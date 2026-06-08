@@ -98,6 +98,7 @@ export interface CourseDetail {
   launchUrl?: string | null;
   imageUrl?: string | null;
   skills: string[];
+  assessmentId?: string | null;
 }
 export interface EnrollmentRow {
   id: string;

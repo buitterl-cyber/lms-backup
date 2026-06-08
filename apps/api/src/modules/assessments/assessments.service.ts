@@ -12,6 +12,19 @@ import { PrismaService } from "../../common/prisma/prisma.service";
 export class AssessmentsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Assessment for the learner to take — questions WITHOUT answer keys (no cheating). */
+  async getForTaking(id: string) {
+    const { tenantId } = getTenantContext();
+    const a = await this.prisma.db.assessment.findFirst({ where: { id, tenantId }, include: { questions: true } });
+    if (!a) return null;
+    return {
+      id: a.id,
+      title: a.title,
+      passScore: a.passScore,
+      questions: a.questions.map((q) => ({ id: q.id, type: q.type, prompt: q.prompt, options: (q.options as string[] | null) ?? [] })),
+    };
+  }
+
   async submit(assessmentId: string, input: { enrollmentId?: string; responses: Record<string, string[]> }) {
     const { tenantId } = getTenantContext();
     const assessment = await this.prisma.db.assessment.findFirst({

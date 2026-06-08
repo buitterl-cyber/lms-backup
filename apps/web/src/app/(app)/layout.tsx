@@ -6,7 +6,7 @@ import { LogoutButton } from "@/components/LogoutButton";
 // aggregator, the intelligence engines (skills/career/compliance/certifications), the
 // marketplace, and RIYADA AI.
 const NAV: { group: string; items: { href: string; label: string }[] }[] = [
-  { group: "Workspace", items: [{ href: "/learner", label: "Dashboard" }, { href: "/catalog", label: "Course Catalog" }, { href: "/my-learning", label: "My Learning" }, { href: "/marketplace", label: "Marketplace" }] },
+  { group: "Workspace", items: [{ href: "/learner", label: "Dashboard" }, { href: "/catalog", label: "Course Catalog" }, { href: "/my-learning", label: "My Learning" }, { href: "/notifications", label: "Notifications" }, { href: "/marketplace", label: "Marketplace" }] },
   { group: "Intelligence", items: [
     { href: "/skills", label: "Skills & Gaps" },
     { href: "/team", label: "Team Readiness" },
@@ -15,7 +15,7 @@ const NAV: { group: string; items: { href: string; label: string }[] }[] = [
     { href: "/certifications", label: "Certifications" },
   ] },
   { group: "Assistant", items: [{ href: "/ai", label: "RIYADA AI" }] },
-  { group: "Admin", items: [{ href: "/providers", label: "Providers" }] },
+  { group: "Admin", items: [{ href: "/providers", label: "Providers" }, { href: "/reports", label: "Reports" }] },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {

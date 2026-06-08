@@ -45,6 +45,7 @@ export class CatalogService {
       include: { skills: { include: { skill: true } } },
     });
     if (!c) return null;
+    const assessment = await this.prisma.db.assessment.findFirst({ where: { tenantId, courseId: c.id }, select: { id: true } });
     return {
       id: c.id,
       title: c.title,
@@ -56,6 +57,7 @@ export class CatalogService {
       launchUrl: c.launchUrl,
       imageUrl: c.imageUrl,
       skills: c.skills.map((s) => s.skill.name),
+      assessmentId: assessment?.id ?? null,
     };
   }
 }

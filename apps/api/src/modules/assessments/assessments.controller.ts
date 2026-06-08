@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
 import { IsObject, IsOptional, IsString } from "class-validator";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { PermissionsGuard } from "../../common/rbac/permissions.guard";
@@ -16,6 +16,12 @@ class SubmitDto {
 @Controller("assessments")
 export class AssessmentsController {
   constructor(private readonly assessments: AssessmentsService) {}
+
+  @Get(":id")
+  @RequirePermissions("enrollment:read")
+  get(@Param("id") id: string) {
+    return this.assessments.getForTaking(id);
+  }
 
   @Post(":id/attempts")
   @RequirePermissions("enrollment:read")

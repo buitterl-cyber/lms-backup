@@ -60,8 +60,17 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             </Card>
           )}
         </div>
-        <div>
+        <div className="space-y-4">
           <CoursePlayer courseId={course.id} launchUrl={course.launchUrl} />
+          {course.assessmentId && (
+            <Card>
+              <h2 className="text-sm font-medium">Knowledge check</h2>
+              <p className="mt-1 text-xs text-muted">Test what you learned and earn your completion.</p>
+              <Link href={`/assessment/${course.assessmentId}`} className="mt-3 block rounded-lg bg-brand px-3 py-2 text-center text-sm font-medium text-white">
+                Take assessment →
+              </Link>
+            </Card>
+          )}
         </div>
       </div>
     </div>
