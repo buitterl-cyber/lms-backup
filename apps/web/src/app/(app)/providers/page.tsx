@@ -4,14 +4,22 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui";
 import { apiGet, apiPost, getContext, type DemoContext, type ProviderConn } from "@/lib/api";
 
-// Admin → Providers: connect learning providers and sync their catalogs into the aggregation hub.
-// Microsoft Learn pulls real content; the others are registered connectors (live OAuth pending).
+// Admin → Providers: connect learning providers (incl. a client's own LearnWorlds school) and sync
+// their catalogs into the aggregation hub.
 const LABEL: Record<string, string> = {
-  go1: "GO1", "ms-learn": "Microsoft Learn", "aws-skill-builder": "AWS Skill Builder",
+  go1: "GO1", "ms-learn": "Microsoft Learn", "aws-skill-builder": "AWS Skill Builder", learnworlds: "LearnWorlds",
   "open-sesame": "OpenSesame", "internal:confluence": "Confluence", "internal:sharepoint": "SharePoint",
   "internal:google-drive": "Google Drive", "internal:m365": "Microsoft 365", "internal:notion": "Notion",
 };
 const REAL = new Set(["ms-learn"]);
+// Providers that need credentials before they can connect.
+const CRED_FIELDS: Record<string, { name: string; label: string; placeholder: string }[]> = {
+  learnworlds: [
+    { name: "school", label: "School URL", placeholder: "yourschool.learnworlds.com" },
+    { name: "clientId", label: "Client ID", placeholder: "Lw-Client id" },
+    { name: "clientSecret", label: "Client secret", placeholder: "••••••••" },
+  ],
+};
 
 export default function ProvidersAdminPage() {
   const [ctx, setCtx] = useState<DemoContext | null>(null);
@@ -19,6 +27,8 @@ export default function ProvidersAdminPage() {
   const [conns, setConns] = useState<ProviderConn[]>([]);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
+  const [connectKey, setConnectKey] = useState<string | null>(null);
+  const [creds, setCreds] = useState<Record<string, string>>({});
 
   async function refresh(c: DemoContext) {
     setAvailable(await apiGet<string[]>("/providers/available", c));
@@ -28,9 +38,19 @@ export default function ProvidersAdminPage() {
     getContext().then((c) => { setCtx(c); return refresh(c); }).catch(() => {});
   }, []);
 
-  async function connect(providerKey: string) {
+  function startConnect(providerKey: string) {
+    if (CRED_FIELDS[providerKey]) {
+      setConnectKey(providerKey);
+      setCreds({});
+    } else {
+      void connect(providerKey, {});
+    }
+  }
+  async function connect(providerKey: string, credentials: Record<string, string>) {
     if (!ctx) return;
-    await apiPost("/providers/connections", ctx, { providerKey, displayName: LABEL[providerKey] ?? providerKey, credentials: {} });
+    await apiPost("/providers/connections", ctx, { providerKey, displayName: LABEL[providerKey] ?? providerKey, credentials });
+    setConnectKey(null);
+    setMsg(`Connected ${LABEL[providerKey] ?? providerKey}.`);
     await refresh(ctx);
   }
   async function sync(id: string) {
@@ -42,7 +62,7 @@ export default function ProvidersAdminPage() {
       setMsg(`Synced ${r.coursesUpserted ?? 0} courses, ${r.skillsCreated ?? 0} new skills.`);
       await refresh(ctx);
     } catch {
-      setMsg("Sync failed.");
+      setMsg("Sync failed — check the connection's credentials.");
     } finally {
       setSyncing(null);
     }
@@ -55,7 +75,7 @@ export default function ProvidersAdminPage() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Providers</h1>
-        <p className="text-sm text-muted">Connect learning providers and sync their catalogs into one hub.</p>
+        <p className="text-sm text-muted">Connect learning providers — including a client&apos;s own LearnWorlds school — and sync catalogs into one hub.</p>
       </header>
 
       {msg && <Card className="text-sm text-green">{msg}</Card>}
@@ -71,7 +91,7 @@ export default function ProvidersAdminPage() {
                 <p className="font-medium">{LABEL[c.providerKey] ?? c.displayName}</p>
                 <p className="text-xs text-muted">
                   {c.courses} courses{c.lastSyncedAt ? ` · last synced ${new Date(c.lastSyncedAt).toLocaleString()}` : " · never synced"}
-                  {REAL.has(c.providerKey) ? "" : " · live OAuth pending"}
+                  {REAL.has(c.providerKey) || CRED_FIELDS[c.providerKey] ? "" : " · live OAuth pending"}
                 </p>
               </div>
               <button onClick={() => sync(c.id)} disabled={syncing === c.id} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-60">
@@ -82,11 +102,36 @@ export default function ProvidersAdminPage() {
         )}
       </Card>
 
+      {connectKey && CRED_FIELDS[connectKey] && (
+        <Card>
+          <h2 className="text-sm font-medium">Connect {LABEL[connectKey]}</h2>
+          <p className="mt-1 text-xs text-muted">Enter the client&apos;s {LABEL[connectKey]} API credentials.</p>
+          <div className="mt-3 space-y-2">
+            {CRED_FIELDS[connectKey].map((f) => (
+              <div key={f.name}>
+                <label className="text-xs text-muted">{f.label}</label>
+                <input
+                  type={f.name.toLowerCase().includes("secret") ? "password" : "text"}
+                  placeholder={f.placeholder}
+                  value={creds[f.name] ?? ""}
+                  onChange={(e) => setCreds((p) => ({ ...p, [f.name]: e.target.value }))}
+                  className="mt-1 w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-brand"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex gap-2">
+            <button onClick={() => connect(connectKey, creds)} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white">Connect</button>
+            <button onClick={() => setConnectKey(null)} className="rounded-lg border border-border px-4 py-2 text-sm">Cancel</button>
+          </div>
+        </Card>
+      )}
+
       <section>
         <h2 className="mb-3 text-sm font-medium text-muted">Available to connect</h2>
         <div className="flex flex-wrap gap-2">
           {connectable.map((k) => (
-            <button key={k} onClick={() => connect(k)} className="rounded-lg border border-border px-3 py-1.5 text-sm text-muted hover:border-brand hover:text-fg">
+            <button key={k} onClick={() => startConnect(k)} className="rounded-lg border border-border px-3 py-1.5 text-sm text-muted hover:border-brand hover:text-fg">
               + {LABEL[k] ?? k}
             </button>
           ))}

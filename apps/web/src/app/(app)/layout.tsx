@@ -15,7 +15,7 @@ const NAV: { group: string; items: { href: string; label: string }[] }[] = [
     { href: "/certifications", label: "Certifications" },
   ] },
   { group: "Assistant", items: [{ href: "/ai", label: "RIYADA AI" }] },
-  { group: "Admin", items: [{ href: "/providers", label: "Providers" }, { href: "/reports", label: "Reports" }] },
+  { group: "Admin", items: [{ href: "/people", label: "People" }, { href: "/providers", label: "Providers" }, { href: "/reports", label: "Reports" }] },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {

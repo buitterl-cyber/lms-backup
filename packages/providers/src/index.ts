@@ -6,3 +6,4 @@ export { OpenSesameProvider, openSesameFactory } from "./providers/open-sesame.p
 export { MsLearnProvider, msLearnFactory } from "./providers/ms-learn.provider";
 export { AwsSkillBuilderProvider, awsSkillBuilderFactory } from "./providers/aws-skill-builder.provider";
 export { InternalKbProvider, internalKbFactories } from "./providers/internal-kb.provider";
+export { LearnWorldsProvider, learnWorldsFactory } from "./providers/learnworlds.provider";

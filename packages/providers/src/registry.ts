@@ -10,6 +10,7 @@ import { openSesameFactory } from "./providers/open-sesame.provider";
 import { msLearnFactory } from "./providers/ms-learn.provider";
 import { awsSkillBuilderFactory } from "./providers/aws-skill-builder.provider";
 import { internalKbFactories } from "./providers/internal-kb.provider";
+import { learnWorldsFactory } from "./providers/learnworlds.provider";
 
 const FACTORIES = new Map<string, ProviderFactory>();
 
@@ -38,5 +39,7 @@ registerProvider(msLearnFactory);
 registerProvider(awsSkillBuilderFactory);
 // ---- Phase 4: internal knowledge sources (Confluence/SharePoint/Drive/M365/Notion) ----
 internalKbFactories.forEach(registerProvider);
+// ---- Phase 2 ----
+registerProvider(learnWorldsFactory);
 // TODO Phase 2: linkedInLearningFactory, courseraFactory, udemyBusinessFactory
 // TODO Phase 3: skillsoftFactory, oreillyFactory, dataCampFactory, cybraryFactory
