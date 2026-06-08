@@ -1,0 +1,621 @@
+// RiyadaIntel — canonical data model (PostgreSQL via Prisma).
+//
+// Multi-tenancy: EVERY tenant-scoped row carries tenantId (platform tenant) and organizationId.
+// Row-level isolation is enforced at the app layer (tenant context) AND in Postgres via RLS
+// policies generated from these tables (see migrations). The hierarchy is:
+//   Platform -> Organization -> Division -> Department -> Team -> User
+//
+// Analytics/event-scale data (xAPI statements, raw activity) lives in ClickHouse, NOT here.
+// This schema is the OLTP system of record. See docs/03-data-and-api.md for the full ERD.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// TENANCY & ORG HIERARCHY
+// ============================================================================
+
+model Tenant {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  customDomain String? @unique
+  // White-label / regional settings
+  branding    Json?    // logo, colors, fonts
+  defaultLocale String @default("en")
+  defaultCurrency String @default("USD")
+  region      String   @default("eu") // data residency: eu | me | africa | asia
+  createdAt   DateTime @default(now())
+  organizations Organization[]
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  slug      String
+  industry  String?
+  settings  Json?
+  createdAt DateTime @default(now())
+
+  divisions   Division[]
+  departments Department[]
+  teams       Team[]
+  users       User[]
+  roles       Role[]
+  providerConnections ProviderConnection[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+}
+
+model Division {
+  id             String   @id @default(cuid())
+  tenantId       String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  departments    Department[]
+  @@index([tenantId, organizationId])
+}
+
+model Department {
+  id             String   @id @default(cuid())
+  tenantId       String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  divisionId     String?
+  division        Division?   @relation(fields: [divisionId], references: [id])
+  name           String
+  teams          Team[]
+  users          User[]
+  @@index([tenantId, organizationId])
+}
+
+model Team {
+  id             String   @id @default(cuid())
+  tenantId       String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  departmentId   String?
+  department      Department? @relation(fields: [departmentId], references: [id])
+  name           String
+  memberships    TeamMembership[]
+  @@index([tenantId, organizationId])
+}
+
+// ============================================================================
+// IDENTITY, RBAC
+// ============================================================================
+
+model User {
+  id             String   @id @default(cuid())
+  tenantId       String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  departmentId   String?
+  department      Department? @relation(fields: [departmentId], references: [id])
+  // Identity is federated to Keycloak; this is the platform-side profile + mapping.
+  keycloakId     String?  @unique
+  // App-level auth (email/password) for environments without Keycloak. bcrypt hash; nullable
+  // for SSO-provisioned users.
+  passwordHash   String?
+  email          String
+  firstName      String
+  lastName       String
+  locale         String   @default("en")
+  jobTitle       String?
+  // Career/workforce role context points at JobRole (e.g. "Helpdesk Engineer"), NOT the RBAC
+  // Role (access role). Access roles are granted via RoleAssignment.
+  currentRoleId  String?
+  currentRole     JobRole? @relation("UserCurrentRole", fields: [currentRoleId], references: [id])
+  targetRoleId   String?
+  targetRole      JobRole? @relation("UserTargetRole", fields: [targetRoleId], references: [id])
+  status         String   @default("active") // active | invited | suspended
+  createdAt      DateTime @default(now())
+
+  roleAssignments RoleAssignment[]
+  teamMemberships TeamMembership[]
+  userSkills      UserSkill[]
+  enrollments     Enrollment[]
+  certificates    EarnedCertificate[]
+  complianceAssignments ComplianceAssignment[]
+  careerPlans     CareerPlan[]
+  recommendations Recommendation[]
+  auditLogs       AuditLog[]
+
+  @@unique([organizationId, email])
+  @@index([tenantId, organizationId])
+}
+
+model TeamMembership {
+  id     String @id @default(cuid())
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  @@unique([teamId, userId])
+}
+
+// RBAC: roles here are *access* roles (Super Admin, Org Admin, Compliance Manager, ...),
+// distinct from job Roles in the Skills Graph. Permissions are fine-grained strings.
+model Role {
+  id             String   @id @default(cuid())
+  tenantId       String
+  organizationId String?  // null => platform-global role
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  key            String   // super_admin | platform_admin | org_admin | dept_manager |
+                           // compliance_manager | hr_manager | trainer | instructor |
+                           // provider | partner | finance_manager | learner | guest
+  name           String
+  permissions    String[] // e.g. ["course:create","compliance:read","report:export"]
+  assignments    RoleAssignment[]
+  @@unique([tenantId, organizationId, key])
+}
+
+model RoleAssignment {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+  // Scope of the grant — assignment can be limited to a department/team subtree.
+  // scopeId is "" for an organization-wide grant (NOT null): a nullable component would make
+  // Postgres treat every org-scope grant as distinct in the unique index, defeating dedupe.
+  scopeType String @default("organization") // organization | department | team
+  scopeId   String @default("")
+  @@unique([userId, roleId, scopeType, scopeId])
+}
+
+// ============================================================================
+// SKILLS GRAPH  (the intelligence moat — see docs/02-intelligence-engines.md)
+// ============================================================================
+
+model Skill {
+  id          String   @id @default(cuid())
+  tenantId    String?  // null => global taxonomy skill, shareable across tenants
+  name        String
+  externalRef String?  // mapping to ESCO/O*NET/Lightcast taxonomy code
+  description String?
+  category    String?
+  // Self-referential graph edges (prerequisite / related) live in SkillEdge.
+  userSkills        UserSkill[]
+  courseSkills      CourseSkill[]
+  roleSkills        RoleSkillRequirement[]
+  certificationSkills CertificationSkill[]
+  edgesFrom   SkillEdge[] @relation("EdgeFrom")
+  edgesTo     SkillEdge[] @relation("EdgeTo")
+  @@index([tenantId])
+  @@index([name])
+}
+
+model SkillEdge {
+  id        String @id @default(cuid())
+  fromId    String
+  from      Skill  @relation("EdgeFrom", fields: [fromId], references: [id])
+  toId      String
+  to        Skill  @relation("EdgeTo", fields: [toId], references: [id])
+  kind      String // prerequisite | related | broader | narrower
+  weight    Float  @default(1)
+  @@unique([fromId, toId, kind])
+}
+
+model Competency {
+  id        String  @id @default(cuid())
+  tenantId  String?
+  name      String
+  framework String? // e.g. SFIA, NICE, custom
+  skillIds  String[] // competency = bundle of skills at target proficiency
+}
+
+// Job role in the workforce sense (Cloud Security Engineer, Helpdesk Engineer, CISO...).
+model JobRole {
+  id           String  @id @default(cuid())
+  tenantId     String?
+  name         String
+  family       String? // career family for path traversal
+  level        Int?    // seniority ordering within a family
+  description  String?
+  requirements RoleSkillRequirement[]
+  fromPaths    CareerPath[] @relation("PathFrom")
+  toPaths      CareerPath[] @relation("PathTo")
+  currentForUsers User[] @relation("UserCurrentRole")
+  targetForUsers  User[] @relation("UserTargetRole")
+  @@index([tenantId])
+}
+
+model RoleSkillRequirement {
+  id           String  @id @default(cuid())
+  jobRoleId    String
+  jobRole      JobRole @relation(fields: [jobRoleId], references: [id])
+  skillId      String
+  skill        Skill   @relation(fields: [skillId], references: [id])
+  targetLevel  Int     @default(3) // 1..5 proficiency
+  importance   String  @default("required") // required | preferred
+  @@unique([jobRoleId, skillId])
+}
+
+model UserSkill {
+  id        String @id @default(cuid())
+  userId    String
+  user      User   @relation(fields: [userId], references: [id])
+  skillId   String
+  skill     Skill  @relation(fields: [skillId], references: [id])
+  level     Int    @default(1) // 1..5
+  source    String @default("self") // self | manager | assessment | inferred | certificate
+  evidence  Json?
+  verifiedAt DateTime?
+  @@unique([userId, skillId])
+}
+
+// ============================================================================
+// PROVIDERS & CATALOG
+// ============================================================================
+
+model ProviderConnection {
+  id             String   @id @default(cuid())
+  tenantId       String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  providerKey    String   // go1 | open-sesame | ms-learn | ...
+  displayName    String
+  // Credentials encrypted at rest (KMS envelope); never returned to clients.
+  credentialsEnc String
+  status         String   @default("active")
+  lastSyncedAt   DateTime?
+  courses        Course[]
+  @@unique([organizationId, providerKey])
+  @@index([tenantId])
+}
+
+model Course {
+  id            String   @id @default(cuid())
+  tenantId      String
+  providerKey   String
+  connectionId  String?
+  connection    ProviderConnection? @relation(fields: [connectionId], references: [id])
+  externalId    String
+  title         String
+  description   String
+  language      String   @default("en")
+  durationMinutes Int?
+  modality      String   @default("self-paced")
+  level         String?
+  imageUrl      String?
+  launchUrl     String?  // deep-link into the provider's content (e.g. the MS Learn module URL)
+  publisher     String?
+  rawCategories String[]
+  isInternal    Boolean  @default(false) // AI Knowledge Academy / internal sources
+  updatedAt     DateTime @updatedAt
+
+  skills      CourseSkill[]
+  enrollments Enrollment[]
+  pathItems   LearningPathItem[]
+
+  @@unique([providerKey, externalId, tenantId])
+  @@index([tenantId])
+  @@index([title])
+}
+
+model CourseSkill {
+  id       String @id @default(cuid())
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
+  skillId  String
+  skill    Skill  @relation(fields: [skillId], references: [id])
+  confidence Float @default(1)
+  @@unique([courseId, skillId])
+}
+
+model LearningPath {
+  id        String @id @default(cuid())
+  tenantId  String
+  name      String
+  description String?
+  origin    String  @default("manual") // manual | ai | provider | career
+  items     LearningPathItem[]
+  @@index([tenantId])
+}
+
+model LearningPathItem {
+  id             String @id @default(cuid())
+  learningPathId String
+  learningPath   LearningPath @relation(fields: [learningPathId], references: [id])
+  courseId       String
+  course         Course @relation(fields: [courseId], references: [id])
+  position       Int
+  @@unique([learningPathId, position])
+}
+
+// ============================================================================
+// ENROLLMENT, PROGRESS, ASSESSMENTS  (LMS + LRS bridge)
+// ============================================================================
+
+model Enrollment {
+  id            String   @id @default(cuid())
+  tenantId      String
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  courseId      String
+  course        Course   @relation(fields: [courseId], references: [id])
+  externalEnrollmentId String?
+  status        String   @default("enrolled") // enrolled|in-progress|completed|failed|expired
+  percent       Int      @default(0)
+  score         Int?
+  assignedBy    String?  // userId of manager / "system" for auto-assignment
+  assignedReason String? // why the recommendation engine assigned this
+  dueAt         DateTime?
+  enrolledAt    DateTime @default(now())
+  completedAt   DateTime?
+  attempts      AssessmentAttempt[]
+  @@unique([userId, courseId])
+  @@index([tenantId])
+  @@index([status])
+}
+
+model Assessment {
+  id          String   @id @default(cuid())
+  tenantId    String
+  courseId    String?
+  title       String
+  passScore   Int      @default(70)
+  randomize   Boolean  @default(true)
+  questions   Question[]
+  attempts    AssessmentAttempt[]
+}
+
+model Question {
+  id           String  @id @default(cuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  type         String  // single | multiple | true_false | essay | practical | file_upload
+  prompt       String
+  options      Json?   // choices for objective types
+  answerKey    Json?   // null for essay/practical (graded by rubric / AI)
+  points       Int     @default(1)
+  aiGenerated  Boolean @default(false)
+}
+
+model AssessmentAttempt {
+  id           String   @id @default(cuid())
+  tenantId     String
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  enrollmentId String?
+  enrollment   Enrollment? @relation(fields: [enrollmentId], references: [id])
+  responses    Json
+  score        Int?
+  passed       Boolean?
+  gradedBy     String?  // "auto" | "ai" | userId
+  submittedAt  DateTime @default(now())
+}
+
+// ============================================================================
+// CERTIFICATION INTELLIGENCE
+// ============================================================================
+
+model Certification {
+  id          String  @id @default(cuid())
+  tenantId    String?
+  name        String  // e.g. "ISO 27001 Lead Auditor", "AWS Solutions Architect"
+  body        String? // issuing body / accreditation
+  validMonths Int?    // default validity window
+  cpdRequired Int?    // CPD hours required to renew
+  skills      CertificationSkill[]
+  earned      EarnedCertificate[]
+}
+
+model CertificationSkill {
+  id              String @id @default(cuid())
+  certificationId String
+  certification   Certification @relation(fields: [certificationId], references: [id])
+  skillId         String
+  skill           Skill @relation(fields: [skillId], references: [id])
+  @@unique([certificationId, skillId])
+}
+
+model EarnedCertificate {
+  id              String   @id @default(cuid())
+  tenantId        String
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  certificationId String?
+  certification   Certification? @relation(fields: [certificationId], references: [id])
+  externalId      String?
+  issuedAt        DateTime
+  expiresAt       DateTime?
+  cpdHours        Float?
+  fileUrl         String?
+  status          String   @default("valid") // valid | expiring | expired | revoked
+  @@index([tenantId, userId])
+  @@index([expiresAt]) // drives renewal/expiry sweeps
+}
+
+// ============================================================================
+// COMPLIANCE INTELLIGENCE
+// ============================================================================
+
+model ComplianceFramework {
+  id        String @id @default(cuid())
+  tenantId  String?
+  key       String // iso27001 | iso9001 | gdpr | nis2 | soc2 | hipaa | pci_dss | cis | ...
+  name      String
+  controls  ComplianceControl[]
+  @@unique([tenantId, key])
+}
+
+model ComplianceControl {
+  id          String @id @default(cuid())
+  frameworkId String
+  framework   ComplianceFramework @relation(fields: [frameworkId], references: [id])
+  code        String // e.g. "A.6.3"
+  title       String
+  // Controls are satisfied by required training/certs mapped here.
+  requiredCourseIds        String[]
+  requiredCertificationIds String[]
+  assignments ComplianceAssignment[]
+}
+
+model ComplianceAssignment {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  controlId String
+  control   ComplianceControl @relation(fields: [controlId], references: [id])
+  status    String   @default("at_risk") // compliant(green) | due(amber) | at_risk(red)
+  dueAt     DateTime?
+  satisfiedAt DateTime?
+  @@unique([userId, controlId])
+  @@index([tenantId, status])
+}
+
+// ============================================================================
+// CAREER INTELLIGENCE
+// ============================================================================
+
+model CareerPath {
+  id          String  @id @default(cuid())
+  tenantId    String?
+  fromRoleId  String
+  fromRole    JobRole @relation("PathFrom", fields: [fromRoleId], references: [id])
+  toRoleId    String
+  toRole      JobRole @relation("PathTo", fields: [toRoleId], references: [id])
+  difficulty  Int     @default(3)
+  typicalMonths Int?
+  plans       CareerPlan[]
+  @@unique([fromRoleId, toRoleId])
+}
+
+model CareerPlan {
+  id           String   @id @default(cuid())
+  tenantId     String
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  careerPathId String?
+  careerPath   CareerPath? @relation(fields: [careerPathId], references: [id])
+  targetRoleId String
+  gapSkillIds  String[] // computed skill gap
+  roadmap      Json     // ordered courses/certs with estimated time + cost
+  estMonths    Int?
+  estCost      Float?
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+  @@index([tenantId, userId])
+}
+
+// ============================================================================
+// AI RECOMMENDATIONS
+// ============================================================================
+
+model Recommendation {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  kind      String   // skill_gap | compliance | career | renewal | engagement
+  subjectType String // course | learning_path | certification | assessment
+  subjectId String
+  reason    String   // human-readable "why" (explainability is a product requirement)
+  score     Float
+  status    String   @default("pending") // pending | accepted | dismissed | auto_assigned
+  createdAt DateTime @default(now())
+  @@index([tenantId, userId, status])
+}
+
+// ============================================================================
+// COMMERCE: marketplace, subscriptions, orders, payments
+// ============================================================================
+
+model Product {
+  id        String @id @default(cuid())
+  tenantId  String
+  kind      String // course | bundle | learning_path | subscription | corporate_package |
+                   // license | skill_track | certification_track
+  name      String
+  priceCents Int
+  currency  String @default("USD")
+  metadata  Json?
+  orderItems OrderItem[]
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  tenantId  String
+  organizationId String
+  plan      String   // intelligence | enterprise | gov | provider
+  seats     Int
+  status    String   @default("active")
+  renewsAt  DateTime?
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  tenantId  String
+  organizationId String
+  totalCents Int
+  currency  String   @default("USD")
+  status    String   @default("pending")
+  items     OrderItem[]
+  payments  Payment[]
+  createdAt DateTime @default(now())
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  order     Order  @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int    @default(1)
+  priceCents Int
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  provider  String   // stripe | invoice | po
+  amountCents Int
+  currency  String   @default("USD")
+  status    String   @default("pending")
+  reference String?
+  createdAt DateTime @default(now())
+}
+
+// ============================================================================
+// PLATFORM: notifications, audit
+// ============================================================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  channel   String   // in_app | email | push
+  kind      String
+  payload   Json
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+  @@index([tenantId, userId])
+}
+
+// Append-only. Enforced INSERT-only at the DB level via trigger/migration.
+model AuditLog {
+  id        String   @id @default(cuid())
+  tenantId  String
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  ip        String?
+  createdAt DateTime @default(now())
+  @@index([tenantId, entity, createdAt])
+}

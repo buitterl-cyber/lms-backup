@@ -1,0 +1,48 @@
+# API deployment + HPA. Workers (provider-sync, expiry-sweep, risk-recompute) use the same image
+# with a different command and are KEDA-scaled on RabbitMQ queue depth. Secrets come from the
+# External Secrets Operator (vault), never baked into the image.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: riyada-api
+  labels: { app: riyada-api }
+spec:
+  replicas: 3
+  selector: { matchLabels: { app: riyada-api } }
+  template:
+    metadata:
+      labels: { app: riyada-api }
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/riyada/api:latest
+          ports: [{ containerPort: 4000 }]
+          envFrom:
+            - secretRef: { name: riyada-secrets } # injected by External Secrets Operator
+          readinessProbe:
+            httpGet: { path: /api/v1/health, port: 4000 }
+            initialDelaySeconds: 10
+          livenessProbe:
+            httpGet: { path: /api/v1/health, port: 4000 }
+            initialDelaySeconds: 20
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: riyada-api }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: riyada-api }
+  minReplicas: 3
+  maxReplicas: 30
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 65 } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: riyada-api }
+spec:
+  selector: { app: riyada-api }
+  ports: [{ port: 80, targetPort: 4000 }]

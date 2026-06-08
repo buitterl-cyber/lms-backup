@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push: { branches: [main] }
+  pull_request: { branches: [main] }
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: riyada, POSTGRES_PASSWORD: riyada, POSTGRES_DB: riyada }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U riyada" --health-interval 10s
+          --health-timeout 5s --health-retries 5
+    env:
+      DATABASE_URL: postgresql://riyada:riyada@localhost:5432/riyada
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate
+      - run: pnpm typecheck
+      - run: pnpm test            # turbo runs all package tests (incl. @riyada/intelligence vitest)
+      - run: pnpm --filter @riyada/api build
+
+  build-images:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: ${{ github.actor }}, password: ${{ secrets.GITHUB_TOKEN }} }
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/docker/api.Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/api:latest
+      # Deploy to staging via Argo Rollouts (canary) happens from the GitOps repo on image push.

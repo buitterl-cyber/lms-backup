@@ -1,0 +1,35 @@
+{
+  "name": "riyadaintel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "RiyadaIntel — AI-Powered Workforce Intelligence Platform",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "pnpm --filter @riyada/database prisma generate",
+    "db:migrate": "pnpm --filter @riyada/database prisma migrate dev",
+    "db:studio": "pnpm --filter @riyada/database prisma studio",
+    "demo": "tsx scripts/demo.ts",
+    "test:intelligence": "pnpm --filter @riyada/intelligence test",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+  },
+  "devDependencies": {
+    "turbo": "^2.9.16",
+    "prettier": "^3.8.3",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss@<8.5.10": "^8.5.15",
+      "@hono/node-server@<1.19.13": "^1.19.13"
+    }
+  }
+}

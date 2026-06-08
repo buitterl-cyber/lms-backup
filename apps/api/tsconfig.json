@@ -1,0 +1,27 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"],
+    // The api is an application, not a library — nothing imports its types. Disabling declaration
+    // emit (the base sets it true for the packages) avoids TS2883: emitting api .d.ts would force
+    // naming Prisma-internal types (JsonValue/DefaultArgs) that live under packages/database.
+    "declaration": false,
+    "declarationMap": false,
+    // Resolve workspace packages to their BUILT declarations, not their TS source. The base
+    // config maps @riyada/* -> packages/*/src for the dev/test/demo flows (bundlers + vitest +
+    // tsx), but tsc-emitting the api with rootDir:"src" rejects source files from outside src
+    // (TS6059). Pointing at dist/*.d.ts consumes the packages as compiled libraries instead, so
+    // `pnpm build` (turbo: ^build first) produces those dist outputs before the api compiles.
+    "paths": {
+      "@riyada/shared": ["../../packages/shared/dist/index.d.ts"],
+      "@riyada/intelligence": ["../../packages/intelligence/dist/index.d.ts"],
+      "@riyada/providers": ["../../packages/providers/dist/index.d.ts"],
+      "@riyada/database": ["../../packages/database/dist/index.d.ts"]
+    }
+  },
+  "include": ["src"]
+}
