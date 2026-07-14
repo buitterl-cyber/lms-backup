@@ -116,6 +116,9 @@ function LoginForm() {
           )}
 
           <p className="mt-4 text-center text-xs text-muted">
+            New here? <Link href="/signup" className="text-brand underline">Create an account</Link>
+          </p>
+          <p className="mt-2 text-center text-xs text-muted">
             Demo: <span className="text-fg">amir@excis.com</span> / <span className="text-fg">demo1234</span> (pre-filled)
           </p>
         </form>

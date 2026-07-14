@@ -9,6 +9,13 @@ class LoginDto {
   @IsString() password!: string;
 }
 
+class SignupDto {
+  @IsString() firstName!: string;
+  @IsString() lastName!: string;
+  @IsString() email!: string;
+  @IsString() password!: string;
+}
+
 // Public (no tenant context). TenantMiddleware skips /api/v1/auth/*.
 @ApiTags("auth")
 @Controller("auth")
@@ -18,6 +25,11 @@ export class AuthController {
   @Post("login")
   login(@Body() dto: LoginDto) {
     return this.auth.login(dto.email, dto.password);
+  }
+
+  @Post("signup")
+  signup(@Body() dto: SignupDto) {
+    return this.auth.signup(dto);
   }
 
   @Get("me")

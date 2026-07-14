@@ -35,6 +35,7 @@ export default async function PublicCoursePage({ params }: { params: Promise<{ i
           <Link href="/" className="text-lg font-semibold tracking-tight">Riyada<span className="text-brand">Intel</span></Link>
           <nav className="flex items-center gap-4">
             <Link href="/courses" className="text-muted hover:text-fg">Courses</Link>
+            <Link href="/signup" className="text-muted hover:text-fg">Sign up</Link>
             <Link href="/login" className="text-muted hover:text-fg">Log in</Link>
           </nav>
         </div>

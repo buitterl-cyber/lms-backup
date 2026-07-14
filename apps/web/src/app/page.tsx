@@ -21,6 +21,7 @@ export default function Landing() {
         <nav className="flex items-center gap-3 text-sm">
           <Link href="/courses" className="text-muted hover:text-fg">Courses</Link>
           <Link href="/login" className="text-muted hover:text-fg">Log in</Link>
+          <Link href="/signup" className="text-muted hover:text-fg">Sign up</Link>
           <Link href="/learner" className="rounded-lg bg-brand px-4 py-2 font-medium text-white">Launch platform</Link>
         </nav>
       </header>

@@ -43,6 +43,7 @@ export default async function PublicCatalog({ searchParams }: { searchParams: Pr
           <Link href="/" className="text-lg font-semibold tracking-tight">Riyada<span className="text-brand">Intel</span></Link>
           <nav className="flex items-center gap-4">
             <Link href="/courses" className="font-medium text-fg">Courses</Link>
+            <Link href="/signup" className="text-muted hover:text-fg">Sign up</Link>
             <Link href="/login" className="text-muted hover:text-fg">Log in</Link>
             <Link href="/learner" className="rounded-lg bg-brand px-4 py-2 font-medium text-white">Launch platform</Link>
           </nav>
