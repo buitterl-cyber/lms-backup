@@ -46,6 +46,14 @@ export default async function MyLearningPage() {
                 <p className="truncate font-medium">{r.course?.title ?? "Course"}</p>
                 <p className="text-xs uppercase tracking-wide text-muted">{PROVIDER_LABEL[r.course?.providerKey ?? ""] ?? r.course?.providerKey}</p>
               </div>
+              {r.dueAt && r.status !== "completed" && (() => {
+                const days = Math.ceil((new Date(r.dueAt).getTime() - Date.now()) / 86_400_000);
+                return (
+                  <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${days < 0 ? "bg-red/15 text-red" : days <= 5 ? "bg-amber/15 text-amber" : "bg-border/60 text-muted"}`}>
+                    {days < 0 ? `Overdue ${-days}d` : `Due in ${days}d`}
+                  </span>
+                );
+              })()}
               <div className="w-32">
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
                   <div className={`h-full ${r.status === "completed" ? "bg-green" : "bg-brand"}`} style={{ width: `${r.percent}%` }} />

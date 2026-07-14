@@ -19,7 +19,7 @@ export default function Landing() {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <span className="text-lg font-semibold tracking-tight">Riyada<span className="text-brand">Intel</span></span>
         <nav className="flex items-center gap-3 text-sm">
-          <Link href="/catalog" className="text-muted hover:text-fg">Catalog</Link>
+          <Link href="/courses" className="text-muted hover:text-fg">Courses</Link>
           <Link href="/login" className="text-muted hover:text-fg">Log in</Link>
           <Link href="/learner" className="rounded-lg bg-brand px-4 py-2 font-medium text-white">Launch platform</Link>
         </nav>
@@ -38,7 +38,7 @@ export default function Landing() {
         </p>
         <div className="mt-8 flex items-center justify-center gap-3">
           <Link href="/learner" className="rounded-lg bg-brand px-5 py-3 text-sm font-medium text-white">Explore the platform →</Link>
-          <Link href="/catalog" className="rounded-lg border border-border px-5 py-3 text-sm font-medium hover:bg-card">Browse the course catalog</Link>
+          <Link href="/courses" className="rounded-lg border border-border px-5 py-3 text-sm font-medium hover:bg-card">Browse the course catalogue</Link>
         </div>
         <p className="mt-10 text-xs uppercase tracking-widest text-muted">Aggregates every major provider</p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted">

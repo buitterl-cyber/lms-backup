@@ -105,6 +105,7 @@ export interface EnrollmentRow {
   courseId: string;
   status: string;
   percent: number;
+  dueAt?: string | null;
   course?: { title: string; providerKey: string };
 }
 export interface ProviderConn {

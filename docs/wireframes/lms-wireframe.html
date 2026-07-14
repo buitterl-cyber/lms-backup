@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LearnFlow — Desktop Wireframe</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent:      #3D5A80;
+    --accent-dim:  #6A8BA4;
+    --accent-wash: #EDF2F7;
+
+    --ink:         #1A1F2E;
+    --ink-soft:    #5A6475;
+    --ink-xsoft:   #98A0AE;
+    --surface:     #F4F5F7;
+    --white:       #FFFFFF;
+    --border:      #E2E5EA;
+    --border-soft: #ECEEF1;
+
+    --green:       #3A7D5C;
+    --green-wash:  #EBF5EF;
+    --amber:       #8A6A2C;
+    --amber-wash:  #F7F1E6;
+    --red:         #8B3A3A;
+    --red-wash:    #F5EAEA;
+
+    --sidebar-w: 216px;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* ── VIEW SWITCHER ── */
+  .view-switcher {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: #1A1F2E;
+    display: flex; align-items: center; gap: 4px;
+    padding: 9px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .vs-logo {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: #fff; margin-right: 14px; letter-spacing: -.3px;
+  }
+  .view-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.15);
+    color: rgba(255,255,255,.55);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px; padding: 5px 14px;
+    border-radius: 20px; cursor: pointer; transition: all .14s;
+  }
+  .view-btn:hover  { background: rgba(255,255,255,.08); color: #fff; }
+  .view-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ── APP SHELL ── */
+  .shell { display: none; flex-direction: row; height: 100vh; padding-top: 44px; }
+  .shell.active { display: flex; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w); min-width: var(--sidebar-w);
+    background: var(--white); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow-y: auto;
+  }
+  .sidebar-logo {
+    padding: 16px 16px 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 700; color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -.3px;
+  }
+  .sidebar-logo small {
+    display: block; font-size: 10px; font-weight: 400;
+    color: var(--ink-xsoft); margin-top: 1px; letter-spacing: 0;
+  }
+  .sidebar-section { padding: 10px 8px 4px; }
+  .sidebar-label {
+    font-size: 10px; font-weight: 600; color: var(--ink-xsoft);
+    text-transform: uppercase; letter-spacing: .7px;
+    padding: 0 8px 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: 7px; cursor: pointer;
+    font-size: 12px; color: var(--ink-soft); transition: all .12s;
+    margin-bottom: 1px;
+  }
+  .nav-item:hover { background: var(--surface); color: var(--ink); }
+  .nav-item.active { background: var(--accent-wash); color: var(--accent); font-weight: 500; }
+  .nav-icon { width: 16px; text-align: center; font-size: 13px; filter: grayscale(.5) opacity(.7); }
+  .nav-item.active .nav-icon { filter: none; }
+  .nav-badge {
+    margin-left: auto; background: var(--accent); color: #fff;
+    font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 10px;
+  }
+  .sidebar-user {
+    margin-top: auto; padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .user-av {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 10px; font-weight: 700; flex-shrink: 0;
+  }
+  .user-name { font-size: 12px; font-weight: 600; }
+  .user-role { font-size: 11px; color: var(--ink-xsoft); }
+
+  /* ── MAIN AREA ── */
+  .main { flex: 1; overflow-y: auto; background: var(--surface); }
+
+  .topbar {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 9px 22px; display: flex; align-items: center; gap: 10px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 700; color: var(--ink);
+  }
+  .topbar-chip {
+    font-size: 11px; color: var(--ink-xsoft);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px 8px;
+  }
+  .topbar-search {
+    margin-left: auto;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 7px; padding: 6px 11px;
+    display: flex; align-items: center; gap: 6px;
+    width: 196px; color: var(--ink-xsoft); font-size: 12px;
+  }
+  .topbar-icon {
+    width: 30px; height: 30px; border-radius: 7px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 13px;
+    filter: grayscale(.6) opacity(.7);
+  }
+
+  .content { padding: 18px 22px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .card-head {
+    padding: 13px 15px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .card-sub   { font-size: 11px; color: var(--ink-xsoft); }
+  .card-body  { padding: 13px 15px; }
+
+  /* ── GRID ── */
+  .grid-4  { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 14px; }
+  .grid-3  { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 14px; }
+  .grid-2  { display: grid; grid-template-columns: 1fr 1fr;       gap: 12px; margin-bottom: 14px; }
+  .grid-21 { display: grid; grid-template-columns: 2fr 1fr;       gap: 12px; margin-bottom: 14px; }
+  .grid-12 { display: grid; grid-template-columns: 1fr 2fr;       gap: 12px; margin-bottom: 14px; }
+
+  /* ── STAT CARD ── */
+  .stat-card { padding: 15px; }
+  .stat-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; margin-bottom: 10px;
+    filter: grayscale(.4) opacity(.8);
+  }
+  .stat-label { font-size: 11px; color: var(--ink-xsoft); font-weight: 500; margin-bottom: 5px; }
+  .stat-value {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 24px; font-weight: 700; color: var(--ink); line-height: 1;
+  }
+  .stat-delta { font-size: 11px; margin-top: 4px; }
+  .stat-delta.up   { color: var(--green); }
+  .stat-delta.down { color: var(--red); }
+
+  /* ── PROGRESS BAR ── */
+  .prog-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 3px; }
+
+  /* ── TABLE ── */
+  .tbl { width: 100%; border-collapse: collapse; }
+  .tbl th {
+    text-align: left; font-size: 10px; font-weight: 600;
+    color: var(--ink-xsoft); padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+  .tbl td { padding: 9px 12px; border-bottom: 1px solid var(--border-soft); font-size: 12px; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: var(--surface); }
+
+  /* ── PILL ── */
+  .pill {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 10px;
+    font-size: 11px; font-weight: 500;
+  }
+  .pill.green  { background: var(--green-wash);  color: var(--green); }
+  .pill.amber  { background: var(--amber-wash);  color: var(--amber); }
+  .pill.red    { background: var(--red-wash);    color: var(--red); }
+  .pill.blue   { background: var(--accent-wash); color: var(--accent); }
+
+  /* ── BUTTON ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 13px; border-radius: 7px; font-size: 12px;
+    font-weight: 500; cursor: pointer; border: none; transition: all .12s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #2f4a6a; }
+  .btn-ghost   { background: transparent; color: var(--ink-soft); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface); }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+  /* ── AVATAR ── */
+  .av {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .av-1 { background: #4E6B80; }
+  .av-2 { background: #5A7A5A; }
+  .av-3 { background: #7A6A4A; }
+  .av-4 { background: #7A4E4E; }
+  .av-5 { background: #5A5A7A; }
+
+  /* ── HEATMAP ── */
+  .heatmap { display: grid; grid-template-columns: repeat(12,1fr); gap: 3px; }
+  .heat-cell { aspect-ratio: 1; border-radius: 3px; background: var(--border); }
+  .heat-cell.l1 { background: #C5D5E4; }
+  .heat-cell.l2 { background: #8AAABF; }
+  .heat-cell.l3 { background: #5A85A0; }
+  .heat-cell.l4 { background: #3D5A80; }
+
+  /* ── LEADERBOARD ── */
+  .lb-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 0; border-bottom: 1px solid var(--border-soft);
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-rank { font-size: 11px; font-weight: 700; color: var(--ink-xsoft); width: 18px; text-align: center; }
+  .lb-rank.gold   { color: #A07820; }
+  .lb-rank.silver { color: #787878; }
+  .lb-rank.bronze { color: #8A5C3A; }
+  .lb-name  { flex: 1; font-size: 12px; font-weight: 500; }
+  .lb-xp    { font-size: 12px; font-weight: 600; color: var(--accent); }
+
+  /* ── STREAK DOTS ── */
+  .streak-days { display: flex; gap: 4px; }
+  .streak-day {
+    width: 26px; height: 26px; border-radius: 6px;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 600; color: var(--ink-xsoft);
+    flex-direction: column; gap: 1px;
+  }
+  .streak-day.done  { background: var(--green);  color: #fff; }
+  .streak-day.today { background: var(--accent); color: #fff; }
+
+  /* ── ALERT ── */
+  .alert {
+    border-radius: 8px; padding: 9px 13px;
+    display: flex; align-items: center; gap: 9px;
+    margin-bottom: 8px; font-size: 12px;
+  }
+  .alert.amber { background: var(--amber-wash); border-left: 3px solid #C49A3A; color: #6B4F1A; }
+  .alert.red   { background: var(--red-wash);   border-left: 3px solid #B05A5A; color: #6B2A2A; }
+
+  /* ── NOTIFICATIONS ── */
+  .notif-item {
+    display: flex; gap: 9px; padding: 9px 0;
+    border-bottom: 1px solid var(--border-soft);
+    align-items: flex-start;
+  }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-top: 4px; flex-shrink: 0; }
+  .notif-dot.read { background: var(--border); }
+  .notif-text { font-size: 12px; }
+  .notif-time { font-size: 11px; color: var(--ink-xsoft); margin-top: 2px; }
+
+  /* ── COURSE CARD ── */
+  .course-card {
+    background: var(--white); border: 1px solid var(--border-soft);
+    border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+  }
+  .course-thumb {
+    height: 84px; display: flex; align-items: center; justify-content: center;
+    font-size: 26px; filter: grayscale(.35) opacity(.85);
+  }
+  .course-body  { padding: 11px; }
+  .course-title { font-weight: 600; font-size: 12px; margin-bottom: 3px; }
+  .course-meta  { font-size: 11px; color: var(--ink-xsoft); margin-bottom: 9px; }
+  .course-prog-label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; margin-bottom: 4px;
+  }
+
+  /* ── CERT ── */
+  .cert-card {
+    border: 1px solid #C8D8E8; border-radius: var(--radius);
+    padding: 13px; text-align: center;
+    background: var(--accent-wash);
+  }
+  .cert-icon  { font-size: 24px; margin-bottom: 6px; filter: grayscale(.3) opacity(.8); }
+  .cert-title { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; color: var(--accent); }
+  .cert-name  { font-size: 11px; color: var(--ink-soft); margin-top: 3px; }
+
+  /* ── FORUM ── */
+  .forum-post {
+    display: flex; gap: 10px; padding: 11px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .forum-post:last-child { border-bottom: none; }
+  .forum-av {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .forum-content { flex: 1; }
+  .forum-author { font-weight: 600; font-size: 12px; }
+  .forum-time   { font-size: 11px; color: var(--ink-xsoft); }
+  .forum-text   { font-size: 12px; color: var(--ink-soft); margin-top: 3px; line-height: 1.5; }
+  .forum-actions { display: flex; gap: 12px; margin-top: 6px; }
+  .forum-action {
+    font-size: 11px; color: var(--ink-xsoft);
+    cursor: pointer; display: flex; align-items: center; gap: 3px;
+  }
+  .forum-action:hover { color: var(--accent); }
+  .pinned-label {
+    font-size: 10px; letter-spacing: .4px; font-weight: 600;
+    color: var(--amber); text-transform: uppercase; margin-left: 6px;
+  }
+
+  /* ── PAGE HEADING ── */
+  .page-title { font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 3px; }
+  .page-sub   { font-size: 12px; color: var(--ink-xsoft); margin-bottom: 16px; }
+
+  /* ── INNER TABS ── */
+  .inner-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .inner-tab {
+    padding: 7px 14px; font-size: 12px; cursor: pointer;
+    color: var(--ink-soft); border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .inner-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+  /* ── MISC ── */
+  .flex { display: flex; }
+  .flex-col { display: flex; flex-direction: column; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .gap-8  { gap: 8px; }
+  .gap-12 { gap: 12px; }
+  .mt-8   { margin-top: 8px; }
+  .mt-12  { margin-top: 12px; }
+  .mb-8   { margin-bottom: 8px; }
+  .text-xs   { font-size: 11px; }
+  .text-soft { color: var(--ink-soft); }
+  .font-600  { font-weight: 600; }
+  .w-full    { width: 100%; }
+</style>
+</head>
+<body>
+
+<!-- VIEW SWITCHER -->
+<div class="view-switcher">
+  <span class="vs-logo">LearnFlow</span>
+  <button class="view-btn active" onclick="show('manager',event)">Manager Dashboard</button>
+  <button class="view-btn" onclick="show('learner',event)">Learner Home</button>
+  <button class="view-btn" onclick="show('forum',event)">Course Forum</button>
+  <button class="view-btn" onclick="show('instructor',event)">Instructor View</button>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  1. MANAGER DASHBOARD                      -->
+<!-- ══════════════════════════════════════════ -->
+<div id="view-manager" class="shell active">
+  <aside class="sidebar">
+    <div class="sidebar-logo">LearnFlow <small>Manager Portal</small></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Overview</div>
+      <div class="nav-item active"><span class="nav-icon">◈</span> Dashboard</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Team Progress</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Courses</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Reports</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Actions</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Nudge Learners <span class="nav-badge">3</span></div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Export Data</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Settings</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-av av-2">SM</div>
+      <div><div class="user-name">Sarah M.</div><div class="user-role">Team Manager</div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Dashboard</div>
+      <div class="topbar-chip">Q2 2026 · Engineering</div>
+      <div class="topbar-search">Search learners, courses…</div>
+      <div class="topbar-icon">🔔</div>
+    </div>
+    <div class="content">
+      <div class="page-title">Good morning, Sarah</div>
+      <div class="page-sub">Here's how your team is tracking this week.</div>
+
+      <!-- Alerts -->
+      <div class="alert amber">
+        <span>△</span>
+        <div><strong>3 learners</strong> haven't started "AWS Security Fundamentals" — deadline in 5 days.
+        <span style="color:var(--accent);cursor:pointer;font-weight:600;"> Send nudge →</span></div>
+      </div>
+      <div class="alert red" style="margin-bottom:14px;">
+        <span>△</span>
+        <div><strong>James K.</strong> is 2 weeks behind on their learning path.
+        <span style="color:var(--accent);cursor:pointer;font-weight:600;"> View profile →</span></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid-4">
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:var(--accent-wash);">📚</div>
+          <div class="stat-label">Courses Assigned</div>
+          <div class="stat-value">24</div>
+          <div class="stat-delta up">↑ 4 this month</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:var(--green-wash);">✓</div>
+          <div class="stat-label">Avg Completion</div>
+          <div class="stat-value">73%</div>
+          <div class="stat-delta up">↑ 8% vs last month</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:var(--amber-wash);">⏱</div>
+          <div class="stat-label">Avg Time / Week</div>
+          <div class="stat-value">2.4h</div>
+          <div class="stat-delta down">↓ 0.3h vs last week</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:var(--accent-wash);">◎</div>
+          <div class="stat-label">Certs Earned</div>
+          <div class="stat-value">11</div>
+          <div class="stat-delta up">↑ 3 this quarter</div>
+        </div>
+      </div>
+
+      <div class="grid-21">
+        <!-- Team table -->
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Team Progress</div>
+              <div class="card-sub">18 learners · sorted by completion</div>
+            </div>
+            <button class="btn btn-ghost btn-sm">Export CSV</button>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>Learner</th>
+                  <th>Active Course</th>
+                  <th>Progress</th>
+                  <th>Last Active</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="flex items-center gap-8"><div class="av av-1">AL</div> Alex L.</div></td>
+                  <td>React Advanced</td>
+                  <td><div style="width:88px;"><div class="prog-bar"><div class="prog-fill" style="width:88%;background:var(--green);"></div></div><div style="font-size:10px;color:var(--ink-xsoft);margin-top:2px;">88%</div></div></td>
+                  <td>Today</td>
+                  <td><span class="pill green">On Track</span></td>
+                  <td><span style="font-size:12px;cursor:pointer;color:var(--ink-xsoft);">💬</span></td>
+                </tr>
+                <tr>
+                  <td><div class="flex items-center gap-8"><div class="av av-2">MP</div> Maria P.</div></td>
+                  <td>AWS Security</td>
+                  <td><div style="width:88px;"><div class="prog-bar"><div class="prog-fill" style="width:61%;background:var(--accent);"></div></div><div style="font-size:10px;color:var(--ink-xsoft);margin-top:2px;">61%</div></div></td>
+                  <td>Yesterday</td>
+                  <td><span class="pill green">On Track</span></td>
+                  <td><span style="font-size:12px;cursor:pointer;color:var(--ink-xsoft);">💬</span></td>
+                </tr>
+                <tr>
+                  <td><div class="flex items-center gap-8"><div class="av av-3">TW</div> Tom W.</div></td>
+                  <td>Python ML</td>
+                  <td><div style="width:88px;"><div class="prog-bar"><div class="prog-fill" style="width:45%;background:var(--amber);"></div></div><div style="font-size:10px;color:var(--ink-xsoft);margin-top:2px;">45%</div></div></td>
+                  <td>3 days ago</td>
+                  <td><span class="pill amber">Falling Behind</span></td>
+                  <td><button class="btn btn-ghost btn-sm">Nudge</button></td>
+                </tr>
+                <tr>
+                  <td><div class="flex items-center gap-8"><div class="av av-4">JK</div> James K.</div></td>
+                  <td>Cybersecurity 101</td>
+                  <td><div style="width:88px;"><div class="prog-bar"><div class="prog-fill" style="width:12%;background:var(--red);"></div></div><div style="font-size:10px;color:var(--ink-xsoft);margin-top:2px;">12%</div></div></td>
+                  <td>2 weeks ago</td>
+                  <td><span class="pill red">At Risk</span></td>
+                  <td><button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red-wash);">Nudge</button></td>
+                </tr>
+                <tr>
+                  <td><div class="flex items-center gap-8"><div class="av av-5">SN</div> Sara N.</div></td>
+                  <td>AWS Security</td>
+                  <td><div style="width:88px;"><div class="prog-bar"><div class="prog-fill" style="width:0%;"></div></div><div style="font-size:10px;color:var(--ink-xsoft);margin-top:2px;">Not started</div></div></td>
+                  <td>5 days ago</td>
+                  <td><span class="pill red">Not Started</span></td>
+                  <td><button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red-wash);">Nudge</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="flex-col" style="gap:12px;">
+          <!-- Heatmap -->
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">Activity Heatmap</div>
+              <div class="card-sub">Last 12 weeks</div>
+            </div>
+            <div class="card-body">
+              <div class="heatmap">
+                <div class="heat-cell"></div><div class="heat-cell l1"></div><div class="heat-cell l2"></div><div class="heat-cell l1"></div>
+                <div class="heat-cell l3"></div><div class="heat-cell l2"></div><div class="heat-cell l4"></div><div class="heat-cell l3"></div>
+                <div class="heat-cell l1"></div><div class="heat-cell l2"></div><div class="heat-cell l1"></div><div class="heat-cell l3"></div>
+                <div class="heat-cell l2"></div><div class="heat-cell"></div><div class="heat-cell l1"></div><div class="heat-cell l2"></div>
+                <div class="heat-cell l4"></div><div class="heat-cell l3"></div><div class="heat-cell l2"></div><div class="heat-cell l4"></div>
+                <div class="heat-cell l1"></div><div class="heat-cell l2"></div><div class="heat-cell l3"></div><div class="heat-cell l1"></div>
+              </div>
+              <div class="flex items-center gap-8 mt-8 text-xs" style="color:var(--ink-xsoft);">
+                <div style="width:9px;height:9px;background:var(--border);border-radius:2px;"></div> None
+                <div style="width:9px;height:9px;background:#8AAABF;border-radius:2px;"></div> Some
+                <div style="width:9px;height:9px;background:#3D5A80;border-radius:2px;"></div> High
+              </div>
+            </div>
+          </div>
+
+          <!-- Leaderboard -->
+          <div class="card">
+            <div class="card-head"><div class="card-title">Leaderboard</div><div class="card-sub">This month</div></div>
+            <div class="card-body">
+              <div class="lb-row"><div class="lb-rank gold">1</div><div class="av av-1" style="width:22px;height:22px;font-size:8px;">AL</div><div class="lb-name">Alex L.</div><div class="lb-xp">2,840 XP</div></div>
+              <div class="lb-row"><div class="lb-rank silver">2</div><div class="av av-2" style="width:22px;height:22px;font-size:8px;">MP</div><div class="lb-name">Maria P.</div><div class="lb-xp">2,210 XP</div></div>
+              <div class="lb-row"><div class="lb-rank bronze">3</div><div class="av av-5" style="width:22px;height:22px;font-size:8px;">SN</div><div class="lb-name">Sara N.</div><div class="lb-xp">1,980 XP</div></div>
+              <div class="lb-row"><div class="lb-rank">4</div><div class="av av-3" style="width:22px;height:22px;font-size:8px;">TW</div><div class="lb-name">Tom W.</div><div class="lb-xp">1,550 XP</div></div>
+            </div>
+          </div>
+
+          <!-- Course ratings -->
+          <div class="card">
+            <div class="card-head"><div class="card-title">Course Ratings</div></div>
+            <div class="card-body">
+              <div class="flex items-center justify-between mb-8"><span class="text-xs">React Advanced</span><span class="text-xs font-600">4.8 / 5</span></div>
+              <div class="flex items-center justify-between mb-8"><span class="text-xs">AWS Security</span><span class="text-xs font-600">4.5 / 5</span></div>
+              <div class="flex items-center justify-between mb-8"><span class="text-xs">Python ML Basics</span><span class="text-xs font-600">4.2 / 5</span></div>
+              <div class="flex items-center justify-between"><span class="text-xs">Cybersecurity 101</span><span class="text-xs font-600" style="color:var(--red);">3.1 / 5 ↓</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  2. LEARNER HOME                           -->
+<!-- ══════════════════════════════════════════ -->
+<div id="view-learner" class="shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">LearnFlow <small>Learner Portal</small></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">My Learning</div>
+      <div class="nav-item active"><span class="nav-icon">◈</span> Home</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> My Courses</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Learning Path</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Achievements</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Certificates</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Community</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Course Forums <span class="nav-badge">5</span></div>
+      <div class="nav-item"><span class="nav-icon">◻</span> AI Study Assistant</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Peer Reviews</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-av av-1">AL</div>
+      <div><div class="user-name">Alex L.</div><div class="user-role">Learner · 2,840 XP</div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">My Learning</div>
+      <div class="topbar-search">Search courses…</div>
+      <div class="topbar-icon">🔔</div>
+    </div>
+    <div class="content">
+
+      <!-- Hero resume card -->
+      <div class="card" style="background:var(--accent);border-color:var(--accent);margin-bottom:14px;">
+        <div class="card-body" style="display:flex;align-items:center;gap:20px;">
+          <div style="flex:1;">
+            <div style="font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:600;margin-bottom:4px;">Continue learning</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:4px;">React Advanced Patterns</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:12px;">Module 7 of 9 · Context API &amp; Performance</div>
+            <div style="background:rgba(255,255,255,.2);border-radius:3px;height:4px;overflow:hidden;margin-bottom:8px;">
+              <div style="background:rgba(255,255,255,.9);height:100%;width:78%;border-radius:3px;"></div>
+            </div>
+            <div style="font-size:11px;color:rgba(255,255,255,.65);margin-bottom:12px;">78% complete · ~45 min remaining</div>
+            <button class="btn" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;font-weight:600;">Continue →</button>
+          </div>
+          <div style="text-align:center;padding:14px 20px;background:rgba(0,0,0,.12);border-radius:10px;">
+            <div style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:700;color:#fff;">12</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.65);">day streak</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-12">
+        <!-- Left stats -->
+        <div class="flex-col" style="gap:12px;">
+          <div class="card">
+            <div class="card-head"><div class="card-title">This week</div></div>
+            <div class="card-body">
+              <div class="streak-days mb-8">
+                <div class="streak-day done">M</div>
+                <div class="streak-day done">T</div>
+                <div class="streak-day done">W</div>
+                <div class="streak-day done">T</div>
+                <div class="streak-day today">F</div>
+                <div class="streak-day">S</div>
+                <div class="streak-day">S</div>
+              </div>
+              <div class="flex items-center justify-between mt-8">
+                <div><div class="stat-label">XP this week</div><div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;color:var(--accent);">+340</div></div>
+                <div><div class="stat-label">Time studied</div><div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;">3.2h</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="card-title">Achievements</div></div>
+            <div class="card-body">
+              <div class="flex" style="gap:10px;flex-wrap:wrap;">
+                <div style="font-size:22px;filter:grayscale(.3) opacity(.85);" title="Fast Learner">⚡</div>
+                <div style="font-size:22px;filter:grayscale(.3) opacity(.85);" title="Streak">🔥</div>
+                <div style="font-size:22px;filter:grayscale(.3) opacity(.85);" title="Top Scorer">🎯</div>
+                <div style="font-size:22px;filter:grayscale(.3) opacity(.85);" title="Helper">🤝</div>
+                <div style="font-size:22px;opacity:.18;" title="Locked">◎</div>
+                <div style="font-size:22px;opacity:.18;" title="Locked">◎</div>
+              </div>
+              <div class="text-xs text-soft mt-8">4 of 12 earned</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Courses -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">My Courses</div>
+            <div style="display:flex;gap:6px;">
+              <span class="pill blue">3 In Progress</span>
+              <span class="pill green">5 Completed</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="grid-3" style="margin-bottom:0;">
+              <div class="course-card">
+                <div class="course-thumb" style="background:var(--accent-wash);">⚛️</div>
+                <div class="course-body">
+                  <div class="course-title">React Advanced</div>
+                  <div class="course-meta">9 modules · Web Dev</div>
+                  <div class="course-prog-label"><span>Progress</span><span style="color:var(--accent);font-weight:600;">78%</span></div>
+                  <div class="prog-bar"><div class="prog-fill" style="width:78%;background:var(--accent);"></div></div>
+                  <div class="flex items-center justify-between" style="margin-top:9px;">
+                    <span class="pill blue">In Progress</span>
+                    <button class="btn btn-primary btn-sm">Continue</button>
+                  </div>
+                </div>
+              </div>
+              <div class="course-card">
+                <div class="course-thumb" style="background:var(--amber-wash);">☁️</div>
+                <div class="course-body">
+                  <div class="course-title">AWS Security</div>
+                  <div class="course-meta">12 modules · Cloud</div>
+                  <div class="course-prog-label"><span>Progress</span><span style="color:var(--amber);font-weight:600;">32%</span></div>
+                  <div class="prog-bar"><div class="prog-fill" style="width:32%;background:var(--amber);"></div></div>
+                  <div class="flex items-center justify-between" style="margin-top:9px;">
+                    <span class="pill amber">Due in 5d</span>
+                    <button class="btn btn-primary btn-sm">Continue</button>
+                  </div>
+                </div>
+              </div>
+              <div class="course-card">
+                <div class="course-thumb" style="background:var(--green-wash);">🐍</div>
+                <div class="course-body">
+                  <div class="course-title">Python ML</div>
+                  <div class="course-meta">8 modules · Data</div>
+                  <div class="course-prog-label"><span>Progress</span><span style="color:var(--green);font-weight:600;">100%</span></div>
+                  <div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--green);"></div></div>
+                  <div class="flex items-center justify-between" style="margin-top:9px;">
+                    <span class="pill green">Completed</span>
+                    <button class="btn btn-ghost btn-sm">Review</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Notifications -->
+        <div class="card">
+          <div class="card-head"><div class="card-title">Notifications</div><button class="btn btn-ghost btn-sm">Mark all read</button></div>
+          <div class="card-body">
+            <div class="notif-item"><div class="notif-dot"></div><div><div class="notif-text"><strong>Maria P.</strong> replied to your forum post in React Advanced</div><div class="notif-time">10 min ago</div></div></div>
+            <div class="notif-item"><div class="notif-dot"></div><div><div class="notif-text">You earned the <strong>Fast Learner</strong> badge</div><div class="notif-time">2 hours ago</div></div></div>
+            <div class="notif-item"><div class="notif-dot"></div><div><div class="notif-text">New: <strong>AWS Security Module 4</strong> is now live</div><div class="notif-time">Yesterday</div></div></div>
+            <div class="notif-item"><div class="notif-dot read"></div><div><div class="notif-text">Reminder: AWS Security is due in <strong>5 days</strong></div><div class="notif-time">2 days ago</div></div></div>
+          </div>
+        </div>
+
+        <!-- Certificate -->
+        <div class="card">
+          <div class="card-head"><div class="card-title">Latest Certificate</div><button class="btn btn-ghost btn-sm">View all</button></div>
+          <div class="card-body">
+            <div class="cert-card mb-8">
+              <div class="cert-icon">◎</div>
+              <div class="cert-title">Python ML Basics</div>
+              <div class="cert-name">Awarded to Alex L. · June 2026</div>
+              <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;">
+                <button class="btn btn-primary btn-sm">Download</button>
+                <button class="btn btn-ghost btn-sm">Share</button>
+              </div>
+            </div>
+            <div class="text-xs text-soft" style="text-align:center;">5 certificates earned total</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  3. COURSE FORUM                           -->
+<!-- ══════════════════════════════════════════ -->
+<div id="view-forum" class="shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">LearnFlow <small>Learner Portal</small></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">My Learning</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Home</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> My Courses</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Forums</div>
+      <div class="nav-item active"><span class="nav-icon">◈</span> React Advanced</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> AWS Security <span class="nav-badge">3</span></div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Python ML</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Tools</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> AI Study Assistant</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Peer Reviews</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-av av-1">AL</div>
+      <div><div class="user-name">Alex L.</div><div class="user-role">Learner · 2,840 XP</div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">React Advanced · Forum</div>
+      <div class="topbar-chip">48 learners enrolled</div>
+      <div class="topbar-search">Search discussions…</div>
+      <button class="btn btn-primary btn-sm" style="margin-left:8px;">+ New Post</button>
+    </div>
+    <div class="content">
+      <div class="inner-tabs">
+        <div class="inner-tab active">All Discussions</div>
+        <div class="inner-tab">Pinned (2)</div>
+        <div class="inner-tab">My Posts</div>
+        <div class="inner-tab">Unanswered</div>
+      </div>
+
+      <div class="grid-21">
+        <div class="card">
+          <div class="card-body">
+
+            <!-- Pinned -->
+            <div class="forum-post">
+              <div class="forum-av av-3">SC</div>
+              <div class="forum-content">
+                <div class="flex items-center gap-8">
+                  <span class="forum-author">Sarah Chen · Instructor</span>
+                  <span class="forum-time">2 days ago</span>
+                  <span class="pinned-label">— Pinned</span>
+                </div>
+                <div style="font-weight:600;font-size:13px;margin-top:4px;">FAQ — Common questions about Module 6 &amp; 7 (Context API)</div>
+                <div class="forum-text">I've compiled the most common questions about Context API. Please read this before posting a new question about performance issues.</div>
+                <div class="forum-actions">
+                  <span class="forum-action">↑ 42 helpful</span>
+                  <span class="forum-action">12 replies</span>
+                  <span class="forum-action">Share</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Post -->
+            <div class="forum-post">
+              <div class="forum-av av-1">MP</div>
+              <div class="forum-content">
+                <div class="flex items-center gap-8">
+                  <span class="forum-author">Maria P.</span>
+                  <span class="forum-time">1 hour ago</span>
+                  <span class="pill green" style="font-size:10px;">Answered</span>
+                </div>
+                <div style="font-weight:600;font-size:13px;margin-top:4px;">Why does useCallback re-create the function on every render?</div>
+                <div class="forum-text">Even with an empty array, I'm seeing my memoized function being re-created. Anyone else hit this?</div>
+                <div class="forum-actions">
+                  <span class="forum-action">↑ 8</span>
+                  <span class="forum-action">6 replies</span>
+                  <span class="forum-action">Share</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Anonymous -->
+            <div class="forum-post">
+              <div class="forum-av" style="background:var(--border);color:var(--ink-soft);">?</div>
+              <div class="forum-content">
+                <div class="flex items-center gap-8">
+                  <span class="forum-author">Anonymous</span>
+                  <span class="forum-time">3 hours ago</span>
+                  <span class="pill amber" style="font-size:10px;">2 replies</span>
+                </div>
+                <div style="font-weight:600;font-size:13px;margin-top:4px;">Struggling with Module 7 quiz — is it just me?</div>
+                <div class="forum-text">I've watched the lesson three times and the quiz still catches me out on memoization. Is the wording tricky or am I missing something?</div>
+                <div class="forum-actions">
+                  <span class="forum-action">↑ 14</span>
+                  <span class="forum-action">Reply</span>
+                  <span class="forum-action">Share</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Your post with instructor reply -->
+            <div class="forum-post">
+              <div class="forum-av av-1">AL</div>
+              <div class="forum-content">
+                <div class="flex items-center gap-8">
+                  <span class="forum-author">Alex L. (you)</span>
+                  <span class="forum-time">Yesterday</span>
+                </div>
+                <div style="font-weight:600;font-size:13px;margin-top:4px;">Best pattern for sharing state between sibling components?</div>
+                <div class="forum-text">Working on Module 7 and wondering whether to lift state up or use Context here. What does everyone prefer?</div>
+                <div class="forum-actions">
+                  <span class="forum-action">↑ 21</span>
+                  <span class="forum-action">9 replies</span>
+                  <span class="forum-action">Share</span>
+                  <span class="forum-action">Edit</span>
+                </div>
+                <div style="background:var(--surface);border-left:3px solid var(--accent);border-radius:6px;padding:8px 10px;margin-top:8px;">
+                  <div class="flex items-center gap-8 mb-4">
+                    <div class="av av-3" style="width:20px;height:20px;font-size:8px;">SC</div>
+                    <span class="font-600 text-xs">Sarah Chen · Instructor</span>
+                    <span class="pill green" style="font-size:9px;">Top Answer</span>
+                  </div>
+                  <div class="forum-text">Lift state up first — Context is better when drilling through many levels. Check the pinned FAQ for more detail.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Forum sidebar -->
+        <div class="flex-col" style="gap:12px;">
+          <!-- AI assistant -->
+          <div class="card" style="border-color:#C8D8E8;background:var(--accent-wash);">
+            <div class="card-head"><div class="card-title" style="color:var(--accent);">AI Study Assistant</div></div>
+            <div class="card-body">
+              <div class="text-xs text-soft mb-8">Ask anything about React Advanced — answers are grounded in the course content.</div>
+              <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;color:var(--ink-soft);margin-bottom:10px;">
+                <div style="color:var(--ink);font-weight:500;margin-bottom:3px;">You asked:</div>
+                When should I use useMemo vs useCallback?
+                <div style="color:var(--accent);font-weight:500;margin-top:7px;margin-bottom:3px;">Answer:</div>
+                Use <code style="background:var(--accent-wash);padding:1px 4px;border-radius:3px;">useMemo</code> for computed values, <code style="background:var(--accent-wash);padding:1px 4px;border-radius:3px;">useCallback</code> for functions. Both reduce unnecessary re-renders…
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;background:var(--white);border:1px solid var(--border);border-radius:7px;padding:6px 10px;">
+                <input type="text" placeholder="Ask a question…" style="border:none;outline:none;flex:1;font-size:12px;font-family:inherit;background:transparent;">
+                <button class="btn btn-primary btn-sm">Ask</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active learners -->
+          <div class="card">
+            <div class="card-head"><div class="card-title">Active now</div><div class="card-sub">10 online</div></div>
+            <div class="card-body">
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <div class="av av-1">AL</div>
+                <div class="av av-2">MP</div>
+                <div class="av av-3">TW</div>
+                <div class="av av-4">SN</div>
+                <div class="av" style="background:var(--border);color:var(--ink-soft);font-size:9px;">+6</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Forum stats -->
+          <div class="card">
+            <div class="card-head"><div class="card-title">Forum stats</div></div>
+            <div class="card-body">
+              <div class="flex items-center justify-between mb-8"><span class="text-xs text-soft">Total posts</span><span class="text-xs font-600">94</span></div>
+              <div class="flex items-center justify-between mb-8"><span class="text-xs text-soft">Answered</span><span class="text-xs font-600" style="color:var(--green);">81 (86%)</span></div>
+              <div class="flex items-center justify-between mb-8"><span class="text-xs text-soft">Your posts</span><span class="text-xs font-600">7</span></div>
+              <div class="flex items-center justify-between"><span class="text-xs text-soft">Helpful votes given</span><span class="text-xs font-600" style="color:var(--accent);">23</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  4. INSTRUCTOR VIEW                        -->
+<!-- ══════════════════════════════════════════ -->
+<div id="view-instructor" class="shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">LearnFlow <small>Instructor Portal</small></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">My Courses</div>
+      <div class="nav-item active"><span class="nav-icon">◈</span> Overview</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Course Builder</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Assignments</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Peer Reviews</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Engagement</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Forums <span class="nav-badge">7</span></div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Announcements</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Feedback</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-av av-3">SC</div>
+      <div><div class="user-name">Sarah Chen</div><div class="user-role">Instructor</div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Instructor Overview</div>
+      <div class="topbar-search">Search…</div>
+      <button class="btn btn-primary btn-sm" style="margin-left:8px;">+ New Course</button>
+    </div>
+    <div class="content">
+      <div class="page-title">Your Courses</div>
+      <div class="page-sub">3 active courses · 112 enrolled learners</div>
+
+      <div class="grid-3">
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:var(--accent-wash);">◎</div>
+          <div class="stat-label">Total Learners</div>
+          <div class="stat-value">112</div>
+          <div class="stat-delta up">↑ 18 this month</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:var(--green-wash);">★</div>
+          <div class="stat-label">Avg Course Rating</div>
+          <div class="stat-value">4.5</div>
+          <div class="stat-delta up">↑ 0.2 vs last quarter</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:var(--amber-wash);">△</div>
+          <div class="stat-label">Unanswered Posts</div>
+          <div class="stat-value">7</div>
+          <div class="stat-delta down">Needs attention</div>
+        </div>
+      </div>
+
+      <div class="grid-21">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Course Performance</div></div>
+          <div class="card-body" style="padding:0;">
+            <table class="tbl">
+              <thead>
+                <tr><th>Course</th><th>Enrolled</th><th>Completion</th><th>Avg Score</th><th>Rating</th><th>Forum</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="flex items-center gap-8" style="filter:grayscale(.3);">⚛️</div> React Advanced</td>
+                  <td>48</td>
+                  <td><div style="display:flex;align-items:center;gap:8px;"><div class="prog-bar" style="width:70px;"><div class="prog-fill" style="width:73%;background:var(--accent);"></div></div><span class="text-xs">73%</span></div></td>
+                  <td>84%</td>
+                  <td>4.8</td>
+                  <td><span class="pill blue">94 posts</span></td>
+                </tr>
+                <tr>
+                  <td><div class="flex items-center gap-8" style="filter:grayscale(.3);">☁️</div> AWS Security</td>
+                  <td>36</td>
+                  <td><div style="display:flex;align-items:center;gap:8px;"><div class="prog-bar" style="width:70px;"><div class="prog-fill" style="width:58%;background:var(--amber);"></div></div><span class="text-xs">58%</span></div></td>
+                  <td>77%</td>
+                  <td>4.5</td>
+                  <td><span class="pill amber">12 posts</span></td>
+                </tr>
+                <tr>
+                  <td><div class="flex items-center gap-8" style="filter:grayscale(.3);">🐍</div> Python ML Basics</td>
+                  <td>28</td>
+                  <td><div style="display:flex;align-items:center;gap:8px;"><div class="prog-bar" style="width:70px;"><div class="prog-fill" style="width:91%;background:var(--green);"></div></div><span class="text-xs">91%</span></div></td>
+                  <td>88%</td>
+                  <td>4.2</td>
+                  <td><span class="pill green">43 posts</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="flex-col" style="gap:12px;">
+          <!-- Peer reviews -->
+          <div class="card">
+            <div class="card-head"><div class="card-title">Peer Review Queue</div><span class="pill amber">4 pending</span></div>
+            <div class="card-body">
+              <div class="flex items-center justify-between mb-8 text-xs"><span>Alex L. → Module 6 Exercise</span><button class="btn btn-ghost btn-sm">Review</button></div>
+              <div class="flex items-center justify-between mb-8 text-xs"><span>Tom W. → Module 4 Essay</span><button class="btn btn-ghost btn-sm">Review</button></div>
+              <div class="flex items-center justify-between text-xs"><span>Maria P. → Final Project</span><button class="btn btn-primary btn-sm">Grade</button></div>
+            </div>
+          </div>
+
+          <!-- Feedback -->
+          <div class="card">
+            <div class="card-head"><div class="card-title">Recent Feedback</div></div>
+            <div class="card-body">
+              <div style="font-size:12px;color:var(--ink-soft);line-height:1.6;border-left:3px solid var(--green);padding-left:10px;margin-bottom:10px;">
+                "The Context API section finally clicked for me — very clear explanations."
+                <div class="text-xs" style="color:var(--ink-xsoft);margin-top:2px;">Anonymous · React Advanced</div>
+              </div>
+              <div style="font-size:12px;color:var(--ink-soft);line-height:1.6;border-left:3px solid var(--amber);padding-left:10px;">
+                "Module 3 quiz questions feel ambiguous — hard to know what's being tested."
+                <div class="text-xs" style="color:var(--ink-xsoft);margin-top:2px;">Anonymous · AWS Security</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function show(view, e) {
+    document.querySelectorAll('.shell').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('view-' + view).classList.add('active');
+    e.target.classList.add('active');
+  }
+</script>
+</body>
+</html>

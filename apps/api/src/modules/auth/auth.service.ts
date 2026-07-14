@@ -40,6 +40,10 @@ export class AuthService {
       name: `${user.firstName} ${user.lastName}`,
     };
     const token = jwt.sign(claims, secret(), { expiresIn: "12h" });
+    // Login is a streak-qualifying activity (no tenant context on this public path — write direct).
+    void this.prisma.db.activityEvent
+      .create({ data: { tenantId: user.tenantId, userId: user.id, kind: "login" } })
+      .catch(() => undefined);
     return { token, user: { id: user.id, email: user.email, name: claims.name, roles: claims.roles } };
   }
 

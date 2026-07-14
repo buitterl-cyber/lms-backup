@@ -292,11 +292,17 @@ model Course {
   publisher     String?
   rawCategories String[]
   isInternal    Boolean  @default(false) // AI Knowledge Academy / internal sources
+  // Sales-site merchandising (Phase 7): best-seller tiles + public pricing.
+  bestSeller    Boolean  @default(false)
+  priceCents    Int?
   updatedAt     DateTime @updatedAt
 
   skills      CourseSkill[]
   enrollments Enrollment[]
   pathItems   LearningPathItem[]
+  modules     CourseModule[]
+  threads     ForumThread[]
+  courseReviews CourseReview[]
 
   @@unique([providerKey, externalId, tenantId])
   @@index([tenantId])
@@ -603,6 +609,205 @@ model Notification {
   readAt    DateTime?
   createdAt DateTime @default(now())
   @@index([tenantId, userId])
+}
+
+// A manager→learner reminder (in-app + email). Rows double as the dedupe record so auto-nudges
+// don't spam: one nudge per (learner, course, kind) per 7 days.
+model Nudge {
+  id        String   @id @default(cuid())
+  tenantId  String
+  learnerId String
+  courseId  String?
+  senderId  String   // userId of the manager, or "system" for scheduled auto-nudges
+  kind      String   @default("manual") // manual | auto_deadline | auto_inactive
+  message   String?
+  createdAt DateTime @default(now())
+  @@index([tenantId, learnerId, courseId, kind, createdAt])
+}
+
+// ============================================================================
+// ACTIVITY & GAMIFICATION  (streaks, XP, badges, leaderboard, heatmap)
+// ============================================================================
+
+// Lightweight OLTP activity feed (logins, module/course completions, forum posts). Drives
+// last-active, streaks, and the manager heatmap. Event-scale xAPI stays in ClickHouse.
+model ActivityEvent {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  kind      String   // login | course_enrolled | module_completed | course_completed | forum_post | assessment
+  refId     String?
+  createdAt DateTime @default(now())
+  @@index([tenantId, userId, createdAt])
+}
+
+model XpEvent {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  amount    Int
+  reason    String   // course_completed | module_completed | forum_post | forum_upvote | badge | streak
+  refId     String?
+  createdAt DateTime @default(now())
+  @@index([tenantId, userId, createdAt])
+}
+
+model Badge {
+  id          String  @id @default(cuid())
+  tenantId    String? // null => global catalog badge
+  key         String  @unique
+  name        String
+  description String
+  icon        String  // emoji glyph, rendered directly
+  xpReward    Int     @default(50)
+  earned      EarnedBadge[]
+}
+
+model EarnedBadge {
+  id       String   @id @default(cuid())
+  tenantId String
+  userId   String
+  badgeId  String
+  badge    Badge    @relation(fields: [badgeId], references: [id])
+  earnedAt DateTime @default(now())
+  @@unique([userId, badgeId])
+}
+
+// ============================================================================
+// COMMUNITY: per-course forums + peer review
+// ============================================================================
+
+model ForumThread {
+  id         String   @id @default(cuid())
+  tenantId   String
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id])
+  authorId   String
+  anonymous  Boolean  @default(false)
+  pinned     Boolean  @default(false)
+  title      String
+  body       String
+  upvotes    Int      @default(0)
+  // Reply the instructor marked as the accepted answer (renders "Answered").
+  answeredReplyId String?
+  createdAt  DateTime @default(now())
+  replies    ForumReply[]
+  @@index([tenantId, courseId, pinned, createdAt])
+}
+
+model ForumReply {
+  id        String   @id @default(cuid())
+  tenantId  String
+  threadId  String
+  thread    ForumThread @relation(fields: [threadId], references: [id])
+  authorId  String
+  anonymous Boolean  @default(false)
+  body      String
+  upvotes   Int      @default(0)
+  createdAt DateTime @default(now())
+  @@index([threadId, createdAt])
+}
+
+// One vote per user per thread/reply; counters on the target are kept in the same transaction.
+model ForumVote {
+  id       String @id @default(cuid())
+  userId   String
+  threadId String @default("")
+  replyId  String @default("")
+  @@unique([userId, threadId, replyId])
+}
+
+model PeerReview {
+  id         String   @id @default(cuid())
+  tenantId   String
+  courseId   String?
+  title      String   // e.g. "Module 6 Exercise"
+  submitterId String
+  reviewerId String?  // instructor or assigned peer; null while unclaimed
+  content    String   // submission text / link
+  status     String   @default("pending") // pending | reviewed
+  feedback   String?
+  score      Int?
+  createdAt  DateTime @default(now())
+  reviewedAt DateTime?
+  @@index([tenantId, status, createdAt])
+}
+
+// Learner course ratings — feeds the manager "Course Ratings" panel and instructor feedback list.
+model CourseReview {
+  id        String   @id @default(cuid())
+  tenantId  String
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  userId    String
+  rating    Int      // 1..5
+  comment   String?
+  anonymous Boolean  @default(true)
+  createdAt DateTime @default(now())
+  @@unique([courseId, userId])
+  @@index([tenantId, courseId])
+}
+
+// ============================================================================
+// NATIVE AUTHORING: course modules + per-module progress (sequential unlock)
+// ============================================================================
+
+model CourseModule {
+  id              String  @id @default(cuid())
+  tenantId        String
+  courseId        String
+  course          Course  @relation(fields: [courseId], references: [id])
+  position        Int     // 1-based order; unlock is sequential by position
+  title           String
+  summary         String?
+  durationMinutes Int?
+  content         String? // markdown lesson body for native courses
+  progress        ModuleProgress[]
+  @@unique([courseId, position])
+}
+
+model ModuleProgress {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String
+  moduleId    String
+  module      CourseModule @relation(fields: [moduleId], references: [id])
+  completedAt DateTime @default(now())
+  @@unique([userId, moduleId])
+}
+
+// ============================================================================
+// SALES SITE: promotions + inquiries (CRM hook)
+// ============================================================================
+
+model Promotion {
+  id        String   @id @default(cuid())
+  tenantId  String
+  title     String
+  subtitle  String?
+  discountPct Int?
+  courseId  String?
+  active    Boolean  @default(true)
+  endsAt    DateTime?
+  createdAt DateTime @default(now())
+  @@index([tenantId, active])
+}
+
+// A sales-site inquiry = the CRM deal seed. Status tracks the follow-up pipeline; a submit also
+// emails the sales mailbox so contact happens ASAP (Carl's requirement).
+model Inquiry {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  name      String
+  email     String
+  company   String?
+  phone     String?
+  message   String
+  courseId  String?
+  source    String   @default("sales-site")
+  status    String   @default("new") // new | contacted | qualified | won | lost
+  createdAt DateTime @default(now())
+  @@index([status, createdAt])
 }
 
 // Append-only. Enforced INSERT-only at the DB level via trigger/migration.

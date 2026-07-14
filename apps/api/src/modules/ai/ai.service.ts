@@ -89,7 +89,7 @@ export class AiService {
    * One assistant turn with a single round of tool execution. A production implementation loops
    * until the model stops calling tools; kept to one hop here for clarity.
    */
-  async chat(prompt: string, policy: TenantLlmPolicy = {}) {
+  async chat(prompt: string, policy: TenantLlmPolicy = {}, courseId?: string) {
     const tctx = getTenantContext();
     const userId = tctx.userId ?? "";
     const user = userId
@@ -119,9 +119,33 @@ export class AiService {
       }
     }
 
+    // Course grounding (the forum's "AI Study Assistant"): answers stay anchored to THIS
+    // course's content — title, description, and module outline.
+    let courseCtx = "";
+    if (courseId) {
+      try {
+        const course = await this.prisma.db.course.findFirst({
+          where: { id: courseId },
+          include: { modules: { orderBy: { position: "asc" }, select: { position: true, title: true, summary: true } } },
+        });
+        if (course) {
+          const outline = course.modules.length
+            ? ` Modules: ${course.modules.map((m) => `${m.position}. ${m.title}${m.summary ? ` (${m.summary})` : ""}`).join("; ")}.`
+            : "";
+          courseCtx =
+            `COURSE CONTEXT — the learner is asking inside the course "${course.title}". ` +
+            `Description: ${course.description.slice(0, 600)}.${outline} ` +
+            "Ground every answer in this course's content; if the question is out of scope, say so and point back to the course.\n";
+        }
+      } catch {
+        /* no course grounding */
+      }
+    }
+
     const system =
       "You are RIYADA AI, a workforce-intelligence assistant. Answer from the live context and " +
       "tool results; explain the 'why'; be concise and specific.\n" +
+      courseCtx +
       (snapshot ? `LIVE CONTEXT — ${snapshot}\n` : "") +
       `When you call tools, use userId="${ctx.userId}", roleId="${ctx.roleId}", departmentId="${ctx.departmentId}".`;
 

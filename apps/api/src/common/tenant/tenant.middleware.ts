@@ -12,12 +12,34 @@ import { AuthService } from "../../modules/auth/auth.service";
 /** Paths that must work without a tenant (probes, login, the pre-auth demo bootstrap). Checked
  *  by suffix so it's robust to the global prefix. */
 const PUBLIC_SUFFIXES = ["/api/v1/health", "/api/v1/demo/context", "/api/v1/auth/login", "/api/v1/auth/me"];
+// Public site sections (marketing/sales). Auth is still honored when a Bearer token is present
+// (the sales pipeline admin endpoints live under the same prefix), but absence of tenant
+// context is not an error here.
+const PUBLIC_SEGMENTS = ["/api/v1/sales/"];
 
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
   use(req: Request, _res: Response, next: NextFunction) {
     const path = (req.originalUrl || req.url || "").split("?")[0];
     if (PUBLIC_SUFFIXES.some((s) => path.endsWith(s))) return next();
+    if (PUBLIC_SEGMENTS.some((s) => path.includes(s))) {
+      const authz = req.headers.authorization;
+      if (authz?.startsWith("Bearer ")) {
+        try {
+          const c = AuthService.verify(authz.slice(7));
+          const ctx: TenantContext = {
+            tenantId: c.tenantId,
+            organizationId: c.organizationId,
+            userId: c.sub,
+            roles: (c.roles ?? ["learner"]) as UserRoleKey[],
+          };
+          return runWithTenant(ctx, () => next());
+        } catch {
+          /* anonymous visitor */
+        }
+      }
+      return next();
+    }
 
     // 1. Verified identity: a signed JWT from /auth/login is the real path.
     const authz = req.headers.authorization;

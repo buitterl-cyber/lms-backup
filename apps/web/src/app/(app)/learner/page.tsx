@@ -1,94 +1,159 @@
-import { Card, MetricCard, Meter, RiskBadge } from "@/components/ui";
+import Link from "next/link";
+import { Card, MetricCard, RiskBadge } from "@/components/ui";
 import { EnrollButton } from "@/components/EnrollButton";
-import { apiGet, apiPost, getContext, type Recommendation, type SkillGap } from "@/lib/api";
+import { apiGet, apiPost, getContext, type EnrollmentRow, type Recommendation, type SkillGap } from "@/lib/api";
 
-// Intelligence-forward learner home: leads with WHY (gaps, expiries, assignments), then the
-// recommended training as a consequence — never a bare course grid. Server component with a
-// graceful demo fallback so the page renders before the backend is wired.
+// Learner Home (wireframe "Learner Home"): continue-learning hero, streak + weekly XP,
+// achievements, my courses — with the skills-intelligence "why" kept underneath.
 export const dynamic = "force-dynamic";
 
-const DEMO_GAP: SkillGap = {
-  roleId: "cloud-sec", roleName: "Cloud Security Engineer", coverage: 0.34,
-  gaps: [
-    { skillId: "azure-sec", name: "Azure Security", deficit: 3, importance: "required", targetLevel: 3, currentLevel: 1 },
-    { skillId: "terraform", name: "Terraform", deficit: 3, importance: "required", targetLevel: 3, currentLevel: 1 },
-    { skillId: "soc2", name: "SOC2", deficit: 3, importance: "required", targetLevel: 3, currentLevel: 1 },
-    { skillId: "iso27001", name: "ISO 27001", deficit: 3, importance: "required", targetLevel: 3, currentLevel: 1 },
-  ],
-};
-const DEMO_RECS: Recommendation[] = [
-  { courseId: "1", title: "Azure Security Engineer", providerKey: "ms-learn", reason: "Closes 1 skill gap for your role via ms-learn.", score: 2.7 },
-  { courseId: "2", title: "Terraform on AWS", providerKey: "aws", reason: "Closes 1 skill gap for your role via aws.", score: 2.4 },
-  { courseId: "3", title: "SOC2 Readiness", providerKey: "cybrary", reason: "Closes 1 skill gap for your role via cybrary.", score: 2.1 },
-];
+interface GamificationProfile {
+  totalXp: number; level: number; nextLevelXp: number; xpThisWeek: number; streak: number;
+  week: { day: string; active: boolean; isToday: boolean }[];
+  badges: { key: string; name: string; description: string; icon: string; earned: boolean }[];
+  badgesEarned: number; badgesTotal: number;
+}
+interface Cert { id: string; certification: string; issuedAt?: string; status: string }
 
 async function load() {
-  try {
-    const ctx = await getContext();
-    const [gap, recs] = await Promise.all([
-      apiGet<SkillGap>(`/users/${ctx.userId}/skill-gap?roleId=${ctx.targetRoleId}`, ctx),
-      apiPost<{ recommendations: Recommendation[] }>(`/users/${ctx.userId}/recommendations/generate?roleId=${ctx.targetRoleId}`, ctx).then((r) => r.recommendations),
-    ]);
-    return { gap, recs, name: ctx.userName || "there", live: true };
-  } catch {
-    return { gap: DEMO_GAP, recs: DEMO_RECS, name: "Amir", live: false }; // demo fallback
-  }
+  const ctx = await getContext();
+  const [gap, recs, game, enrollments] = await Promise.all([
+    apiGet<SkillGap>(`/users/${ctx.userId}/skill-gap?roleId=${ctx.targetRoleId}`, ctx).catch(() => null),
+    apiPost<{ recommendations: Recommendation[] }>(`/users/${ctx.userId}/recommendations/generate?roleId=${ctx.targetRoleId}`, ctx)
+      .then((r) => r.recommendations).catch(() => []),
+    apiGet<GamificationProfile>(`/gamification/me?userId=${ctx.userId}`, ctx).catch(() => null),
+    apiGet<EnrollmentRow[]>(`/users/${ctx.userId}/enrollments`, ctx).catch(() => []),
+  ]);
+  return { ctx, gap, recs, game, enrollments };
 }
 
 export default async function LearnerHome() {
-  const { gap, recs, name, live } = await load();
-  const readiness = Math.round(gap.coverage * 100);
+  const { ctx, gap, recs, game, enrollments } = await load();
+  const inProgress = enrollments.filter((e) => e.status === "in-progress");
+  const continueCourse = inProgress[0] ?? enrollments.find((e) => e.status === "enrolled");
+  const readiness = gap ? Math.round(gap.coverage * 100) : null;
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Welcome back, {name}</h1>
-          <p className="text-sm text-muted">
-            Target role: {gap.roleName}
-            <span className={`ml-2 rounded px-1.5 py-0.5 text-[10px] ${live ? "bg-green/15 text-green" : "bg-amber/15 text-amber"}`}>
-              {live ? "LIVE" : "demo"}
-            </span>
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight">Good morning, {(ctx.userName || "there").split(" ")[0]}</h1>
+          <p className="text-sm text-muted">Keep your streak going.</p>
         </div>
-        <RiskBadge risk={readiness >= 75 ? "green" : readiness >= 50 ? "amber" : "red"} label={`Readiness ${readiness}%`} />
+        {game && (
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2">
+            <span className="text-xl">🔥</span>
+            <div>
+              <p className="text-lg font-semibold leading-none">{game.streak}</p>
+              <p className="text-[10px] uppercase tracking-wide text-muted">day streak</p>
+            </div>
+          </div>
+        )}
       </header>
 
-      <div className="grid grid-cols-3 gap-4">
-        <MetricCard label="Workforce Readiness" value={`${readiness}%`} sub="+4 this month" />
-        <MetricCard label="Skill gaps" value={`${gap.gaps.length}`} sub="for your target role" />
-        <MetricCard label="Certs expiring" value="1" sub="ISO 27001 in 22 days" />
-      </div>
+      {continueCourse && (
+        <Card className="border-brand/40 bg-gradient-to-r from-brand/10 to-transparent">
+          <p className="text-xs uppercase tracking-wide text-brand">Continue learning</p>
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-lg font-semibold">{continueCourse.course?.title ?? "Your course"}</p>
+              <p className="text-xs text-muted">{continueCourse.percent}% complete</p>
+            </div>
+            <Link href={`/catalog/${continueCourse.courseId}`} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white">
+              Continue →
+            </Link>
+          </div>
+          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-border">
+            <div className="h-full bg-brand" style={{ width: `${continueCourse.percent}%` }} />
+          </div>
+        </Card>
+      )}
 
-      <Card>
-        <h2 className="text-sm font-medium text-muted">Why you&apos;re here</h2>
-        <ul className="mt-3 space-y-2 text-sm">
-          <li className="flex items-center gap-2"><span className="text-red">●</span> ISO 27001 Lead Auditor expires in 22 days — renew now.</li>
-          <li className="flex items-center gap-2"><span className="text-amber">●</span> {gap.gaps.length} skills missing for {gap.roleName}: {gap.gaps.map((g) => g.name).join(", ")}.</li>
-          <li className="flex items-center gap-2"><span className="text-brand">◆</span> Assigned: GDPR refresh (compliance control Art.39).</li>
-        </ul>
-        <div className="mt-4">
-          <p className="mb-1 text-xs text-muted">Readiness toward {gap.roleName}</p>
-          <Meter value={readiness} />
+      {game && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Card>
+            <p className="text-sm text-muted">This week</p>
+            <div className="mt-3 flex justify-between">
+              {game.week.map((d, i) => (
+                <div key={i} className="flex flex-col items-center gap-1">
+                  <span className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-medium ${
+                    d.active ? "bg-green/20 text-green" : d.isToday ? "ring-1 ring-brand text-brand" : "bg-border/40 text-muted"
+                  }`}>
+                    {d.active ? "✓" : d.day}
+                  </span>
+                  <span className="text-[9px] text-muted">{d.day}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+          <MetricCard label="XP this week" value={`+${game.xpThisWeek}`} sub={`Level ${game.level} · ${game.totalXp} / ${game.nextLevelXp} XP`} />
+          <Card>
+            <p className="text-sm text-muted">Achievements</p>
+            <div className="mt-2 flex items-center gap-1.5 text-xl">
+              {game.badges.slice(0, 6).map((b) => (
+                <span key={b.key} title={`${b.name} — ${b.description}`} className={b.earned ? "" : "opacity-25 grayscale"}>{b.icon}</span>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-muted">{game.badgesEarned} of {game.badgesTotal} earned</p>
+          </Card>
         </div>
-      </Card>
+      )}
 
       <section>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">Recommended for you</h2>
-          <span className="text-xs text-muted">every recommendation explains the why</span>
+          <h2 className="text-lg font-semibold tracking-tight">My courses</h2>
+          <Link href="/my-learning" className="text-xs text-brand">See all →</Link>
         </div>
-        <div className="grid grid-cols-3 gap-4">
-          {recs.map((r) => (
-            <Card key={r.courseId} className="flex flex-col">
-              <p className="text-xs uppercase tracking-wide text-muted">{r.providerKey}</p>
-              <p className="mt-1 font-medium">{r.title}</p>
-              <p className="mt-2 flex-1 text-xs text-muted">{r.reason}</p>
-              <EnrollButton courseId={r.courseId} className="mt-4 w-full" />
-            </Card>
-          ))}
-        </div>
+        {enrollments.length === 0 ? (
+          <Card>No enrollments yet. <Link href="/catalog" className="text-brand underline">Browse the catalog →</Link></Card>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {enrollments.slice(0, 3).map((e) => (
+              <Link key={e.id} href={`/catalog/${e.courseId}`}>
+                <Card className="h-full transition hover:border-brand/50">
+                  <p className="truncate text-sm font-medium">{e.course?.title ?? "Course"}</p>
+                  <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-border">
+                    <div className={`h-full ${e.status === "completed" ? "bg-green" : "bg-brand"}`} style={{ width: `${e.percent}%` }} />
+                  </div>
+                  <p className="mt-2 text-xs text-muted">{e.status === "completed" ? "Completed ✓" : `${e.percent}%`}</p>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
+
+      {gap && (
+        <Card>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-medium text-muted">Readiness toward {gap.roleName}</h2>
+            <RiskBadge risk={readiness! >= 75 ? "green" : readiness! >= 50 ? "amber" : "red"} label={`Readiness ${readiness}%`} />
+          </div>
+          <p className="mt-2 text-sm">
+            {gap.gaps.length} skills missing: <span className="text-muted">{gap.gaps.map((g) => g.name).join(", ")}</span>
+          </p>
+          <Link href="/skills" className="mt-2 inline-block text-xs text-brand">Full gap analysis →</Link>
+        </Card>
+      )}
+
+      {recs.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold tracking-tight">Recommended for you</h2>
+            <span className="hidden text-xs text-muted sm:block">every recommendation explains the why</span>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {recs.slice(0, 3).map((r) => (
+              <Card key={r.courseId} className="flex flex-col">
+                <p className="text-xs uppercase tracking-wide text-muted">{r.providerKey}</p>
+                <p className="mt-1 font-medium">{r.title}</p>
+                <p className="mt-2 flex-1 text-xs text-muted">{r.reason}</p>
+                <EnrollButton courseId={r.courseId} className="mt-4 w-full" />
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

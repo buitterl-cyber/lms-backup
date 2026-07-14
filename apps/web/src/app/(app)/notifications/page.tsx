@@ -18,6 +18,9 @@ const KIND_LABEL: Record<string, string> = {
   certification_renewal: "Certification renewal",
   compliance_alert: "Compliance alert",
   assignment: "Training assigned",
+  nudge: "Reminder",
+  forum_reply: "Forum reply",
+  peer_review: "Work reviewed",
 };
 
 async function load() {

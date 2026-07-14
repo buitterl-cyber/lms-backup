@@ -6,6 +6,15 @@ export const metadata: Metadata = {
   title: "RiyadaIntel — AI-Powered Workforce Intelligence Platform",
   description:
     "Connect skills, compliance, certifications, careers and learning from every major training provider into a single intelligence layer.",
+  appleWebApp: { capable: true, title: "RiyadaIntel", statusBarStyle: "black-translucent" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
+};
+
+export const viewport = {
+  themeColor: "#4f46e5",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

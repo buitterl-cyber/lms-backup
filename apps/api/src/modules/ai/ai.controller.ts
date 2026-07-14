@@ -8,6 +8,7 @@ import { KnowledgeAcademyService } from "./knowledge-academy.service";
 
 class ChatDto {
   @IsString() prompt!: string;
+  @IsOptional() @IsString() courseId?: string;
 }
 
 class IngestDto {
@@ -29,7 +30,7 @@ export class AiController {
   @Post("chat")
   @RequirePermissions("ai:use")
   chat(@Body() dto: ChatDto) {
-    return this.ai.chat(dto.prompt);
+    return this.ai.chat(dto.prompt, {}, dto.courseId);
   }
 
   @Post("knowledge-academy/ingest")

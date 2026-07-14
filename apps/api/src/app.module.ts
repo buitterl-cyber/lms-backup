@@ -22,10 +22,17 @@ import { MarketplaceModule } from "./modules/marketplace/marketplace.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { ReportingModule } from "./modules/reporting/reporting.module";
 import { AiModule } from "./modules/ai/ai.module";
+import { MailerModule } from "./common/mailer/mailer.module";
+import { GamificationModule } from "./modules/gamification/gamification.module";
+import { ForumsModule } from "./modules/forums/forums.module";
+import { InstructorModule } from "./modules/instructor/instructor.module";
+import { SalesModule } from "./modules/sales/sales.module";
 
 @Module({
   imports: [
     PrismaModule,
+    MailerModule,
+    GamificationModule,
     JobsModule,
     IdentityModule,
     SkillsModule,
@@ -42,6 +49,9 @@ import { AiModule } from "./modules/ai/ai.module";
     NotificationsModule,
     ReportingModule,
     AiModule,
+    ForumsModule,
+    InstructorModule,
+    SalesModule,
     DemoModule,
     AuthModule,
   ],

@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { getTenantContext, NotFoundError } from "@riyada/shared";
 import { createProvider } from "@riyada/providers";
 import { PrismaService } from "../../common/prisma/prisma.service";
+import { GamificationService } from "../gamification/gamification.service";
 
 /**
  * LMS enrollment + progress. Completing a course levels up the learner's skills (course->skills),
@@ -10,7 +11,10 @@ import { PrismaService } from "../../common/prisma/prisma.service";
  */
 @Injectable()
 export class EnrollmentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gamification: GamificationService,
+  ) {}
 
   async enroll(input: { userId: string; courseId: string; assignedReason?: string }) {
     const { tenantId, userId: actor } = getTenantContext();
@@ -30,6 +34,7 @@ export class EnrollmentService {
     // provider is connected. Fire-and-forget: a misconfigured/offline provider never blocks the
     // local enrolment.
     void this.propagateToProvider(input.userId, input.courseId).catch(() => undefined);
+    void this.gamification.recordActivity(input.userId, "course_enrolled", input.courseId).catch(() => undefined);
     return enrollment;
   }
 
@@ -76,7 +81,11 @@ export class EnrollmentService {
       },
     });
 
-    if (completed) await this.levelUpSkills(enrollment.userId, enrollment.courseId);
+    await this.gamification.recordActivity(enrollment.userId, completed ? "course_completed" : "course_progress", enrollment.courseId);
+    if (completed) {
+      await this.levelUpSkills(enrollment.userId, enrollment.courseId);
+      await this.gamification.award(enrollment.userId, "course_completed", enrollment.courseId);
+    }
     return updated;
   }
 

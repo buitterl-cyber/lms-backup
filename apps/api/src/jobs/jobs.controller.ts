@@ -29,4 +29,10 @@ export class JobsController {
   catalogSync() {
     return this.jobs.enqueueCatalogSyncs();
   }
+
+  @Post("nudge-sweep")
+  @RequirePermissions("enrollment:assign")
+  nudgeSweep() {
+    return this.jobs.nudgeSweep();
+  }
 }
