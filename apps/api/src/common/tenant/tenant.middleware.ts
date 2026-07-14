@@ -15,7 +15,7 @@ const PUBLIC_SUFFIXES = ["/api/v1/health", "/api/v1/demo/context", "/api/v1/auth
 // Public site sections (marketing/sales). Auth is still honored when a Bearer token is present
 // (the sales pipeline admin endpoints live under the same prefix), but absence of tenant
 // context is not an error here.
-const PUBLIC_SEGMENTS = ["/api/v1/sales/"];
+const PUBLIC_SEGMENTS = ["/api/v1/sales/", "/api/v1/auth/social/"];
 
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {

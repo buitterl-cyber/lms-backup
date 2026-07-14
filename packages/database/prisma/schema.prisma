@@ -611,6 +611,19 @@ model Notification {
   @@index([tenantId, userId])
 }
 
+// Social sign-in identity (Google/Apple/Meta/LinkedIn/Microsoft). A user may hold several;
+// first social login creates the platform User ("signup"), later ones just map to it.
+model SocialIdentity {
+  id             String   @id @default(cuid())
+  userId         String
+  provider       String   // google | apple | facebook | linkedin | microsoft
+  providerUserId String   // the provider's stable subject id
+  email          String?
+  createdAt      DateTime @default(now())
+  @@unique([provider, providerUserId])
+  @@index([userId])
+}
+
 // A manager→learner reminder (in-app + email). Rows double as the dedupe record so auto-nudges
 // don't spam: one nudge per (learner, course, kind) per 7 days.
 model Nudge {
