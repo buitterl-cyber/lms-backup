@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Brand } from "@/components/Brand";
 import { Suspense } from "react";
 
 // Real login: POSTs to /auth/login, stores the JWT in the riyada_token cookie, redirects into the
@@ -65,8 +66,8 @@ function LoginForm() {
   return (
     <div className="flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <Link href="/" className="block text-center text-lg font-semibold tracking-tight">
-          Riyada<span className="text-brand">Intel</span>
+        <Link href="/" className="flex justify-center">
+          <Brand size={30} className="text-xl" />
         </Link>
         <form onSubmit={submit} className="mt-8 rounded-xl border border-border bg-card p-6">
           <h1 className="text-lg font-semibold">Sign in</h1>

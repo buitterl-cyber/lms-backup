@@ -30,7 +30,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const { cookies } = await import("next/headers");
   const { SKINS, THEME_COOKIE } = await import("@/components/themes");
   const raw = (await cookies()).get(THEME_COOKIE)?.value;
-  const theme = SKINS.some((s) => s.key === raw) ? raw : "midnight";
+  const theme = SKINS.some((s) => s.key === raw) ? raw : "riyada";
   return (
     <html lang="en" dir="ltr" data-theme={theme} className={`dark ${sora.variable} ${inter.variable}`}>
       <body className="min-h-screen">{children}</body>

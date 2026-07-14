@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Brand } from "@/components/Brand";
 
 // Email/password signup (learner account, logged in immediately) + the social providers as
 // one-click signup when configured.
@@ -45,8 +46,8 @@ function SignupForm() {
   return (
     <div className="flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <Link href="/" className="block text-center text-lg font-semibold tracking-tight">
-          Riyada<span className="text-brand">Intel</span>
+        <Link href="/" className="flex justify-center">
+          <Brand size={30} className="text-xl" />
         </Link>
         <form onSubmit={submit} className="mt-8 rounded-xl border border-border bg-card p-6">
           <h1 className="text-lg font-semibold">Create your account</h1>

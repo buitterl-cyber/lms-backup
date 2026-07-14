@@ -9,6 +9,7 @@ export interface Skin {
 }
 
 export const SKINS: Skin[] = [
+  { key: "riyada", name: "Riyada", tag: "the official look", bg: "#f7f9fd", brand: "#225ec8" },
   { key: "midnight", name: "Midnight", tag: "the classic", bg: "#0b0c12", brand: "#818cf8" },
   { key: "daylight", name: "Daylight", tag: "clean & bright", bg: "#fafafc", brand: "#4f46e5" },
   { key: "ocean", name: "Ocean", tag: "deep water", bg: "#060e18", brand: "#38aaf0" },

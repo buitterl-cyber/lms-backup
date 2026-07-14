@@ -81,6 +81,9 @@ html[data-theme="cyber"] { --bg: 12 7 20; --fg: 242 234 250; --muted: 158 140 18
 html[data-theme="volt"] { --bg: 8 10 7; --fg: 238 246 232; --muted: 145 160 138; --card: 15 19 13; --border: 32 40 28; --brand: 163 230 53; --aurora1: 163 230 53; --aurora2: 45 212 191; }
 
 /* — light family (they defeat .dark by coming later in the sheet) — */
+/* Riyada — THE DEFAULT: the logo's world (navy diamond, gold swoosh, white field).
+   Fresh and bright: white ground, navy ink, lively logo blue for actions, gold aurora. */
+html[data-theme="riyada"] { --bg: 247 249 253; --fg: 21 34 60; --muted: 106 121 148; --card: 255 255 255; --border: 220 228 241; --brand: 34 94 200; --aurora1: 34 94 200; --aurora2: 245 166 35; }
 html[data-theme="daylight"] { --bg: 250 250 252; --fg: 17 18 20; --muted: 113 119 130; --card: 255 255 255; --border: 228 230 238; --brand: 79 70 229; --aurora1: 79 70 229; --aurora2: 56 189 248; }
 html[data-theme="paper"] { --bg: 248 246 241; --fg: 32 30 26; --muted: 128 120 108; --card: 255 254 250; --border: 226 220 208; --brand: 60 90 166; --aurora1: 60 90 166; --aurora2: 180 160 120; }
 html[data-theme="sand"] { --bg: 249 244 235; --fg: 43 34 26; --muted: 140 122 102; --card: 255 251 244; --border: 230 218 200; --brand: 194 96 54; --aurora1: 194 96 54; --aurora2: 226 178 100; }

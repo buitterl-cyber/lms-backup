@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Brand } from "@/components/Brand";
 import { InquiryForm } from "@/components/InquiryForm";
 
 // PUBLIC sales catalogue (Carl's "sales website"): best sellers up top, instant search across
@@ -40,7 +41,7 @@ export default async function PublicCatalog({ searchParams }: { searchParams: Pr
     <div className="min-h-screen">
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 text-sm">
-          <Link href="/" className="font-display text-lg font-semibold">Riyada<span className="text-brand">Intel</span></Link>
+          <Link href="/"><Brand size={26} className="text-lg" /></Link>
           <nav className="flex items-center gap-4">
             <Link href="/courses" className="font-medium text-fg">Courses</Link>
             <Link href="/signup" className="text-muted hover:text-fg">Sign up</Link>

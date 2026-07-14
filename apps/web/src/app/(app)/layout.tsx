@@ -4,6 +4,7 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { BottomNav } from "@/components/BottomNav";
 import { Avatar } from "@/components/Avatar";
 import { Topbar } from "@/components/Topbar";
+import { Brand } from "@/components/Brand";
 import { apiGet, getContext } from "@/lib/api";
 
 // App shell, wireframe anatomy: grouped sidebar nav + a user identity card pinned at the
@@ -64,8 +65,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <div className="aurora" aria-hidden />
       <div className="relative mx-auto flex max-w-6xl gap-8 px-4 py-6 md:px-6 md:py-8">
         <aside className="hidden w-56 shrink-0 md:flex md:flex-col">
-          <Link href="/" className="font-display block text-xl font-semibold">
-            Riyada<span className="text-brand">Intel</span>
+          <Link href="/" className="block">
+            <Brand size={28} className="text-xl" />
           </Link>
           <nav className="mt-8 flex-1 space-y-5">
             {NAV.map((g) => (
@@ -95,7 +96,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               </div>
             </div>
             <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-border">
-              <div className="h-full rounded-full bg-gradient-to-r from-brand to-sky-400" style={{ width: `${Math.round(me.levelProgress * 100)}%` }} />
+              <div className="h-full rounded-full" style={{ width: `${Math.round(me.levelProgress * 100)}%`, background: "linear-gradient(to right, rgb(var(--brand)), rgb(var(--aurora2)))" }} />
             </div>
             <p className="tnum mt-1.5 text-[10px] text-muted">{me.xp.toLocaleString()} / {me.nextLevelXp.toLocaleString()} XP</p>
             <LogoutButton className="mt-2 block text-[11px] text-muted hover:text-fg" />

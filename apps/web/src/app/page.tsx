@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Brand } from "@/components/Brand";
 
 // Marketing landing — the public face of RiyadaIntel. Full-bleed (outside the app sidebar).
 const PROVIDERS = ["GO1", "OpenSesame", "Microsoft Learn", "AWS Skill Builder", "Coursera", "LinkedIn Learning", "Udemy", "Skillsoft", "O'Reilly", "Cybrary"];
@@ -17,7 +18,7 @@ export default function Landing() {
     <div>
       {/* nav */}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <span className="font-display text-lg font-semibold">Riyada<span className="text-brand">Intel</span></span>
+        <Brand size={28} className="text-lg" />
         <nav className="flex items-center gap-3 text-sm">
           <Link href="/courses" className="text-muted hover:text-fg">Courses</Link>
           <Link href="/login" className="text-muted hover:text-fg">Log in</Link>

@@ -7,11 +7,11 @@ import { SKINS, THEME_COOKIE } from "@/components/themes";
  *  cookie so the server renders the chosen skin on the next visit with no flash. */
 export function ThemeSwitcher() {
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState("midnight");
+  const [active, setActive] = useState("riyada");
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setActive(document.documentElement.dataset.theme || "midnight");
+    setActive(document.documentElement.dataset.theme || "riyada");
     function close(e: MouseEvent) {
       if (open && panel.current && !panel.current.contains(e.target as Node)) setOpen(false);
     }
