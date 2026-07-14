@@ -38,7 +38,7 @@ export default async function NotificationsPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
+        <h1 className="font-display text-2xl font-semibold">Notifications</h1>
         <p className="text-sm text-muted">{notifs.length} notification{notifs.length === 1 ? "" : "s"}</p>
       </header>
 

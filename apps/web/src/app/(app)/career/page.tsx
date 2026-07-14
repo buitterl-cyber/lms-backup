@@ -36,7 +36,7 @@ export default function CareerPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Career Studio</h1>
+        <h1 className="font-display text-2xl font-semibold">Career Studio</h1>
         <p className="text-sm text-muted">A roadmap from where you are to where you want to be.</p>
       </header>
 

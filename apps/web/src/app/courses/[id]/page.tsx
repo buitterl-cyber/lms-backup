@@ -32,7 +32,7 @@ export default async function PublicCoursePage({ params }: { params: Promise<{ i
     <div className="min-h-screen">
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 text-sm">
-          <Link href="/" className="text-lg font-semibold tracking-tight">Riyada<span className="text-brand">Intel</span></Link>
+          <Link href="/" className="font-display text-lg font-semibold">Riyada<span className="text-brand">Intel</span></Link>
           <nav className="flex items-center gap-4">
             <Link href="/courses" className="text-muted hover:text-fg">Courses</Link>
             <Link href="/signup" className="text-muted hover:text-fg">Sign up</Link>
@@ -49,7 +49,7 @@ export default async function PublicCoursePage({ params }: { params: Promise<{ i
             {course.bestSeller && <span className="rounded-full bg-amber/15 px-2.5 py-0.5 font-semibold uppercase tracking-wide text-amber">Best seller</span>}
             <span className="uppercase tracking-wide text-muted">{course.provider}{course.level ? ` · ${course.level}` : ""}{course.durationMinutes ? ` · ${Math.round(course.durationMinutes / 60)}h` : ""}</span>
           </div>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">{course.title}</h1>
+          <h1 className="font-display mt-2 text-3xl font-semibold">{course.title}</h1>
           <div className="mt-2 flex items-center gap-3 text-sm">
             {course.rating && (
               <span className="text-amber">{"★".repeat(Math.round(course.rating))} <span className="text-fg">{course.rating}</span> <span className="text-muted">({course.ratingCount})</span></span>
@@ -82,7 +82,7 @@ export default async function PublicCoursePage({ params }: { params: Promise<{ i
         )}
 
         <section className="rounded-2xl border border-brand/30 bg-card p-6">
-          <h2 className="text-lg font-semibold tracking-tight">Interested in this course?</h2>
+          <h2 className="font-display text-lg font-semibold">Interested in this course?</h2>
           <p className="mt-1 text-sm text-muted">Leave your details and our team will get straight back to you.</p>
           <div className="mt-4"><InquiryForm courseId={course.id} courseTitle={course.title} /></div>
         </section>

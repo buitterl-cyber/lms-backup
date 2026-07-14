@@ -20,7 +20,7 @@ export default async function SalesInquiriesPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Sales Pipeline</h1>
+        <h1 className="font-display text-2xl font-semibold">Sales Pipeline</h1>
         <p className="text-sm text-muted">Inquiries from the public course site — follow up ASAP.</p>
       </header>
 

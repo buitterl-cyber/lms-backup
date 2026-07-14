@@ -5,27 +5,62 @@
 @config "../../tailwind.config.ts";
 
 :root {
-  --bg: 250 250 251;
+  --bg: 250 250 252;
   --fg: 17 18 20;
   --muted: 113 119 130;
   --card: 255 255 255;
-  --border: 230 232 236;
+  --border: 228 230 238;
   --brand: 79 70 229; /* indigo */
 }
 
+/* Dark carries a deliberate indigo cast — the app's own temperature, not neutral gray. */
 .dark {
-  --bg: 12 13 16;
-  --fg: 240 241 244;
-  --muted: 150 156 166;
-  --card: 22 23 28;
-  --border: 38 40 47;
+  --bg: 11 12 18;
+  --fg: 240 241 246;
+  --muted: 148 155 170;
+  --card: 20 22 31;
+  --border: 39 42 56;
   --brand: 129 140 248;
 }
 
 body {
   background: rgb(var(--bg));
   color: rgb(var(--fg));
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   font-feature-settings: "cv02", "cv03", "cv04";
+}
+
+/* Display face for the identity moments: logo, page titles, hero metrics. */
+.font-display {
+  font-family: var(--font-display), var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Metrics and tables read as data: lining, tabular numerals. */
+.tnum {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* The shell's aurora — one quiet indigo→cyan wash bleeding from the top edge. It is the only
+   ambient decoration in the app; everything else stays flat and disciplined. */
+.aurora {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 260px;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 100% at 20% 0%, rgb(var(--brand) / 0.14), transparent 70%),
+    radial-gradient(50% 90% at 75% 0%, rgb(56 189 248 / 0.08), transparent 70%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
 }
 
 /* RTL is driven by <html dir="rtl"> set from locale; logical properties keep layouts mirrored. */

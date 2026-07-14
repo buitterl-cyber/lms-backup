@@ -74,7 +74,7 @@ export default function ProvidersAdminPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Providers</h1>
+        <h1 className="font-display text-2xl font-semibold">Providers</h1>
         <p className="text-sm text-muted">Connect learning providers — including a client&apos;s own LearnWorlds school — and sync catalogs into one hub.</p>
       </header>
 

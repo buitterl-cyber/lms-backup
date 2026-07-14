@@ -2,9 +2,13 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { LogoutButton } from "@/components/LogoutButton";
 import { BottomNav } from "@/components/BottomNav";
+import { Avatar } from "@/components/Avatar";
+import { Topbar } from "@/components/Topbar";
+import { apiGet, getContext } from "@/lib/api";
 
-// App shell. Desktop: sidebar with the platform surfaces. Mobile (<md): the sidebar collapses
-// away and a bottom tab bar (wireframe pattern) takes over; pages stack single-column.
+// App shell, wireframe anatomy: grouped sidebar nav + a user identity card pinned at the
+// bottom, a topbar with global search + notification bell, aurora wash on the top edge.
+// Mobile (<md): sidebar collapses away, bottom tab bar takes over.
 const NAV: { group: string; items: { href: string; label: string }[] }[] = [
   { group: "Workspace", items: [{ href: "/learner", label: "Dashboard" }, { href: "/catalog", label: "Course Catalog" }, { href: "/my-learning", label: "My Learning" }, { href: "/notifications", label: "Notifications" }, { href: "/marketplace", label: "Marketplace" }] },
   { group: "Intelligence", items: [
@@ -24,31 +28,86 @@ const NAV: { group: string; items: { href: string; label: string }[] }[] = [
   ] },
 ];
 
-export default function AppLayout({ children }: { children: ReactNode }) {
+interface Game { totalXp: number; level: number; nextLevelXp: number; streak: number }
+interface Notif { readAt: string | null }
+
+async function identity() {
+  try {
+    const ctx = await getContext();
+    const [game, notifs] = await Promise.all([
+      apiGet<Game>(`/gamification/me?userId=${ctx.userId}`, ctx).catch(() => null),
+      apiGet<Notif[]>(`/users/${ctx.userId}/notifications`, ctx).catch(() => [] as Notif[]),
+    ]);
+    const level = game?.level ?? 1;
+    const prev = (level - 1) * (level - 1) * 100;
+    const next = game?.nextLevelXp ?? 100;
+    return {
+      name: ctx.userName || "Learner",
+      role: (ctx.roles?.[0] ?? "learner").replace(/_/g, " "),
+      xp: game?.totalXp ?? 0,
+      level,
+      levelProgress: next > prev ? ((game?.totalXp ?? 0) - prev) / (next - prev) : 0,
+      nextLevelXp: next,
+      streak: game?.streak ?? 0,
+      unread: notifs.filter((n) => !n.readAt).length,
+    };
+  } catch {
+    return { name: "Learner", role: "learner", xp: 0, level: 1, levelProgress: 0, nextLevelXp: 100, streak: 0, unread: 0 };
+  }
+}
+
+export default async function AppLayout({ children }: { children: ReactNode }) {
+  const me = await identity();
+
   return (
-    <div className="mx-auto flex max-w-6xl gap-8 px-4 py-6 md:px-6 md:py-8">
-      <aside className="hidden w-52 shrink-0 md:block">
-        <Link href="/" className="block text-lg font-semibold tracking-tight">
-          Riyada<span className="text-brand">Intel</span>
-        </Link>
-        <nav className="mt-8 space-y-5">
-          {NAV.map((g) => (
-            <div key={g.group}>
-              <p className="px-3 text-[10px] font-medium uppercase tracking-widest text-muted">{g.group}</p>
-              <div className="mt-1 flex flex-col gap-0.5">
-                {g.items.map((n) => (
-                  <Link key={n.href} href={n.href} className="rounded-lg px-3 py-1.5 text-sm text-muted hover:bg-card hover:text-fg">
-                    {n.label}
-                  </Link>
-                ))}
+    <>
+      <div className="aurora" aria-hidden />
+      <div className="relative mx-auto flex max-w-6xl gap-8 px-4 py-6 md:px-6 md:py-8">
+        <aside className="hidden w-56 shrink-0 md:flex md:flex-col">
+          <Link href="/" className="font-display block text-xl font-semibold">
+            Riyada<span className="text-brand">Intel</span>
+          </Link>
+          <nav className="mt-8 flex-1 space-y-5">
+            {NAV.map((g) => (
+              <div key={g.group}>
+                <p className="px-3 text-[10px] font-medium uppercase tracking-widest text-muted">{g.group}</p>
+                <div className="mt-1 flex flex-col gap-0.5">
+                  {g.items.map((n) => (
+                    <Link key={n.href} href={n.href} className="flex items-center justify-between rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:bg-card hover:text-fg">
+                      {n.label}
+                      {n.href === "/notifications" && me.unread > 0 && (
+                        <span className="tnum rounded-full bg-brand/15 px-1.5 text-[10px] font-semibold text-brand">{me.unread}</span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </nav>
+
+          {/* Identity card (wireframe sidebar footer): who you are, how far to the next level. */}
+          <div className="mt-8 rounded-xl border border-border bg-card/70 p-3 backdrop-blur">
+            <div className="flex items-center gap-3">
+              <Avatar name={me.name} size={34} ring={me.levelProgress} />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{me.name}</p>
+                <p className="truncate text-[11px] capitalize text-muted">{me.role} · Level {me.level}</p>
               </div>
             </div>
-          ))}
-        </nav>
-        <LogoutButton className="mt-8 block px-3 text-xs text-muted hover:text-fg" />
-      </aside>
-      <main className="min-w-0 flex-1 pb-20 md:pb-0">{children}</main>
-      <BottomNav />
-    </div>
+            <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-border">
+              <div className="h-full rounded-full bg-gradient-to-r from-brand to-sky-400" style={{ width: `${Math.round(me.levelProgress * 100)}%` }} />
+            </div>
+            <p className="tnum mt-1.5 text-[10px] text-muted">{me.xp.toLocaleString()} / {me.nextLevelXp.toLocaleString()} XP</p>
+            <LogoutButton className="mt-2 block text-[11px] text-muted hover:text-fg" />
+          </div>
+        </aside>
+
+        <main className="min-w-0 flex-1 pb-20 md:pb-0">
+          <Topbar name={me.name} streak={me.streak} level={me.level} levelProgress={me.levelProgress} unread={me.unread} />
+          <div className="rise">{children}</div>
+        </main>
+        <BottomNav />
+      </div>
+    </>
   );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui";
 import { NewThreadForm, VoteButton } from "@/components/forum";
 import { StudyAssistant } from "@/components/StudyAssistant";
+import { Avatar } from "@/components/Avatar";
 import { apiGet, getContext, type CourseDetail } from "@/lib/api";
 
 // Course Forum (wireframe): discussions with pinned/instructor/anonymous posts, upvotes,
@@ -52,7 +53,7 @@ export default async function ForumPage({
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{course.title} · Forum</h1>
+          <h1 className="font-display text-2xl font-semibold">{course.title} · Forum</h1>
           <p className="text-sm text-muted">{stats?.enrolled ?? 0} learners enrolled</p>
         </div>
         <NewThreadForm ctx={ctx} courseId={id} />
@@ -77,6 +78,7 @@ export default async function ForumPage({
             <Card key={t.id} className={t.pinned ? "border-brand/40" : ""}>
               {t.pinned && <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-brand">— Pinned by instructor</p>}
               <div className="flex items-center gap-2 text-xs text-muted">
+                <Avatar name={t.author} size={22} />
                 <span className="font-medium text-fg">{t.author}</span>
                 {t.isInstructor && <span className="rounded bg-brand/15 px-1.5 py-0.5 text-[10px] font-medium text-brand">Instructor</span>}
                 <span>· {ago(t.createdAt)}</span>

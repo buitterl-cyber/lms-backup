@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card } from "@/components/ui";
 import { ModerateButton, ReplyBox, VoteButton } from "@/components/forum";
+import { Avatar } from "@/components/Avatar";
 import { apiGet, getContext } from "@/lib/api";
 
 // A forum thread with replies, voting, and instructor moderation (pin / accept answer).
@@ -28,6 +29,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
 
       <Card className={t.pinned ? "border-brand/40" : ""}>
         <div className="flex items-center gap-2 text-xs text-muted">
+          <Avatar name={t.author} size={24} />
           <span className="font-medium text-fg">{t.author}</span>
           {t.isInstructor && <span className="rounded bg-brand/15 px-1.5 py-0.5 text-[10px] font-medium text-brand">Instructor</span>}
           {t.pinned && <span className="text-brand">· Pinned</span>}
@@ -57,6 +59,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
         {rest.map((r) => (
           <Card key={r.id}>
             <div className="flex items-center gap-2 text-xs text-muted">
+              <Avatar name={r.author} size={22} />
               <span className="font-medium text-fg">{r.author}{r.mine ? " (you)" : ""}</span>
               {r.isInstructor && <span className="rounded bg-brand/15 px-1.5 py-0.5 text-[10px] font-medium text-brand">Instructor</span>}
             </div>

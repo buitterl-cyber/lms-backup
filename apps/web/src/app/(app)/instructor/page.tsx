@@ -26,7 +26,7 @@ export default async function InstructorPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Instructor Overview</h1>
+        <h1 className="font-display text-2xl font-semibold">Instructor Overview</h1>
         <p className="text-sm text-muted">Your courses, learners, and what needs attention.</p>
       </header>
 

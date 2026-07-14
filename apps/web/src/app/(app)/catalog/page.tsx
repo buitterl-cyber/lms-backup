@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card } from "@/components/ui";
+import { Card, courseGlyph } from "@/components/ui";
 import { apiGet, getContext, type CatalogResult } from "@/lib/api";
 
 // Content Aggregation Hub — one catalog across every connected provider. Live data from
@@ -21,16 +21,23 @@ async function load() {
   }
 }
 
-export default async function CatalogPage() {
-  const courses = await load();
+export default async function CatalogPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q = "" } = await searchParams;
+  const all = await load();
+  const needle = q.trim().toLowerCase();
+  const courses = needle
+    ? all.filter((c) => `${c.title} ${c.skills.join(" ")} ${c.provider}`.toLowerCase().includes(needle))
+    : all;
   const providers = [...new Set(courses.map((c) => c.provider))];
 
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Course Catalog</h1>
+        <h1 className="font-display text-2xl font-semibold">Course Catalog</h1>
         <p className="text-sm text-muted">
-          {courses.length} courses aggregated across {providers.length} providers — one catalog, every source.
+          {q
+            ? `${courses.length} course${courses.length === 1 ? "" : "s"} matching “${q}”`
+            : `${courses.length} courses aggregated across ${providers.length} providers — one catalog, every source.`}
         </p>
       </header>
 
@@ -51,10 +58,13 @@ export default async function CatalogPage() {
             <Link key={c.id} href={`/catalog/${c.id}`} className="block">
               <Card className="flex h-full flex-col transition-colors hover:border-brand/50">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase tracking-wide text-muted">{PROVIDER_LABEL[c.provider] ?? c.provider}</span>
-                  {c.level && <span className="rounded bg-border/60 px-1.5 py-0.5 text-[10px] uppercase text-muted">{c.level}</span>}
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-bg text-lg ring-1 ring-border">{courseGlyph(`${c.title} ${c.skills.join(" ")}`)}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="text-xs uppercase tracking-wide text-muted">{PROVIDER_LABEL[c.provider] ?? c.provider}</span>
+                    {c.level && <span className="rounded bg-border/60 px-1.5 py-0.5 text-[10px] uppercase text-muted">{c.level}</span>}
+                  </span>
                 </div>
-                <h3 className="mt-1 font-medium">{c.title}</h3>
+                <h3 className="mt-2 font-medium">{c.title}</h3>
                 <div className="mt-2 flex flex-wrap gap-1">
                   {c.skills.slice(0, 4).map((s) => (
                     <span key={s} className="rounded-full bg-card px-2 py-0.5 text-[11px] text-muted ring-1 ring-border">{s}</span>

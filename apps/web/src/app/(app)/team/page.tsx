@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, MetricCard, RiskBadge } from "@/components/ui";
 import { NudgeButton } from "@/components/NudgeButton";
+import { Avatar } from "@/components/Avatar";
 import { apiGet, getContext, type DemoContext, type WorkforceReadiness } from "@/lib/api";
 
 // Manager Dashboard (wireframe "Manager Portal"): alerts, KPIs, per-learner progress with the
@@ -54,7 +55,7 @@ export default async function TeamPage() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Team Dashboard</h1>
+          <h1 className="font-display text-2xl font-semibold">Team Dashboard</h1>
           <p className="text-sm text-muted">Here&apos;s how your team is tracking this week.</p>
         </div>
         <Link href="/reports" className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-card">Export CSV →</Link>
@@ -99,8 +100,13 @@ export default async function TeamPage() {
               {team.learners.map((l) => (
                 <tr key={l.userId} className="border-b border-border/60 last:border-0">
                   <td className="p-4">
-                    <p className="font-medium">{l.name}</p>
-                    {l.dueAt && <p className="text-[11px] text-amber">Due {new Date(l.dueAt).toISOString().slice(0, 10)}</p>}
+                    <span className="flex items-center gap-3">
+                      <Avatar name={l.name} size={30} />
+                      <span>
+                        <p className="font-medium">{l.name}</p>
+                        {l.dueAt && <p className="text-[11px] text-amber">Due {new Date(l.dueAt).toISOString().slice(0, 10)}</p>}
+                      </span>
+                    </span>
                   </td>
                   <td className="max-w-[180px] truncate">{l.activeCourse ?? "—"}</td>
                   <td>
@@ -159,8 +165,9 @@ export default async function TeamPage() {
             {team.leaderboard.map((e) => (
               <div key={e.userId} className="flex items-center gap-3 text-sm">
                 <span className={`w-5 text-center text-xs font-semibold ${e.rank === 1 ? "text-amber" : "text-muted"}`}>{e.rank}</span>
+                <Avatar name={e.name} size={26} />
                 <span className="flex-1 truncate">{e.name}</span>
-                <span className="text-xs font-medium text-brand">{e.xp.toLocaleString()} XP</span>
+                <span className="tnum text-xs font-medium text-brand">{e.xp.toLocaleString()} XP</span>
               </div>
             ))}
           </div>

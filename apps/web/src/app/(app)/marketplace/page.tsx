@@ -19,7 +19,7 @@ export default function MarketplacePage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Marketplace</h1>
+        <h1 className="font-display text-2xl font-semibold">Marketplace</h1>
         <p className="text-sm text-muted">Intelligence subscriptions, skill tracks, and certification bundles.</p>
       </header>
 

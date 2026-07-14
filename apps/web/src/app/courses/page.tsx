@@ -40,7 +40,7 @@ export default async function PublicCatalog({ searchParams }: { searchParams: Pr
     <div className="min-h-screen">
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 text-sm">
-          <Link href="/" className="text-lg font-semibold tracking-tight">Riyada<span className="text-brand">Intel</span></Link>
+          <Link href="/" className="font-display text-lg font-semibold">Riyada<span className="text-brand">Intel</span></Link>
           <nav className="flex items-center gap-4">
             <Link href="/courses" className="font-medium text-fg">Courses</Link>
             <Link href="/signup" className="text-muted hover:text-fg">Sign up</Link>
@@ -52,7 +52,7 @@ export default async function PublicCatalog({ searchParams }: { searchParams: Pr
 
       <main className="mx-auto max-w-6xl space-y-10 px-6 py-10">
         <section className="text-center">
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Find your next course</h1>
+          <h1 className="font-display text-3xl font-semibold sm:text-4xl">Find your next course</h1>
           <p className="mt-2 text-sm text-muted">Search {featured?.catalogSize?.toLocaleString() ?? "the"} courses across every major provider.</p>
           <form action="/courses" className="mx-auto mt-5 flex max-w-xl gap-2">
             <input
@@ -76,7 +76,7 @@ export default async function PublicCatalog({ searchParams }: { searchParams: Pr
 
         {!q && featured && featured.bestSellers.length > 0 && (
           <section>
-            <h2 className="text-lg font-semibold tracking-tight">Best sellers</h2>
+            <h2 className="font-display text-lg font-semibold">Best sellers</h2>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {featured.bestSellers.map((c) => (
                 <Link key={c.id} href={`/courses/${c.id}`} className="group rounded-xl border border-border bg-card p-5 transition hover:border-brand/50">
@@ -94,7 +94,7 @@ export default async function PublicCatalog({ searchParams }: { searchParams: Pr
         )}
 
         <section>
-          <h2 className="text-lg font-semibold tracking-tight">{q ? `Results for “${q}”` : "Browse the catalogue"}</h2>
+          <h2 className="font-display text-lg font-semibold">{q ? `Results for “${q}”` : "Browse the catalogue"}</h2>
           {results.length === 0 ? (
             <p className="mt-4 text-sm text-muted">No courses matched — try a broader search.</p>
           ) : (
@@ -114,7 +114,7 @@ export default async function PublicCatalog({ searchParams }: { searchParams: Pr
         </section>
 
         <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-          <h2 className="text-lg font-semibold tracking-tight">Training a team?</h2>
+          <h2 className="font-display text-lg font-semibold">Training a team?</h2>
           <p className="mt-1 text-sm text-muted">Tell us what you need — volume pricing, learning paths, and compliance tracking included.</p>
           <div className="mt-4"><InquiryForm /></div>
         </section>

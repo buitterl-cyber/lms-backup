@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, MetricCard, RiskBadge } from "@/components/ui";
+import { Card, courseGlyph, MetricCard, RiskBadge } from "@/components/ui";
 import { EnrollButton } from "@/components/EnrollButton";
 import { apiGet, apiPost, getContext, type EnrollmentRow, type Recommendation, type SkillGap } from "@/lib/api";
 
@@ -37,18 +37,9 @@ export default async function LearnerHome() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Good morning, {(ctx.userName || "there").split(" ")[0]}</h1>
+          <h1 className="font-display text-2xl font-semibold">Good morning, {(ctx.userName || "there").split(" ")[0]}</h1>
           <p className="text-sm text-muted">Keep your streak going.</p>
         </div>
-        {game && (
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2">
-            <span className="text-xl">🔥</span>
-            <div>
-              <p className="text-lg font-semibold leading-none">{game.streak}</p>
-              <p className="text-[10px] uppercase tracking-wide text-muted">day streak</p>
-            </div>
-          </div>
-        )}
       </header>
 
       {continueCourse && (
@@ -101,7 +92,7 @@ export default async function LearnerHome() {
 
       <section>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">My courses</h2>
+          <h2 className="font-display text-lg font-semibold">My courses</h2>
           <Link href="/my-learning" className="text-xs text-brand">See all →</Link>
         </div>
         {enrollments.length === 0 ? (
@@ -111,7 +102,10 @@ export default async function LearnerHome() {
             {enrollments.slice(0, 3).map((e) => (
               <Link key={e.id} href={`/catalog/${e.courseId}`}>
                 <Card className="h-full transition hover:border-brand/50">
-                  <p className="truncate text-sm font-medium">{e.course?.title ?? "Course"}</p>
+                  <p className="flex items-center gap-2 text-sm font-medium">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-bg text-base ring-1 ring-border">{courseGlyph(e.course?.title ?? "")}</span>
+                    <span className="truncate">{e.course?.title ?? "Course"}</span>
+                  </p>
                   <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-border">
                     <div className={`h-full ${e.status === "completed" ? "bg-green" : "bg-brand"}`} style={{ width: `${e.percent}%` }} />
                   </div>
@@ -139,7 +133,7 @@ export default async function LearnerHome() {
       {recs.length > 0 && (
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold tracking-tight">Recommended for you</h2>
+            <h2 className="font-display text-lg font-semibold">Recommended for you</h2>
             <span className="hidden text-xs text-muted sm:block">every recommendation explains the why</span>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

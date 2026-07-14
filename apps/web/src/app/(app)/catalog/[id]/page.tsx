@@ -48,7 +48,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
           {course.level ? ` · ${course.level}` : ""}
           {course.durationMinutes ? ` · ${Math.round(course.durationMinutes / 60)}h` : ""}
         </p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{course.title}</h1>
+        <h1 className="font-display mt-1 text-2xl font-semibold">{course.title}</h1>
       </header>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

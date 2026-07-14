@@ -45,7 +45,7 @@ export default function AiPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">RIYADA AI</h1>
+        <h1 className="font-display text-2xl font-semibold">RIYADA AI</h1>
         <p className="text-sm text-muted">Grounded in your Skills Graph, compliance state, and recommendations.</p>
       </header>
 

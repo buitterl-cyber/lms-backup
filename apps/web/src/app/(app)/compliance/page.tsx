@@ -30,7 +30,7 @@ export default async function CompliancePage() {
     <div className="space-y-6">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Compliance — Cloud &amp; Security</h1>
+          <h1 className="font-display text-2xl font-semibold">Compliance — Cloud &amp; Security</h1>
           <p className="text-sm text-muted">Green / amber / red, recomputed continuously</p>
         </div>
         <RiskBadge risk={risk.status} label={`Audit-ready ${risk.auditReadiness}%`} />

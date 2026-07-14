@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, RiskBadge } from "@/components/ui";
+import { Card, courseGlyph, RiskBadge } from "@/components/ui";
 import { apiGet, getContext, type EnrollmentRow } from "@/lib/api";
 
 // My Learning — the learner's enrolled courses with live progress. Continue opens the course;
@@ -28,7 +28,7 @@ export default async function MyLearningPage() {
     <div className="space-y-6">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">My Learning</h1>
+          <h1 className="font-display text-2xl font-semibold">My Learning</h1>
           <p className="text-sm text-muted">{rows.length} enrolled · {done} completed</p>
         </div>
         <Link href="/catalog" className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-card">Browse catalog</Link>
@@ -42,6 +42,7 @@ export default async function MyLearningPage() {
         <Card className="p-0">
           {rows.map((r) => (
             <Link key={r.id} href={`/catalog/${r.courseId}`} className="flex items-center gap-4 border-b border-border/60 p-4 last:border-0 hover:bg-bg">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bg text-lg ring-1 ring-border">{courseGlyph(r.course?.title ?? "")}</span>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{r.course?.title ?? "Course"}</p>
                 <p className="text-xs uppercase tracking-wide text-muted">{PROVIDER_LABEL[r.course?.providerKey ?? ""] ?? r.course?.providerKey}</p>

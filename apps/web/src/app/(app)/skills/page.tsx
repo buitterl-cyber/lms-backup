@@ -24,7 +24,7 @@ export default async function SkillsPage() {
     <div className="space-y-6">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Skills & Gaps</h1>
+          <h1 className="font-display text-2xl font-semibold">Skills & Gaps</h1>
           <p className="text-sm text-muted">{name} → {gap.roleName}</p>
         </div>
         <RiskBadge risk={cov >= 75 ? "green" : cov >= 50 ? "amber" : "red"} label={`${cov}% coverage`} />

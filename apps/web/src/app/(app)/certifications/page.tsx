@@ -21,7 +21,7 @@ export default async function CertificationsPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Certifications</h1>
+        <h1 className="font-display text-2xl font-semibold">Certifications</h1>
         <p className="text-sm text-muted">Expiries, CPD progress and automated renewal reminders.</p>
       </header>
 

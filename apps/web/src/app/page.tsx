@@ -17,7 +17,7 @@ export default function Landing() {
     <div>
       {/* nav */}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <span className="text-lg font-semibold tracking-tight">Riyada<span className="text-brand">Intel</span></span>
+        <span className="font-display text-lg font-semibold">Riyada<span className="text-brand">Intel</span></span>
         <nav className="flex items-center gap-3 text-sm">
           <Link href="/courses" className="text-muted hover:text-fg">Courses</Link>
           <Link href="/login" className="text-muted hover:text-fg">Log in</Link>
@@ -50,7 +50,7 @@ export default function Landing() {
       {/* moat */}
       <section className="border-y border-border bg-card/40 py-12">
         <div className="mx-auto max-w-3xl px-6 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">The content is not the moat.</h2>
+          <h2 className="font-display text-2xl font-semibold">The content is not the moat.</h2>
           <p className="mt-2 text-2xl font-semibold tracking-tight text-brand">The intelligence layer is.</p>
           <p className="mt-4 text-muted">Everyone can resell the same courses. RiyadaIntel owns the Skills Graph, the gap analysis, and the compliance, certification and career reasoning that turn a catalog into workforce readiness.</p>
         </div>
@@ -67,7 +67,7 @@ export default function Landing() {
           ))}
         </div>
         <div className="mt-12 flex flex-col items-center gap-3 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">See it on live data</h2>
+          <h2 className="font-display text-2xl font-semibold">See it on live data</h2>
           <p className="max-w-xl text-muted">A seeded demo organization is loaded — explore the learner dashboard, the aggregated catalog, compliance and RIYADA AI.</p>
           <Link href="/login" className="mt-2 rounded-lg bg-brand px-5 py-3 text-sm font-medium text-white">Log in to the demo →</Link>
         </div>

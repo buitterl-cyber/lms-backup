@@ -52,7 +52,7 @@ export default function QuizPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <header>
         <Link href="/catalog" className="text-sm text-muted hover:text-fg">← Catalog</Link>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{a.title}</h1>
+        <h1 className="font-display mt-1 text-2xl font-semibold">{a.title}</h1>
         <p className="text-sm text-muted">{a.questions.length} questions · pass mark {a.passScore}%</p>
       </header>
 
