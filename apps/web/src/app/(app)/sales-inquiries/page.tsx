@@ -1,6 +1,7 @@
 import { Card, MetricCard } from "@/components/ui";
 import { PipelineStatus } from "@/components/PipelineStatus";
-import { apiGet, getContext } from "@/lib/api";
+import { isAdmin, apiGet, getContext } from "@/lib/api";
+import { AccessDenied } from "@/components/AccessDenied";
 
 // Sales pipeline: every public-site inquiry lands here as a deal seed (new → contacted →
 // qualified → won/lost). Submits also email sales in real time.
@@ -13,6 +14,7 @@ interface Inquiry {
 
 export default async function SalesInquiriesPage() {
   const ctx = await getContext();
+  if (!isAdmin(ctx.roles)) return <AccessDenied />;
   const items = await apiGet<Inquiry[]>("/sales/pipeline", ctx).catch(() => [] as Inquiry[]);
   const open = items.filter((i) => ["new", "contacted", "qualified"].includes(i.status));
   const won = items.filter((i) => i.status === "won");

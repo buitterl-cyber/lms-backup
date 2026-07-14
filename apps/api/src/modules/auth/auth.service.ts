@@ -3,6 +3,7 @@ import { DomainError } from "@riyada/shared";
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 import { PrismaService } from "../../common/prisma/prisma.service";
+import { MailerService } from "../../common/mailer/mailer.service";
 
 const secret = () => process.env.JWT_SECRET || "dev-insecure-secret";
 
@@ -21,9 +22,19 @@ export interface JwtClaims {
  */
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailer: MailerService,
+  ) {}
 
-  async login(email: string, password: string) {
+  /** Roles allowed through the Admin/Manager portal. Everyone may use the learner portal —
+   *  an admin is also a learner — but a pure learner is refused at the admin door. */
+  static readonly ADMIN_ROLES = [
+    "super_admin", "platform_admin", "org_admin", "dept_manager", "compliance_manager",
+    "hr_manager", "finance_manager", "instructor", "trainer",
+  ];
+
+  async login(email: string, password: string, portal?: "learner" | "admin") {
     const user = await this.prisma.db.user.findFirst({
       where: { email },
       include: { roleAssignments: { include: { role: true } } },
@@ -32,6 +43,13 @@ export class AuthService {
       throw new DomainError("Invalid email or password", 401, "invalid_credentials");
     }
     const roles = user.roleAssignments.map((ra) => ra.role.key);
+    if (portal === "admin" && !roles.some((r) => AuthService.ADMIN_ROLES.includes(r))) {
+      throw new DomainError(
+        "This account doesn't have admin access — use the learner sign-in instead",
+        403,
+        "not_admin",
+      );
+    }
     const claims: JwtClaims = {
       sub: user.id,
       tenantId: user.tenantId,
@@ -98,6 +116,41 @@ export class AuthService {
     };
     const token = jwt.sign(claims, secret(), { expiresIn: "12h" });
     return { token, user: { id: user.id, email: user.email, name: claims.name, roles: claims.roles } };
+  }
+
+  /** Forgot password: email a 15-minute signed reset link. Always answers "sent" so the
+   *  endpoint can't be used to probe which emails exist. */
+  async forgotPassword(email: string) {
+    const user = await this.prisma.db.user.findFirst({ where: { email: email.trim().toLowerCase() } });
+    if (user) {
+      const token = jwt.sign({ sub: user.id, purpose: "reset" }, secret(), { expiresIn: "15m" });
+      const url = `${process.env.WEB_URL || "https://lms.excisone.com"}/reset-password?token=${encodeURIComponent(token)}`;
+      await this.mailer.send(
+        user.email,
+        "Reset your password",
+        `<p>Hi ${user.firstName},</p>
+         <p>Someone asked to reset the password for this account. The link below works for 15 minutes:</p>
+         <p><a href="${url}">Choose a new password →</a></p>
+         <p style="color:#888;font-size:12px">If this wasn't you, ignore this email — nothing changes.</p>`,
+      );
+    }
+    return { sent: true };
+  }
+
+  async resetPassword(token: string, password: string) {
+    let claims: { sub: string; purpose?: string };
+    try {
+      claims = jwt.verify(token, secret()) as { sub: string; purpose?: string };
+    } catch {
+      throw new DomainError("This reset link is invalid or has expired — request a new one", 400, "bad_reset_token");
+    }
+    if (claims.purpose !== "reset") throw new DomainError("This reset link is invalid", 400, "bad_reset_token");
+    if ((password ?? "").length < 8) throw new DomainError("Password must be at least 8 characters", 400, "weak_password");
+    await this.prisma.db.user.update({
+      where: { id: claims.sub },
+      data: { passwordHash: await bcrypt.hash(password, 10) },
+    });
+    return { reset: true };
   }
 
   static verify(token: string): JwtClaims {

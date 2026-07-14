@@ -1,138 +1,105 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Brand } from "@/components/Brand";
-import { Suspense } from "react";
+import { AUTH, AuthShell } from "@/components/auth/AuthShell";
 
-// Real login: POSTs to /auth/login, stores the JWT in the riyada_token cookie, redirects into the
-// app. Social sign-in/signup buttons appear per configured provider (/auth/social/providers) and
-// hand the browser to the provider; the API callback sets the same cookie and lands in /learner.
+// Role selection — the front door. Two clear paths, nothing else.
+export const dynamic = "force-dynamic";
 
-const SOCIAL_ICON: Record<string, string> = {
-  google: "G",
-  microsoft: "⊞",
-  apple: "",
-  facebook: "f",
-  linkedin: "in",
-};
-
-const SOCIAL_ERROR: Record<string, string> = {
-  social_cancelled: "Sign-in was cancelled — try again when you're ready.",
-  social_not_configured: "That sign-in method isn't configured yet.",
-  social_bad_state: "That sign-in link expired — please try again.",
-  social_token_failed: "The provider rejected the sign-in — please try again.",
-  social_failed: "Social sign-in failed — please try again.",
-};
-
-function LoginForm() {
-  const router = useRouter();
-  const params = useSearchParams();
-  const [email, setEmail] = useState("amir@excis.com");
-  const [password, setPassword] = useState("demo1234");
-  const [error, setError] = useState(() => SOCIAL_ERROR[params.get("error") ?? ""] ?? "");
-  const [loading, setLoading] = useState(false);
-  const [providers, setProviders] = useState<{ key: string; label: string }[]>([]);
-
-  useEffect(() => {
-    fetch("/api/v1/auth/social/providers")
-      .then((r) => (r.ok ? r.json() : []))
-      .then(setProviders)
-      .catch(() => setProviders([]));
-  }, []);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) throw new Error("bad");
-      const { token } = await res.json();
-      document.cookie = `riyada_token=${encodeURIComponent(token)}; path=/; max-age=43200; samesite=lax`;
-      router.push("/learner");
-    } catch {
-      setError("Invalid email or password.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
+function RoleCard({
+  href,
+  title,
+  description,
+  cta,
+  icon,
+  accent,
+}: {
+  href: string;
+  title: string;
+  description: string;
+  cta: string;
+  icon: React.ReactNode;
+  accent: string;
+}) {
   return (
-    <div className="flex min-h-screen items-center justify-center px-6">
-      <div className="w-full max-w-sm">
-        <Link href="/" className="flex justify-center">
-          <Brand size={30} className="text-xl" />
-        </Link>
-        <form onSubmit={submit} className="mt-8 rounded-xl border border-border bg-card p-6">
-          <h1 className="text-lg font-semibold">Sign in</h1>
-          <p className="mt-1 text-sm text-muted">Workforce Intelligence Platform</p>
-
-          <div className="mt-5 space-y-3">
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@organization.com"
-              className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-brand"
-            />
-            <input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type="password"
-              placeholder="••••••••"
-              className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-brand"
-            />
-            {error && <p className="text-xs text-red">{error}</p>}
-            <button disabled={loading} className="w-full rounded-lg bg-brand px-3 py-2.5 text-sm font-medium text-white disabled:opacity-60">
-              {loading ? "Signing in…" : "Sign in"}
-            </button>
-          </div>
-
-          {providers.length > 0 && (
-            <div className="mt-5">
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted">
-                <span className="h-px flex-1 bg-border" />
-                or continue with
-                <span className="h-px flex-1 bg-border" />
-              </div>
-              <div className="mt-3 grid grid-cols-1 gap-2">
-                {providers.map((p) => (
-                  <a
-                    key={p.key}
-                    href={`/api/v1/auth/social/${p.key}`}
-                    className="flex items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-bg"
-                  >
-                    <span className="w-5 text-center font-semibold">{SOCIAL_ICON[p.key] ?? "•"}</span>
-                    Continue with {p.label}
-                  </a>
-                ))}
-              </div>
-              <p className="mt-2 text-center text-[11px] text-muted">New here? Any of these creates your account instantly.</p>
-            </div>
-          )}
-
-          <p className="mt-4 text-center text-xs text-muted">
-            New here? <Link href="/signup" className="text-brand underline">Create an account</Link>
-          </p>
-          <p className="mt-2 text-center text-xs text-muted">
-            Demo: <span className="text-fg">amir@excis.com</span> / <span className="text-fg">demo1234</span> (pre-filled)
-          </p>
-        </form>
-        <p className="mt-4 text-center text-xs text-muted">Production: SSO/SAML + SCIM, MFA, 13 RBAC roles.</p>
-      </div>
-    </div>
+    <Link
+      href={href}
+      className="group flex flex-col p-6 transition-transform hover:-translate-y-0.5"
+      style={{
+        background: AUTH.card,
+        border: `1px solid ${AUTH.border}`,
+        borderRadius: 12,
+        boxShadow: "0 4px 16px rgba(22, 35, 60, 0.06)",
+      }}
+    >
+      <span
+        className="flex h-11 w-11 items-center justify-center"
+        style={{ background: `${accent}14`, color: accent, borderRadius: 10 }}
+      >
+        {icon}
+      </span>
+      <span
+        className="mt-4 text-base font-bold"
+        style={{ fontFamily: "var(--font-auth), Inter, sans-serif", color: AUTH.ink }}
+      >
+        {title}
+      </span>
+      <span className="mt-1 flex-1 text-sm leading-relaxed" style={{ color: AUTH.muted }}>
+        {description}
+      </span>
+      <span className="mt-4 text-sm font-semibold" style={{ color: accent }}>
+        {cta} →
+      </span>
+    </Link>
   );
 }
 
-export default function LoginPage() {
+export default function RoleSelectPage() {
   return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
+    <AuthShell width="max-w-2xl">
+      <h1
+        className="text-center text-xl font-bold"
+        style={{ fontFamily: "var(--font-auth), Inter, sans-serif", color: AUTH.ink }}
+      >
+        Welcome back
+      </h1>
+      <p className="mt-1 text-center text-sm" style={{ color: AUTH.muted }}>
+        Choose how you want to sign in.
+      </p>
+
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <RoleCard
+          href="/login/learner"
+          title="I'm a Learner"
+          description="Take courses, track your progress, keep your streak alive."
+          cta="Sign in to Learning Portal"
+          accent={AUTH.gold}
+          icon={
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 10 12 5 2 10l10 5 10-5z" />
+              <path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5" />
+            </svg>
+          }
+        />
+        <RoleCard
+          href="/login/admin"
+          title="I'm an Admin / Manager"
+          description="Team dashboards, nudges, courses, and the sales pipeline."
+          cta="Sign in to Admin Portal"
+          accent={AUTH.navy}
+          icon={
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 3v18h18" />
+              <path d="M7 15v-4M12 15V8M17 15v-7" />
+            </svg>
+          }
+        />
+      </div>
+
+      <p className="mt-6 text-center text-xs" style={{ color: AUTH.muted }}>
+        New here?{" "}
+        <Link href="/signup" className="font-medium hover:underline" style={{ color: AUTH.navy }}>
+          Create a learner account
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

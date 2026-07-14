@@ -45,7 +45,7 @@ export class SocialAuthController {
 
   private async finish(provider: string, code?: string, state?: string, error?: string, res?: Response) {
     if (error || !code || !state) {
-      return res!.redirect(`${WEB()}/login?error=${encodeURIComponent(error || "social_cancelled")}`);
+      return res!.redirect(`${WEB()}/login/learner?error=${encodeURIComponent(error || "social_cancelled")}`);
     }
     try {
       const { token, redirectPath } = await this.social.handleCallback(provider, code, state);
@@ -59,7 +59,7 @@ export class SocialAuthController {
       return res!.redirect(`${WEB()}${redirectPath}`);
     } catch (e) {
       const code = (e as { code?: string }).code || "social_failed";
-      return res!.redirect(`${WEB()}/login?error=${encodeURIComponent(code)}`);
+      return res!.redirect(`${WEB()}/login/learner?error=${encodeURIComponent(code)}`);
     }
   }
 }

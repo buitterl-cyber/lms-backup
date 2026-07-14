@@ -13,6 +13,18 @@ const baseUrl = () => (typeof window === "undefined" ? SERVER_API : "/api/v1");
 
 export const TOKEN_COOKIE = "riyada_token";
 
+/** Mirrors AuthService.ADMIN_ROLES — the roles that may enter the admin portal/surfaces. */
+export const ADMIN_ROLES = [
+  "super_admin", "platform_admin", "org_admin", "dept_manager", "compliance_manager",
+  "hr_manager", "finance_manager", "instructor", "trainer",
+];
+
+/** No roles at all = anonymous demo browsing, which keeps full visibility by design. */
+export function isAdmin(roles?: string[]): boolean {
+  if (!roles?.length) return true;
+  return roles.some((r) => ADMIN_ROLES.includes(r));
+}
+
 async function authToken(): Promise<string | null> {
   if (typeof window === "undefined") {
     try {

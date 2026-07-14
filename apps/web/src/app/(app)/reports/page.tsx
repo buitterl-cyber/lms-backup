@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui";
-import { getContext } from "@/lib/api";
+import { isAdmin, getContext as getCtx, getContext } from "@/lib/api";
+import { AccessDenied } from "@/components/AccessDenied";
+import { useEffect } from "react";
 
 // Reporting — authenticated CSV exports for the 6 report kinds. A plain <a download> can't send
 // the Authorization header, so we fetch with auth, build a Blob, and trigger the download.
@@ -22,6 +24,10 @@ function tokenFromCookie(): string | null {
 
 export default function ReportsPage() {
   const [busy, setBusy] = useState<string | null>(null);
+  const [allowed, setAllowed] = useState(true);
+  useEffect(() => {
+    getCtx().then((c) => setAllowed(isAdmin(c.roles))).catch(() => {});
+  }, []);
 
   async function download(kind: string) {
     setBusy(kind);
@@ -43,6 +49,8 @@ export default function ReportsPage() {
       setBusy(null);
     }
   }
+
+  if (!allowed) return <AccessDenied />;
 
   return (
     <div className="space-y-6">

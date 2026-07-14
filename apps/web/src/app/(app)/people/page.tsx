@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui";
-import { apiGet, apiPost, getContext, type CatalogCourse, type DemoContext } from "@/lib/api";
+import { isAdmin, apiGet, apiPost, getContext, type CatalogCourse, type DemoContext } from "@/lib/api";
+import { AccessDenied } from "@/components/AccessDenied";
 
 // Client dashboard — manage your people: invite them, and enrol them in courses. When the course
 // comes from a connected provider (e.g. the client's LearnWorlds), the enrolment provisions the
@@ -56,6 +57,8 @@ export default function PeoplePage() {
       setBusy(false);
     }
   }
+
+  if (ctx && !isAdmin(ctx.roles)) return <AccessDenied />;
 
   return (
     <div className="space-y-6">

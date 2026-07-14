@@ -11,7 +11,10 @@ import { AuthService } from "../../modules/auth/auth.service";
  */
 /** Paths that must work without a tenant (probes, login, the pre-auth demo bootstrap). Checked
  *  by suffix so it's robust to the global prefix. */
-const PUBLIC_SUFFIXES = ["/api/v1/health", "/api/v1/demo/context", "/api/v1/auth/login", "/api/v1/auth/signup", "/api/v1/auth/me"];
+const PUBLIC_SUFFIXES = [
+  "/api/v1/health", "/api/v1/demo/context", "/api/v1/auth/login", "/api/v1/auth/signup",
+  "/api/v1/auth/forgot", "/api/v1/auth/reset", "/api/v1/auth/me",
+];
 // Public site sections (marketing/sales). Auth is still honored when a Bearer token is present
 // (the sales pipeline admin endpoints live under the same prefix), but absence of tenant
 // context is not an error here.

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui";
-import { apiGet, apiPost, getContext, type DemoContext, type ProviderConn } from "@/lib/api";
+import { isAdmin, apiGet, apiPost, getContext, type DemoContext, type ProviderConn } from "@/lib/api";
+import { AccessDenied } from "@/components/AccessDenied";
 
 // Admin → Providers: connect learning providers (incl. a client's own LearnWorlds school) and sync
 // their catalogs into the aggregation hub.
@@ -70,6 +71,8 @@ export default function ProvidersAdminPage() {
 
   const connected = new Set(conns.map((c) => c.providerKey));
   const connectable = available.filter((k) => !connected.has(k));
+
+  if (ctx && !isAdmin(ctx.roles)) return <AccessDenied />;
 
   return (
     <div className="space-y-6">

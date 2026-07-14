@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Card, MetricCard, RiskBadge } from "@/components/ui";
 import { NudgeButton } from "@/components/NudgeButton";
 import { Avatar } from "@/components/Avatar";
-import { apiGet, getContext, type DemoContext, type WorkforceReadiness } from "@/lib/api";
+import { isAdmin, apiGet, getContext, type DemoContext, type WorkforceReadiness } from "@/lib/api";
+import { AccessDenied } from "@/components/AccessDenied";
 
 // Manager Dashboard (wireframe "Manager Portal"): alerts, KPIs, per-learner progress with the
 // Nudge action, activity heatmap, leaderboard, course ratings — plus the original skills
@@ -49,6 +50,7 @@ async function load(): Promise<{ ctx: DemoContext; team: TeamDashboard | null; r
 
 export default async function TeamPage() {
   const { ctx, team, readiness } = await load();
+  if (!isAdmin(ctx.roles)) return <AccessDenied />;
   if (!team) return <Card>Could not load the team dashboard.</Card>;
 
   return (

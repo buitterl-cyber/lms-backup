@@ -1,6 +1,7 @@
 import { Card, MetricCard } from "@/components/ui";
 import { CourseBuilder, ReviewAction } from "@/components/InstructorTools";
-import { apiGet, getContext } from "@/lib/api";
+import { isAdmin, apiGet, getContext } from "@/lib/api";
+import { AccessDenied } from "@/components/AccessDenied";
 
 // Instructor Portal (wireframe "Instructor View"): KPIs, course performance, peer-review
 // queue, recent feedback — plus the native Course Builder (modules w/ sequential unlock).
@@ -17,6 +18,7 @@ interface QueueItem { id: string; title: string; content: string; submitter: str
 
 export default async function InstructorPage() {
   const ctx = await getContext();
+  if (!isAdmin(ctx.roles)) return <AccessDenied />;
   const [overview, queue] = await Promise.all([
     apiGet<Overview>("/instructor/overview", ctx).catch(() => null),
     apiGet<QueueItem[]>("/peer-reviews?status=pending", ctx).catch(() => [] as QueueItem[]),

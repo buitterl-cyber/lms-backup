@@ -5,7 +5,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Avatar } from "@/components/Avatar";
 import { Topbar } from "@/components/Topbar";
 import { Brand } from "@/components/Brand";
-import { apiGet, getContext } from "@/lib/api";
+import { apiGet, getContext, isAdmin } from "@/lib/api";
 
 // App shell, wireframe anatomy: grouped sidebar nav + a user identity card pinned at the
 // bottom, a topbar with global search + notification bell, aurora wash on the top edge.
@@ -45,6 +45,7 @@ async function identity() {
     return {
       name: ctx.userName || "Learner",
       role: (ctx.roles?.[0] ?? "learner").replace(/_/g, " "),
+      admin: isAdmin(ctx.roles),
       xp: game?.totalXp ?? 0,
       level,
       levelProgress: next > prev ? ((game?.totalXp ?? 0) - prev) / (next - prev) : 0,
@@ -53,12 +54,23 @@ async function identity() {
       unread: notifs.filter((n) => !n.readAt).length,
     };
   } catch {
-    return { name: "Learner", role: "learner", xp: 0, level: 1, levelProgress: 0, nextLevelXp: 100, streak: 0, unread: 0 };
+    return { name: "Learner", role: "learner", admin: true, xp: 0, level: 1, levelProgress: 0, nextLevelXp: 100, streak: 0, unread: 0 };
   }
 }
 
+// Admin-only surfaces disappear from a learner's navigation entirely (the pages themselves
+// are guarded too — hiding is UX, the guard is the rule).
+const ADMIN_GROUPS = new Set(["Teaching", "Admin"]);
+const ADMIN_ITEMS = new Set(["/team"]);
+
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const me = await identity();
+  const nav = me.admin
+    ? NAV
+    : NAV.filter((g) => !ADMIN_GROUPS.has(g.group)).map((g) => ({
+        ...g,
+        items: g.items.filter((n) => !ADMIN_ITEMS.has(n.href)),
+      }));
 
   return (
     <>
@@ -69,7 +81,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <Brand size={28} className="text-xl" />
           </Link>
           <nav className="mt-8 flex-1 space-y-5">
-            {NAV.map((g) => (
+            {nav.map((g) => (
               <div key={g.group}>
                 <p className="px-3 text-[10px] font-medium uppercase tracking-widest text-muted">{g.group}</p>
                 <div className="mt-1 flex flex-col gap-0.5">
@@ -107,7 +119,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           <Topbar name={me.name} streak={me.streak} level={me.level} levelProgress={me.levelProgress} unread={me.unread} />
           <div className="rise">{children}</div>
         </main>
-        <BottomNav />
+        <BottomNav manage={me.admin} />
       </div>
     </>
   );

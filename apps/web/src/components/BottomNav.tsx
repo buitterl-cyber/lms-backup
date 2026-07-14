@@ -13,12 +13,13 @@ const TABS = [
   { href: "/notifications", icon: "🔔", label: "Alerts" },
 ];
 
-export function BottomNav() {
+export function BottomNav({ manage = true }: { manage?: boolean }) {
   const pathname = usePathname();
+  const tabs = manage ? TABS : TABS.filter((t) => t.href !== "/team");
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur md:hidden">
       <div className="mx-auto flex max-w-md items-stretch justify-between px-2 pb-[env(safe-area-inset-bottom)]">
-        {TABS.map((t) => {
+        {tabs.map((t) => {
           const active = pathname === t.href || pathname.startsWith(`${t.href}/`);
           return (
             <Link
