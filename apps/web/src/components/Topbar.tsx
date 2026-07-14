@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 /** Wireframe topbar: global course search, streak flame, notification bell with a live unread
  *  count, and the identity avatar with its level ring. Server-rendered; search works without JS. */
@@ -30,6 +31,7 @@ export function Topbar({
           🔥 {streak}
         </span>
       )}
+      <ThemeSwitcher />
       <Link href="/notifications" className="relative rounded-xl border border-border bg-card/70 p-2 backdrop-blur hover:border-brand/50" aria-label={`Notifications — ${unread} unread`}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-muted">
           <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />

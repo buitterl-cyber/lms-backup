@@ -23,11 +23,16 @@ export const viewport = {
   viewportFit: "cover" as const,
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
   // Shell only. The marketing landing + login render full-bleed; the app shell (sidebar) lives in
-  // the (app) route group's layout.
+  // the (app) route group's layout. The chosen skin comes from a cookie so SSR paints it with no
+  // flash; the value is validated against the known keys before it touches the DOM.
+  const { cookies } = await import("next/headers");
+  const { SKINS, THEME_COOKIE } = await import("@/components/themes");
+  const raw = (await cookies()).get(THEME_COOKIE)?.value;
+  const theme = SKINS.some((s) => s.key === raw) ? raw : "midnight";
   return (
-    <html lang="en" dir="ltr" className={`dark ${sora.variable} ${inter.variable}`}>
+    <html lang="en" dir="ltr" data-theme={theme} className={`dark ${sora.variable} ${inter.variable}`}>
       <body className="min-h-screen">{children}</body>
     </html>
   );

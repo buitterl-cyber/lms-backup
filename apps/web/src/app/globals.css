@@ -41,17 +41,55 @@ body {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* The shell's aurora — one quiet indigo→cyan wash bleeding from the top edge. It is the only
-   ambient decoration in the app; everything else stays flat and disciplined. */
+/* The shell's aurora — one quiet two-tone wash bleeding from the top edge. Its colors follow
+   the active skin (--aurora1/--aurora2); it is the only ambient decoration in the app. */
+:root {
+  --aurora1: 79 70 229;
+  --aurora2: 56 189 248;
+}
+.dark {
+  --aurora1: 129 140 248;
+  --aurora2: 56 189 248;
+}
 .aurora {
   position: fixed;
   inset: 0 0 auto 0;
   height: 260px;
   pointer-events: none;
   background:
-    radial-gradient(60% 100% at 20% 0%, rgb(var(--brand) / 0.14), transparent 70%),
-    radial-gradient(50% 90% at 75% 0%, rgb(56 189 248 / 0.08), transparent 70%);
+    radial-gradient(60% 100% at 20% 0%, rgb(var(--aurora1) / 0.14), transparent 70%),
+    radial-gradient(50% 90% at 75% 0%, rgb(var(--aurora2) / 0.09), transparent 70%);
 }
+
+/* ============================================================================
+   SKINS — 20 personalities over one layout. A skin is only tokens; the layout,
+   spacing, and type never move. Declared after .dark so data-theme always wins.
+   ============================================================================ */
+
+/* — dark family — */
+html[data-theme="midnight"] { /* the default indigo dark, named */ }
+html[data-theme="ocean"] { --bg: 6 14 24; --fg: 230 240 248; --muted: 130 150 170; --card: 12 24 38; --border: 26 44 62; --brand: 56 170 240; --aurora1: 56 170 240; --aurora2: 45 212 191; }
+html[data-theme="forest"] { --bg: 8 14 10; --fg: 232 240 233; --muted: 138 155 142; --card: 15 24 18; --border: 31 45 35; --brand: 74 200 120; --aurora1: 74 200 120; --aurora2: 190 220 100; }
+html[data-theme="sunset"] { --bg: 20 10 14; --fg: 248 236 234; --muted: 170 140 140; --card: 33 18 24; --border: 55 32 40; --brand: 244 114 88; --aurora1: 244 114 88; --aurora2: 232 121 198; }
+html[data-theme="grape"] { --bg: 15 9 22; --fg: 240 234 248; --muted: 155 140 175; --card: 26 17 38; --border: 46 32 64; --brand: 178 122 246; --aurora1: 178 122 246; --aurora2: 96 165 250; }
+html[data-theme="ember"] { --bg: 14 9 8; --fg: 246 238 234; --muted: 160 140 132; --card: 26 16 13; --border: 48 30 24; --brand: 240 110 60; --aurora1: 240 110 60; --aurora2: 250 200 80; }
+html[data-theme="borealis"] { --bg: 6 15 17; --fg: 230 244 244; --muted: 125 155 155; --card: 11 26 29; --border: 24 48 52; --brand: 45 212 191; --aurora1: 45 212 191; --aurora2: 129 140 248; }
+html[data-theme="mono"] { --bg: 9 9 10; --fg: 245 245 246; --muted: 148 148 152; --card: 20 20 22; --border: 42 42 46; --brand: 226 226 230; --aurora1: 120 120 128; --aurora2: 80 80 88; }
+html[data-theme="espresso"] { --bg: 17 12 9; --fg: 242 234 226; --muted: 162 145 130; --card: 30 22 17; --border: 52 40 31; --brand: 200 140 90; --aurora1: 200 140 90; --aurora2: 240 200 140; }
+html[data-theme="royal"] { --bg: 8 12 26; --fg: 238 240 248; --muted: 140 150 176; --card: 15 21 42; --border: 31 40 70; --brand: 222 178 88; --aurora1: 222 178 88; --aurora2: 96 130 250; }
+html[data-theme="cyber"] { --bg: 12 7 20; --fg: 242 234 250; --muted: 158 140 180; --card: 22 13 36; --border: 44 26 66; --brand: 236 72 200; --aurora1: 236 72 200; --aurora2: 56 189 248; }
+html[data-theme="volt"] { --bg: 8 10 7; --fg: 238 246 232; --muted: 145 160 138; --card: 15 19 13; --border: 32 40 28; --brand: 163 230 53; --aurora1: 163 230 53; --aurora2: 45 212 191; }
+
+/* — light family (they defeat .dark by coming later in the sheet) — */
+html[data-theme="daylight"] { --bg: 250 250 252; --fg: 17 18 20; --muted: 113 119 130; --card: 255 255 255; --border: 228 230 238; --brand: 79 70 229; --aurora1: 79 70 229; --aurora2: 56 189 248; }
+html[data-theme="paper"] { --bg: 248 246 241; --fg: 32 30 26; --muted: 128 120 108; --card: 255 254 250; --border: 226 220 208; --brand: 60 90 166; --aurora1: 60 90 166; --aurora2: 180 160 120; }
+html[data-theme="sand"] { --bg: 249 244 235; --fg: 43 34 26; --muted: 140 122 102; --card: 255 251 244; --border: 230 218 200; --brand: 194 96 54; --aurora1: 194 96 54; --aurora2: 226 178 100; }
+html[data-theme="mint"] { --bg: 241 249 245; --fg: 20 34 27; --muted: 106 130 117; --card: 252 255 253; --border: 213 232 221; --brand: 22 140 96; --aurora1: 22 140 96; --aurora2: 90 200 170; }
+html[data-theme="sky"] { --bg: 241 247 252; --fg: 18 28 38; --muted: 108 126 142; --card: 251 253 255; --border: 214 227 238; --brand: 22 118 200; --aurora1: 22 118 200; --aurora2: 100 200 240; }
+html[data-theme="rose"] { --bg: 252 244 246; --fg: 40 22 28; --muted: 148 118 126; --card: 255 251 252; --border: 238 217 223; --brand: 200 52 100; --aurora1: 200 52 100; --aurora2: 240 150 130; }
+html[data-theme="bubblegum"] { --bg: 250 243 252; --fg: 38 22 44; --muted: 142 118 150; --card: 255 250 255; --border: 236 219 240; --brand: 190 60 200; --aurora1: 190 60 200; --aurora2: 90 140 250; }
+html[data-theme="lagoon"] { --bg: 238 248 248; --fg: 16 34 36; --muted: 104 132 133; --card: 250 255 255; --border: 209 231 231; --brand: 14 128 136; --aurora1: 14 128 136; --aurora2: 60 180 200; }
+html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 96; --card: 255 253 246; --border: 235 226 202; --brand: 190 122 10; --aurora1: 190 122 10; --aurora2: 130 190 40; }
 
 @media (prefers-reduced-motion: no-preference) {
   .rise {
