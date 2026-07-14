@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { getTenantContext, NotFoundError } from "@riyada/shared";
+import { ForbiddenError, getTenantContext, hasPermission, NotFoundError } from "@riyada/shared";
 import { createProvider } from "@riyada/providers";
 import { PrismaService } from "../../common/prisma/prisma.service";
 import { GamificationService } from "../gamification/gamification.service";
@@ -17,7 +17,11 @@ export class EnrollmentService {
   ) {}
 
   async enroll(input: { userId: string; courseId: string; assignedReason?: string }) {
-    const { tenantId, userId: actor } = getTenantContext();
+    const { tenantId, userId: actor, roles } = getTenantContext();
+    // Self-enrollment is every learner's right; enrolling OTHERS is a manager action.
+    if (input.userId !== actor && !hasPermission(roles, "enrollment:assign")) {
+      throw new ForbiddenError("enrollment:assign");
+    }
     const enrollment = await this.prisma.db.enrollment.upsert({
       where: { userId_courseId: { userId: input.userId, courseId: input.courseId } },
       update: {},
@@ -66,9 +70,13 @@ export class EnrollmentService {
   }
 
   async setProgress(enrollmentId: string, percent: number, score?: number) {
-    const { tenantId } = getTenantContext();
+    const { tenantId, userId: actor, roles } = getTenantContext();
     const enrollment = await this.prisma.db.enrollment.findFirst({ where: { id: enrollmentId, tenantId } });
     if (!enrollment) throw new NotFoundError("Enrollment", enrollmentId);
+    // Ownership: a learner moves only their own progress; managers may move anyone's.
+    if (enrollment.userId !== actor && !hasPermission(roles, "enrollment:assign")) {
+      throw new ForbiddenError("enrollment:assign");
+    }
 
     const completed = percent >= 100;
     const updated = await this.prisma.db.enrollment.update({

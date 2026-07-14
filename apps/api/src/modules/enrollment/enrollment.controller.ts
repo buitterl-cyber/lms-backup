@@ -22,8 +22,10 @@ class ProgressDto {
 export class EnrollmentController {
   constructor(private readonly enrollment: EnrollmentService) {}
 
+  // Learners may enroll THEMSELVES (that's what "Start course" is); enrolling someone
+  // else still requires enrollment:assign — checked in the service.
   @Post("enrollments")
-  @RequirePermissions("enrollment:assign")
+  @RequirePermissions("enrollment:read")
   enroll(@Body() dto: EnrollDto) {
     return this.enrollment.enroll(dto);
   }

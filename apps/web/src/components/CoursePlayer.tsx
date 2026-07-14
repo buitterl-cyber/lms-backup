@@ -16,6 +16,7 @@ export function CoursePlayer({ courseId, launchUrl }: { courseId: string; launch
   const [percent, setPercent] = useState(0);
   const [busy, setBusy] = useState(false);
   const [justCompleted, setJustCompleted] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     getContext()
@@ -43,6 +44,7 @@ export function CoursePlayer({ courseId, launchUrl }: { courseId: string; launch
   async function start() {
     if (!ctx) return;
     setBusy(true);
+    setError("");
     try {
       const id = await ensureEnrolled(ctx);
       if (id) {
@@ -51,6 +53,8 @@ export function CoursePlayer({ courseId, launchUrl }: { courseId: string; launch
         setPercent(e.percent ?? 25);
       }
       if (launchUrl) window.open(launchUrl, "_blank", "noopener");
+    } catch {
+      setError("Couldn't start the course — please try again, or sign in again if the problem persists.");
     } finally {
       setBusy(false);
     }
@@ -59,6 +63,7 @@ export function CoursePlayer({ courseId, launchUrl }: { courseId: string; launch
   async function complete() {
     if (!ctx) return;
     setBusy(true);
+    setError("");
     try {
       const id = await ensureEnrolled(ctx);
       if (id) {
@@ -67,6 +72,8 @@ export function CoursePlayer({ courseId, launchUrl }: { courseId: string; launch
         setPercent(100);
         setJustCompleted(true);
       }
+    } catch {
+      setError("Couldn't mark the course complete — please try again.");
     } finally {
       setBusy(false);
     }
@@ -83,6 +90,8 @@ export function CoursePlayer({ courseId, launchUrl }: { courseId: string; launch
       <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-border">
         <div className={`h-full ${done ? "bg-green" : "bg-brand"}`} style={{ width: `${percent}%` }} />
       </div>
+
+      {error && <p className="mt-3 text-xs text-red">{error}</p>}
 
       {justCompleted && (
         <div className="mt-4 rounded-lg bg-green/10 p-3 text-sm text-green">
