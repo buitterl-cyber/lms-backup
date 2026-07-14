@@ -109,7 +109,7 @@ export class EnrollmentService {
     const { tenantId } = getTenantContext();
     return this.prisma.db.enrollment.findMany({
       where: { tenantId, userId },
-      include: { course: { select: { title: true, providerKey: true } } },
+      include: { course: { select: { title: true, providerKey: true, durationMinutes: true } } },
       orderBy: { enrolledAt: "desc" },
     });
   }

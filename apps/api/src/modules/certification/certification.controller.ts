@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
+import { Controller, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { PermissionsGuard } from "../../common/rbac/permissions.guard";
 import { RequirePermissions } from "../../common/rbac/permissions.decorator";
@@ -15,6 +15,12 @@ export class CertificationController {
   @RequirePermissions("certification:read")
   expiring(@Query("withinDays") withinDays?: string) {
     return this.certs.expiring(withinDays ? Number(withinDays) : 90);
+  }
+
+  @Get("user/:userId")
+  @RequirePermissions("certification:read")
+  forUser(@Param("userId") userId: string) {
+    return this.certs.forUser(userId);
   }
 
   @Post("expiry-sweep")

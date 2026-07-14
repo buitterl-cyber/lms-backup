@@ -105,14 +105,41 @@ export class TeamService {
         alerts.push({ kind: "behind", text: `${l.name} is ${weeks} week${weeks > 1 ? "s" : ""} behind on their learning path.`, userIds: [l.userId] });
     }
 
-    // KPIs
+    // KPIs — deltas only where real history exists (no fabricated trends):
+    // courses assigned this month vs last (enrolledAt), certs this 90d vs prior 90d, and
+    // avg active days/week this month vs last (activity events). Completion has no
+    // historical snapshot yet, so it ships without a delta.
     const allEnrollments = users.flatMap((u) => u.enrollments);
+    const MONTH = 30 * DAY;
+    const [assignedThisMonth, assignedLastMonth, certsPrev, actThisMonth, actLastMonth] = await Promise.all([
+      this.prisma.db.enrollment.count({ where: { tenantId, enrolledAt: { gte: new Date(now - MONTH) } } }),
+      this.prisma.db.enrollment.count({ where: { tenantId, enrolledAt: { gte: new Date(now - 2 * MONTH), lt: new Date(now - MONTH) } } }),
+      this.prisma.db.earnedCertificate.count({ where: { tenantId, issuedAt: { gte: new Date(now - 180 * DAY), lt: new Date(now - 90 * DAY) } } }),
+      this.prisma.db.activityEvent.findMany({
+        where: { tenantId, createdAt: { gte: new Date(now - MONTH) } }, select: { userId: true, createdAt: true },
+      }),
+      this.prisma.db.activityEvent.findMany({
+        where: { tenantId, createdAt: { gte: new Date(now - 2 * MONTH), lt: new Date(now - MONTH) } }, select: { userId: true, createdAt: true },
+      }),
+    ]);
+    const activeDaysPerWeek = (events: { userId: string; createdAt: Date }[]) => {
+      if (!users.length) return 0;
+      const days = new Set(events.map((e) => `${e.userId}:${e.createdAt.toISOString().slice(0, 10)}`));
+      return Math.round((days.size / users.length / (MONTH / (7 * DAY))) * 10) / 10;
+    };
+    const avgActiveDays = activeDaysPerWeek(actThisMonth);
+    const avgActiveDaysPrev = activeDaysPerWeek(actLastMonth);
+
     const kpis = {
       coursesAssigned: allEnrollments.length,
+      coursesAssignedDelta: assignedThisMonth - assignedLastMonth,
       avgCompletion: allEnrollments.length
         ? Math.round(allEnrollments.reduce((s, e) => s + e.percent, 0) / allEnrollments.length)
         : 0,
+      avgActiveDays,
+      avgActiveDaysDelta: Math.round((avgActiveDays - avgActiveDaysPrev) * 10) / 10,
       certsEarned: certsQ,
+      certsEarnedDelta: certsQ - certsPrev,
       teamSize: users.length,
     };
 

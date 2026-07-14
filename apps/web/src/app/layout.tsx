@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Inter, Sora } from "next/font/google";
+import { DM_Sans, Inter } from "next/font/google";
 import "./globals.css";
 
-// Type system: Sora carries display personality (logo, page titles, big metrics);
+// Type system (14-Jul spec): DM Sans carries headings/titles and big metrics;
 // Inter does the quiet UI work. Both variable, both self-hosted by next/font.
-const sora = Sora({ subsets: ["latin"], weight: ["600", "700"], variable: "--font-display" });
+const dmSans = DM_Sans({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-display" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 
 export const metadata: Metadata = {
@@ -32,7 +32,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const raw = (await cookies()).get(THEME_COOKIE)?.value;
   const theme = SKINS.some((s) => s.key === raw) ? raw : "riyada";
   return (
-    <html lang="en" dir="ltr" data-theme={theme} className={`dark ${sora.variable} ${inter.variable}`}>
+    <html lang="en" dir="ltr" data-theme={theme} className={`dark ${dmSans.variable} ${inter.variable}`}>
       <body className="min-h-screen">{children}</body>
     </html>
   );

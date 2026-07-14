@@ -7,6 +7,25 @@ import { PrismaService } from "../../common/prisma/prisma.service";
 export class CertificationService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** A learner's earned certificates, newest first — feeds the dashboard certificates strip. */
+  async forUser(userId: string) {
+    const { tenantId } = getTenantContext();
+    const certs = await this.prisma.db.earnedCertificate.findMany({
+      where: { tenantId, userId },
+      include: { certification: true },
+      orderBy: { issuedAt: "desc" },
+      take: 12,
+    });
+    return certs.map((c) => ({
+      id: c.id,
+      name: c.certification?.name ?? "Certificate",
+      issuedAt: c.issuedAt,
+      expiresAt: c.expiresAt,
+      status: c.status,
+      fileUrl: c.fileUrl,
+    }));
+  }
+
   /** Certificates expiring within N days across the org — feeds renewal campaigns. */
   async expiring(withinDays = 90) {
     const { tenantId } = getTenantContext();

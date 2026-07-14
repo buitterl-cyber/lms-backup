@@ -57,14 +57,20 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
           {courses.map((c) => (
             <Link key={c.id} href={`/catalog/${c.id}`} className="block">
               <Card className="flex h-full flex-col transition-colors hover:border-brand/50">
-                <div className="flex items-center justify-between">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-bg text-lg ring-1 ring-border">{courseGlyph(`${c.title} ${c.skills.join(" ")}`)}</span>
-                  <span className="flex items-center gap-2">
-                    <span className="text-xs uppercase tracking-wide text-muted">{PROVIDER_LABEL[c.provider] ?? c.provider}</span>
-                    {c.level && <span className="rounded bg-border/60 px-1.5 py-0.5 text-[10px] uppercase text-muted">{c.level}</span>}
+                {/* Icon in its own fixed box (shrink-0 + overflow-hidden) beside a min-w-0 text
+                    column — the two can never overlap at any card width. */}
+                <div className="flex items-start gap-3">
+                  <span className="glyph flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-bg text-xl ring-1 ring-border">
+                    {courseGlyph(`${c.title} ${c.skills.join(" ")}`)}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <h3 className="font-medium leading-snug">{c.title}</h3>
+                    <span className="mt-1 flex flex-wrap items-center gap-2">
+                      <span className="truncate text-xs uppercase tracking-wide text-muted">{PROVIDER_LABEL[c.provider] ?? c.provider}</span>
+                      {c.level && <span className="shrink-0 rounded-full bg-border/60 px-2 py-0.5 text-[10px] uppercase text-muted">{c.level}</span>}
+                    </span>
                   </span>
                 </div>
-                <h3 className="mt-2 font-medium">{c.title}</h3>
                 <div className="mt-2 flex flex-wrap gap-1">
                   {c.skills.slice(0, 4).map((s) => (
                     <span key={s} className="rounded-full bg-card px-2 py-0.5 text-[11px] text-muted ring-1 ring-border">{s}</span>

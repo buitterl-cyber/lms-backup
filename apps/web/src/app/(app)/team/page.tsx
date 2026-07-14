@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, MetricCard, RiskBadge } from "@/components/ui";
 import { NudgeButton } from "@/components/NudgeButton";
+import { ExportCsv } from "@/components/ExportCsv";
 import { Avatar } from "@/components/Avatar";
 import { isAdmin, apiGet, getContext, type DemoContext, type WorkforceReadiness } from "@/lib/api";
 import { AccessDenied } from "@/components/AccessDenied";
@@ -11,7 +12,10 @@ import { AccessDenied } from "@/components/AccessDenied";
 export const dynamic = "force-dynamic";
 
 interface TeamDashboard {
-  kpis: { coursesAssigned: number; avgCompletion: number; certsEarned: number; teamSize: number };
+  kpis: {
+    coursesAssigned: number; coursesAssignedDelta: number; avgCompletion: number;
+    avgActiveDays: number; avgActiveDaysDelta: number; certsEarned: number; certsEarnedDelta: number; teamSize: number;
+  };
   learners: {
     userId: string; name: string; email: string; activeCourse: string | null; activeCourseId: string | null;
     percent: number | null; started: boolean; dueAt: string | null; lastActiveAt: string | null;
@@ -48,10 +52,14 @@ async function load(): Promise<{ ctx: DemoContext; team: TeamDashboard | null; r
   return { ctx, team, readiness };
 }
 
-export default async function TeamPage() {
+export default async function TeamPage({ searchParams }: { searchParams: Promise<{ sort?: string }> }) {
+  const { sort = "progress" } = await searchParams;
   const { ctx, team, readiness } = await load();
   if (!isAdmin(ctx.roles)) return <AccessDenied />;
   if (!team) return <Card>Could not load the team dashboard.</Card>;
+  const learners = [...team.learners].sort((a, b) =>
+    sort === "name" ? a.name.localeCompare(b.name) : (b.percent ?? -1) - (a.percent ?? -1),
+  );
 
   return (
     <div className="space-y-6">
@@ -60,7 +68,11 @@ export default async function TeamPage() {
           <h1 className="font-display text-2xl font-semibold">Team Dashboard</h1>
           <p className="text-sm text-muted">Here&apos;s how your team is tracking this week.</p>
         </div>
-        <Link href="/reports" className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-card">Export CSV →</Link>
+        <ExportCsv
+          filename="team-progress.csv"
+          header={["Learner", "Email", "Active course", "Progress %", "Last active", "Status"]}
+          rows={team.learners.map((l) => [l.name, l.email, l.activeCourse, l.percent, l.lastActiveAt, l.status])}
+        />
       </header>
 
       {team.alerts.length > 0 && (
@@ -79,27 +91,38 @@ export default async function TeamPage() {
       )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <MetricCard label="Courses assigned" value={`${team.kpis.coursesAssigned}`} sub={`across ${team.kpis.teamSize} learners`} />
-        <MetricCard label="Avg completion" value={`${team.kpis.avgCompletion}%`} />
-        <MetricCard label="Certs earned" value={`${team.kpis.certsEarned}`} sub="last 90 days" />
-        <MetricCard label="Team size" value={`${team.kpis.teamSize}`} />
+        <MetricCard
+          label="Courses assigned" value={`${team.kpis.coursesAssigned}`}
+          delta={`${Math.abs(team.kpis.coursesAssignedDelta)} vs last month`} down={team.kpis.coursesAssignedDelta < 0}
+          sub={`across ${team.kpis.teamSize} learners`}
+        />
+        <MetricCard label="Avg completion" value={`${team.kpis.avgCompletion}%`} sub="no trend yet — history builds monthly" />
+        <MetricCard
+          label="Avg active days / wk" value={`${team.kpis.avgActiveDays}`}
+          delta={`${Math.abs(team.kpis.avgActiveDaysDelta)} vs last month`} down={team.kpis.avgActiveDaysDelta < 0}
+        />
+        <MetricCard
+          label="Certs earned" value={`${team.kpis.certsEarned}`}
+          delta={`${Math.abs(team.kpis.certsEarnedDelta)} vs prior 90d`} down={team.kpis.certsEarnedDelta < 0}
+          sub="last 90 days"
+        />
       </div>
 
       <Card className="p-0">
         <div className="border-b border-border p-4 text-sm font-medium">
-          Team progress <span className="ml-1 text-xs font-normal text-muted">{team.learners.length} learners</span>
+          Team progress <span className="ml-1 text-xs font-normal text-muted">{learners.length} learners · sorted by {sort === "name" ? "name" : "completion"}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="text-left text-xs text-muted">
               <tr className="border-b border-border">
-                <th className="p-4 font-medium">Learner</th><th className="font-medium">Active course</th>
-                <th className="font-medium">Progress</th><th className="font-medium">Last active</th>
+                <th className="p-4 font-medium"><Link href="?sort=name" className="hover:text-fg">Learner ⇅</Link></th><th className="font-medium">Active course</th>
+                <th className="font-medium"><Link href="?sort=progress" className="hover:text-fg">Progress ⇅</Link></th><th className="font-medium">Last active</th>
                 <th className="font-medium">Status</th><th className="p-4 font-medium" />
               </tr>
             </thead>
             <tbody>
-              {team.learners.map((l) => (
+              {learners.map((l) => (
                 <tr key={l.userId} className="border-b border-border/60 last:border-0">
                   <td className="p-4">
                     <span className="flex items-center gap-3">
@@ -146,7 +169,7 @@ export default async function TeamPage() {
                 {week.map((n, di) => (
                   <div
                     key={di}
-                    className={`aspect-square w-full rounded-sm ${n === 0 ? "bg-border/50" : n < 3 ? "bg-brand/40" : "bg-brand"}`}
+                    className={`aspect-square w-full rounded-sm ${n === 0 ? "bg-border/50" : n === 1 ? "bg-brand/25" : n < 4 ? "bg-brand/55" : "bg-brand"}`}
                     title={`${n} activities`}
                   />
                 ))}
@@ -155,7 +178,8 @@ export default async function TeamPage() {
           </div>
           <div className="mt-3 flex items-center gap-3 text-[10px] text-muted">
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-border/50" /> None</span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-brand/40" /> Some</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-brand/25" /> Light</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-brand/55" /> Mid</span>
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-brand" /> High</span>
           </div>
         </Card>
