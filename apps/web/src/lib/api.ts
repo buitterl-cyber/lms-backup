@@ -28,15 +28,18 @@ async function authToken(): Promise<string | null> {
 
 async function buildHeaders(ctx?: DemoContext): Promise<Record<string, string>> {
   const token = await authToken();
-  if (token) return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
-  // Demo fallback (no login): trust headers derived from the bootstrap context.
-  return {
+  // Always include the demo-context headers: the middleware prefers a valid Bearer token, and
+  // when the cookie is stale (rotated JWT_SECRET, expired) it falls through to these instead of
+  // rejecting every request until the user clears cookies.
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "X-Tenant-Id": ctx?.tenantId ?? "",
     "X-Org-Id": ctx?.organizationId ?? "",
     "X-User-Id": ctx?.userId ?? "",
-    "X-Roles": "org_admin",
+    "X-Roles": (ctx?.roles?.length ? ctx.roles : ["org_admin"]).join(","),
   };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
 }
 
 export interface DemoContext {
@@ -51,12 +54,19 @@ export interface DemoContext {
   roles?: string[];
 }
 
-/** Resolve the current identity: /auth/me when logged in, else the demo bootstrap. */
+/** Resolve the current identity: /auth/me when logged in, else the demo bootstrap. A stale or
+ *  rotated-secret cookie must never take pages down — fall back to the demo context so the app
+ *  renders and the user can simply log in again. */
 export async function getContext(): Promise<DemoContext> {
   const token = await authToken();
-  const path = token ? "/auth/me" : "/demo/context";
-  const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-  const res = await fetch(`${baseUrl()}${path}`, { headers, cache: "no-store" });
+  if (token) {
+    const res = await fetch(`${baseUrl()}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (res.ok) return res.json() as Promise<DemoContext>;
+  }
+  const res = await fetch(`${baseUrl()}/demo/context`, { cache: "no-store" });
   if (!res.ok) throw new Error(`context -> ${res.status}`);
   return res.json() as Promise<DemoContext>;
 }

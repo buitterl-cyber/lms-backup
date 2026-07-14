@@ -53,7 +53,14 @@ export class AuthService {
 
   /** Same shape as /demo/context (+roles) so the web can use either interchangeably. */
   async me(token: string) {
-    const c = AuthService.verify(token);
+    let c: JwtClaims;
+    try {
+      c = AuthService.verify(token);
+    } catch {
+      // Stale/foreign cookie (e.g. signed with a rotated JWT_SECRET) is a client-state problem,
+      // not a server error: 401 so the web can fall back to the demo context instead of dying.
+      throw new DomainError("Invalid or expired token", 401, "invalid_token");
+    }
     const user = await this.prisma.db.user.findFirst({
       where: { id: c.sub },
       select: { id: true, firstName: true, lastName: true, jobTitle: true, tenantId: true, organizationId: true, departmentId: true, currentRoleId: true, targetRoleId: true },
