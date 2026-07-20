@@ -1,23 +1,10 @@
-/** Simplified hero product visual — readiness → gaps → action.
- *  Floating chips sit outside the frame so they never cover dashboard content. */
+/** Simplified hero product visual — readiness → gaps → action. */
 export function HeroProductVisual() {
   return (
-    <div className="relative mx-auto w-full max-w-xl px-1 pb-12 pt-20 sm:px-2 lg:max-w-none lg:pb-14 lg:pt-24">
+    <div className="relative mx-auto w-full max-w-xl px-1 pb-12 pt-2 sm:px-2 lg:max-w-none lg:pb-14">
       <div aria-hidden className="mkt-visual-glow pointer-events-none absolute inset-2 rounded-[2rem]" />
 
-      {/* Live chip — fully above the card frame */}
-      <div className="mkt-float rise rise-d5 absolute left-3 top-2 z-20 hidden max-w-[220px] rounded-2xl border border-border bg-card px-3 py-2 shadow-lg shadow-black/10 sm:left-4 md:block lg:left-0">
-        <p className="flex items-center gap-2 text-[11px] font-medium text-fg">
-          <span className="relative flex h-2 w-2 shrink-0">
-            <span className="mkt-pulse absolute inset-0 rounded-full bg-accentTeal opacity-60" />
-            <span className="relative h-2 w-2 rounded-full bg-accentTeal" />
-          </span>
-          Gap closed — SOC 2
-        </p>
-        <p className="mt-0.5 ps-4 text-[10px] text-muted">Security · just now</p>
-      </div>
-
-      {/* Readiness chip — fully below the card frame */}
+      {/* Readiness chip — below the card frame */}
       <div className="mkt-float-slow rise rise-d6 absolute bottom-2 right-3 z-20 hidden rounded-2xl border border-border bg-heroPanel px-3.5 py-2.5 text-white shadow-xl sm:right-4 sm:block lg:right-0">
         <p className="text-[10px] uppercase tracking-wider text-white/55">Readiness</p>
         <p className="tnum text-xl font-semibold text-accentTeal">72%</p>
