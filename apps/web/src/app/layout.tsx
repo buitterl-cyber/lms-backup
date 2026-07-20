@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { DM_Sans, Inter } from "next/font/google";
 import "./globals.css";
+import "flag-icons/css/flag-icons.min.css";
 
 // Type system (14-Jul spec): DM Sans carries headings/titles and big metrics;
 // Inter does the quiet UI work. Both variable, both self-hosted by next/font.
@@ -25,14 +26,18 @@ export const viewport = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   // Shell only. The marketing landing + login render full-bleed; the app shell (sidebar) lives in
-  // the (app) route group's layout. The chosen skin comes from a cookie so SSR paints it with no
-  // flash; the value is validated against the known keys before it touches the DOM.
+  // the (app) route group's layout. The chosen skin AND locale come from cookies so SSR paints
+  // both with no flash; each value is validated against its known keys before it touches the DOM.
   const { cookies } = await import("next/headers");
-  const { SKINS, THEME_COOKIE } = await import("@/components/themes");
-  const raw = (await cookies()).get(THEME_COOKIE)?.value;
-  const theme = SKINS.some((s) => s.key === raw) ? raw : "riyada";
+  const { SKINS, THEME_COOKIE, skinMode } = await import("@/components/themes");
+  const { LOCALE_COOKIE, resolveLocale, dir } = await import("@/lib/i18n");
+  const jar = await cookies();
+  const rawTheme = jar.get(THEME_COOKIE)?.value;
+  const theme = SKINS.some((s) => s.key === rawTheme) ? rawTheme : "riyada";
+  const modeClass = skinMode(theme) === "dark" ? "dark" : "";
+  const locale = resolveLocale(jar.get(LOCALE_COOKIE)?.value);
   return (
-    <html lang="en" dir="ltr" data-theme={theme} className={`dark ${dmSans.variable} ${inter.variable}`}>
+    <html lang={locale} dir={dir(locale)} data-theme={theme} className={`${modeClass} ${dmSans.variable} ${inter.variable}`.trim()}>
       <body className="min-h-screen">{children}</body>
     </html>
   );

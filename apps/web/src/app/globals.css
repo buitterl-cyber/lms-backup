@@ -46,6 +46,20 @@ body {
   filter: grayscale(0.4) opacity(0.85);
 }
 
+/* Every input/button/link across the app pairs `outline-none` with a focus:border-brand color
+   change — fine for mouse clicks, but it drops the focus ring entirely for keyboard users. This
+   restores a real, visible ring on :focus-visible only (so mouse/touch clicks stay unaffected),
+   and wins over the outline-none utility on ordinary CSS specificity — no per-file changes. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 2px;
+}
+
 /* The shell's aurora — one quiet two-tone wash bleeding from the top edge. Its colors follow
    the active skin (--aurora1/--aurora2); it is the only ambient decoration in the app. */
 :root {
@@ -68,7 +82,10 @@ body {
 
 /* ============================================================================
    SKINS — 20 personalities over one layout. A skin is only tokens; the layout,
-   spacing, and type never move. Declared after .dark so data-theme always wins.
+   spacing, and type never move. Each skin's light/dark family is declared
+   explicitly in components/themes.ts (`Skin.mode`) — layout.tsx and
+   ThemeSwitcher set the `dark` class on <html> from that, not from stylesheet
+   order. The dark/light grouping below is just for readability.
    ============================================================================ */
 
 /* — dark family — */
@@ -85,7 +102,7 @@ html[data-theme="royal"] { --bg: 8 12 26; --fg: 238 240 248; --muted: 140 150 17
 html[data-theme="cyber"] { --bg: 12 7 20; --fg: 242 234 250; --muted: 158 140 180; --card: 22 13 36; --border: 44 26 66; --brand: 236 72 200; --aurora1: 236 72 200; --aurora2: 56 189 248; }
 html[data-theme="volt"] { --bg: 8 10 7; --fg: 238 246 232; --muted: 145 160 138; --card: 15 19 13; --border: 32 40 28; --brand: 163 230 53; --aurora1: 163 230 53; --aurora2: 45 212 191; }
 
-/* — light family (they defeat .dark by coming later in the sheet) — */
+/* — light family — */
 /* Riyada — THE DEFAULT: the logo's world per the 14-Jul design spec.
    Navy #1E3A6E primary, gold #F5A623 accent, #F4F5F7 surface, #1A1F2E ink, #5A6475 soft text. */
 html[data-theme="riyada"] { --bg: 244 245 247; --fg: 26 31 46; --muted: 90 100 117; --card: 255 255 255; --border: 226 229 234; --brand: 30 58 110; --aurora1: 30 58 110; --aurora2: 245 166 35; }
@@ -99,14 +116,105 @@ html[data-theme="bubblegum"] { --bg: 250 243 252; --fg: 38 22 44; --muted: 142 1
 html[data-theme="lagoon"] { --bg: 238 248 248; --fg: 16 34 36; --muted: 104 132 133; --card: 250 255 255; --border: 209 231 231; --brand: 14 128 136; --aurora1: 14 128 136; --aurora2: 60 180 200; }
 html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 96; --card: 255 253 246; --border: 235 226 202; --brand: 190 122 10; --aurora1: 190 122 10; --aurora2: 130 190 40; }
 
+/* Motion — shared entrance + scroll-reveal. Marketing + app shells both use `.rise`;
+   the landing page adds staggered delays and `.reveal` (toggled by Reveal.tsx). */
 @media (prefers-reduced-motion: no-preference) {
   .rise {
-    animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation: rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
+  .rise-d1 { animation-delay: 0.08s; }
+  .rise-d2 { animation-delay: 0.16s; }
+  .rise-d3 { animation-delay: 0.24s; }
+  .rise-d4 { animation-delay: 0.32s; }
+  .rise-d5 { animation-delay: 0.4s; }
+  .rise-d6 { animation-delay: 0.48s; }
+
   @keyframes rise {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: none; }
   }
+
+  /* Scroll-triggered reveal — starts hidden; Reveal.tsx adds `.is-in` in view. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 0.6s cubic-bezier(0.2, 0.7, 0.2, 1),
+      transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .reveal.is-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Bar-grow for the hero mock chart — runs once on load. */
+  .hero-bar {
+    transform-origin: bottom;
+    animation: hero-bar 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  @keyframes hero-bar {
+    from { transform: scaleY(0.08); opacity: 0.4; }
+    to { transform: scaleY(1); opacity: 1; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .reveal,
+  .hero-bar {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================================
+   FIXED PALETTES — pinned regardless of the active skin. Pre-login/auth
+   surfaces and the marketing hero mock intentionally never follow the skin
+   cookie, so their colors live here instead of as hardcoded hex in components.
+   ============================================================================ */
+:root {
+  /* Official Riyada gold — shared by the auth shell and any in-app surface (e.g. the
+     learner resume-hero CTA) that wants the fixed brand accent, not the active skin's. */
+  --brand-gold: 245 166 35;      /* #F5A623 */
+  --brand-gold-ink: 58 42 5;     /* #3A2A05 — text color safe on top of --brand-gold */
+
+  /* Auth shell (login/signup/reset) — official navy + neutrals, independent of skins. */
+  --auth-brand: 30 58 110;       /* #1E3A6E */
+  --auth-ink: 22 35 60;          /* #16233C */
+  --auth-muted: 107 118 136;     /* #6B7688 */
+  --auth-border: 226 229 234;    /* #E2E5EA */
+  --auth-field: 247 249 252;     /* #F7F9FC */
+  --auth-card: 255 255 255;      /* #FFFFFF */
+
+  /* Marketing hero mock (HeroDashboardMock) — fixed dark mockup, independent of skins. */
+  --hero-amber: 251 191 36;      /* #FBBF24 */
+  --hero-teal: 45 212 191;       /* #2DD4BF */
+  --hero-coral: 255 111 97;      /* #FF6F61 */
+  --hero-panel: 11 29 46;        /* #0B1D2E */
+
+  /* Our second brand accent (identified from the hero card, the site's strongest visual
+     moment): teal, paired with the dark navy panel above. Fixed like brand-gold — a
+     recognizable RiyadaIntel color regardless of the visitor's active skin — used to extend
+     that hero moment's look into more of the marketing site and dashboard chrome. Same value
+     as --hero-teal (not a new color), just named for general reuse beyond that one component. */
+  --accent-teal: 45 212 191;      /* #2DD4BF */
+  --accent-teal-ink: 11 29 46;    /* #0B1D2E — text color safe on top of --accent-teal */
+}
+
+/* Marketing landing — soft aurora wash behind the hero (token-driven, not hard-coded hex). */
+.marketing-hero-wash {
+  background:
+    radial-gradient(55% 80% at 15% 0%, rgb(var(--aurora1) / 0.12), transparent 70%),
+    radial-gradient(45% 70% at 85% 10%, rgb(var(--aurora2) / 0.10), transparent 65%);
+}
+
+.marketing-cta-wash {
+  background:
+    radial-gradient(50% 80% at 80% 20%, rgb(var(--accent-teal) / 0.22), transparent 60%),
+    radial-gradient(40% 60% at 10% 90%, rgb(var(--aurora2) / 0.18), transparent 55%);
 }
 
 /* RTL is driven by <html dir="rtl"> set from locale; logical properties keep layouts mirrored. */
