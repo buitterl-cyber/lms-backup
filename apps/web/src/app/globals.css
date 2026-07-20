@@ -217,6 +217,94 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
     radial-gradient(40% 60% at 10% 90%, rgb(var(--aurora2) / 0.18), transparent 55%);
 }
 
+/* —— Page atmosphere (Docebo depth, Riyada tokens) —— */
+.mkt-page {
+  background:
+    radial-gradient(80% 50% at 10% -10%, rgb(var(--accent-teal) / 0.08), transparent 55%),
+    radial-gradient(70% 45% at 95% 5%, rgb(var(--brand) / 0.07), transparent 50%),
+    rgb(var(--bg));
+}
+.mkt-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  pointer-events: none;
+  will-change: transform;
+}
+.mkt-blob-a {
+  width: min(520px, 55vw);
+  height: min(520px, 55vw);
+  top: -8%;
+  left: -12%;
+  background: rgb(var(--accent-teal) / 0.22);
+  opacity: 0.85;
+}
+.mkt-blob-b {
+  width: min(460px, 48vw);
+  height: min(460px, 48vw);
+  top: 8%;
+  right: -14%;
+  background: rgb(var(--brand) / 0.18);
+  opacity: 0.9;
+}
+.mkt-blob-c {
+  width: min(320px, 40vw);
+  height: min(320px, 40vw);
+  bottom: 18%;
+  left: 38%;
+  background: rgb(var(--brand-gold) / 0.14);
+}
+.mkt-blob-d {
+  width: min(420px, 50vw);
+  height: min(420px, 50vw);
+  top: -20%;
+  right: -10%;
+  background: rgb(var(--accent-teal) / 0.12);
+}
+.mkt-hero-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgb(var(--border) / 0.55) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--border) / 0.55) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 65% 55% at 70% 35%, black, transparent 75%);
+  opacity: 0.45;
+}
+.mkt-visual-glow {
+  background:
+    radial-gradient(circle at 40% 40%, rgb(var(--accent-teal) / 0.28), transparent 55%),
+    radial-gradient(circle at 80% 70%, rgb(var(--brand) / 0.18), transparent 50%);
+  filter: blur(28px);
+}
+.mkt-accent-line {
+  background: linear-gradient(
+    105deg,
+    rgb(var(--fg)) 0%,
+    rgb(var(--brand)) 40%,
+    rgb(var(--accent-teal)) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.mkt-btn-demo {
+  background: linear-gradient(135deg, rgb(var(--brand)) 0%, rgb(30 58 110) 55%, rgb(var(--accent-teal-ink)) 100%);
+  color: #fff;
+  box-shadow:
+    0 10px 28px -10px rgb(var(--brand) / 0.55),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+.mkt-btn-demo:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+  box-shadow:
+    0 16px 36px -12px rgb(var(--brand) / 0.6),
+    0 0 0 4px rgb(var(--accent-teal) / 0.18);
+}
+
 /* —— Docebo-grade marketing motion (CSS-only continuous life) —— */
 .mkt-gradient-text {
   background: linear-gradient(
@@ -377,6 +465,10 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
   .mkt-orb-b { animation: mkt-drift 22s ease-in-out infinite reverse; }
   .mkt-orb-c { animation: mkt-drift 26s ease-in-out infinite; }
   .mkt-orb-cta { animation: mkt-drift 20s ease-in-out infinite alternate; }
+  .mkt-blob-a { animation: mkt-drift 20s ease-in-out infinite; }
+  .mkt-blob-b { animation: mkt-drift 24s ease-in-out infinite reverse; }
+  .mkt-blob-c { animation: mkt-drift 28s ease-in-out infinite; }
+  .mkt-blob-d { animation: mkt-drift 22s ease-in-out infinite alternate; }
 
   .mkt-float { animation: mkt-float 6.5s ease-in-out infinite; }
   .mkt-float-slow { animation: mkt-float 8.5s ease-in-out infinite reverse; }
@@ -386,12 +478,17 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
   }
 
   .mkt-marquee-track {
-    animation: mkt-marquee 42s linear infinite;
+    animation: mkt-marquee 38s linear infinite;
   }
 
   .mkt-mesh {
     background-size: 140% 140%;
     animation: mkt-mesh-shift 14s ease-in-out infinite alternate;
+  }
+
+  .mkt-bar-fill {
+    transform-origin: left center;
+    animation: mkt-bar 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
 
   @keyframes mkt-drift {
@@ -401,7 +498,7 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
   }
   @keyframes mkt-float {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-14px); }
+    50% { transform: translateY(-12px); }
   }
   @keyframes mkt-pulse {
     0% { box-shadow: 0 0 0 0 rgb(var(--accent-teal) / 0.55); opacity: 1; }
@@ -416,16 +513,22 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
     from { background-position: 0% 40%; }
     to { background-position: 100% 60%; }
   }
+  @keyframes mkt-bar {
+    from { transform: scaleX(0.15); opacity: 0.5; }
+    to { transform: scaleX(1); opacity: 1; }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .mkt-orb,
+  .mkt-blob,
   .mkt-float,
   .mkt-float-slow,
   .mkt-pulse,
   .mkt-marquee-track,
   .mkt-mesh,
-  .mkt-orb-cta {
+  .mkt-orb-cta,
+  .mkt-bar-fill {
     animation: none !important;
   }
 }

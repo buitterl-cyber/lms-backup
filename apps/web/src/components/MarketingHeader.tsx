@@ -12,14 +12,14 @@ const NAV = [
   { href: "#resources", label: "Resources" },
 ] as const;
 
-/** Marketing-only header: Product / Solutions / … + Log in + single primary CTA “Book a demo”. */
+/** Floating pill header — Docebo-inspired depth, Riyada navy/teal tokens. */
 export function MarketingHeader() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const menuId = useId();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -39,19 +39,19 @@ export function MarketingHeader() {
   }
 
   return (
-    <header
-      className={`sticky top-0 z-50 border-b transition-[background-color,border-color,box-shadow] duration-200 ${
-        scrolled
-          ? "border-border bg-card/90 shadow-sm backdrop-blur-md"
-          : "border-transparent bg-bg/80 backdrop-blur-sm"
-      }`}
-    >
-      <div className="mx-auto flex h-14 max-w-[1280px] items-center justify-between gap-4 px-5 sm:h-16 sm:px-6">
-        <Link href="/" className="shrink-0" onClick={close}>
+    <header className="sticky top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-4">
+      <div
+        className={`mx-auto flex max-w-[1280px] items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 transition duration-300 sm:px-4 sm:py-3 ${
+          scrolled || open
+            ? "border-border/80 bg-card/95 shadow-[0_12px_40px_-16px_rgba(15,23,42,0.28)] backdrop-blur-xl"
+            : "border-border/50 bg-card/70 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] backdrop-blur-md"
+        }`}
+      >
+        <Link href="/" className="shrink-0 ps-1" onClick={close}>
           <Brand size={28} className="text-[1.05rem]" />
         </Link>
 
-        <nav className="hidden items-center gap-7 text-[13px] font-medium text-muted lg:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-6 text-[13px] font-medium text-muted lg:flex" aria-label="Primary">
           {NAV.map((item) => (
             <a key={item.href} href={item.href} className="transition hover:text-fg">
               {item.label}
@@ -59,13 +59,16 @@ export function MarketingHeader() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <Link href="/login" className="text-[13px] font-medium text-muted transition hover:text-fg">
+        <div className="hidden items-center gap-2 lg:flex">
+          <Link
+            href="/login"
+            className="rounded-full px-3 py-2 text-[13px] font-medium text-muted transition hover:bg-bg hover:text-fg"
+          >
             Log in
           </Link>
           <a
             href="#book-demo"
-            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white transition hover:opacity-95"
+            className="mkt-btn-demo inline-flex min-h-10 items-center justify-center rounded-full px-5 text-[13px] font-semibold"
           >
             Book a demo
           </a>
@@ -73,47 +76,41 @@ export function MarketingHeader() {
 
         <button
           type="button"
-          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-border text-fg lg:hidden"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-border text-fg lg:hidden"
           aria-expanded={open}
           aria-controls={menuId}
           aria-label={open ? "Close menu" : "Open menu"}
           onClick={() => setOpen((v) => !v)}
         >
-          <span className="sr-only">{open ? "Close" : "Menu"}</span>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-            {open ? (
-              <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-            ) : (
-              <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
-            )}
+            {open ? <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" /> : <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />}
           </svg>
         </button>
       </div>
 
       {open && (
-        <div id={menuId} className="border-t border-border bg-card lg:hidden">
-          <nav className="mx-auto flex max-w-[1280px] flex-col gap-1 px-5 py-3" aria-label="Mobile">
+        <div
+          id={menuId}
+          className="mx-auto mt-2 max-w-[1280px] overflow-hidden rounded-2xl border border-border bg-card shadow-lg lg:hidden"
+        >
+          <nav className="flex flex-col gap-1 px-3 py-3" aria-label="Mobile">
             {NAV.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
                 onClick={close}
-                className="flex min-h-11 items-center rounded-lg px-2 text-sm font-medium text-fg hover:bg-bg"
+                className="flex min-h-11 items-center rounded-xl px-3 text-sm font-medium text-fg hover:bg-bg"
               >
                 {item.label}
               </a>
             ))}
-            <Link
-              href="/login"
-              onClick={close}
-              className="flex min-h-11 items-center rounded-lg px-2 text-sm font-medium text-fg hover:bg-bg"
-            >
+            <Link href="/login" onClick={close} className="flex min-h-11 items-center rounded-xl px-3 text-sm font-medium text-fg hover:bg-bg">
               Log in
             </Link>
             <a
               href="#book-demo"
               onClick={close}
-              className="mt-1 flex min-h-11 items-center justify-center rounded-lg bg-brand px-4 text-sm font-semibold text-white"
+              className="mkt-btn-demo mt-1 flex min-h-11 items-center justify-center rounded-full text-sm font-semibold"
             >
               Book a demo
             </a>

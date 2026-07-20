@@ -6,8 +6,8 @@ import { LaunchPopup } from "@/components/LaunchPopup";
 import { MarketingHeader } from "@/components/MarketingHeader";
 import { Reveal } from "@/components/Reveal";
 
-// Marketing homepage — workforce-readiness intelligence positioning (not a course marketplace).
-// Copy is kept inline and editable like the rest of the project.
+// Marketing homepage — workforce-readiness intelligence.
+// Visual language borrows Docebo’s depth/motion energy; colours stay Riyada navy/teal/gold.
 
 const OUTCOMES = [
   {
@@ -46,7 +46,6 @@ const WORKFLOW = [
   { step: "04", title: "Act through existing providers", desc: "Assign or review training without replacing the content sources you already use." },
 ] as const;
 
-/** Provider names already present in the product/connectors — not invented partners. */
 const PROVIDERS = ["GO1", "Microsoft Learn", "AWS Skill Builder", "Cybrary", "Internal knowledge"] as const;
 
 const AGGREGATION = [
@@ -63,48 +62,56 @@ const INTELLIGENCE = [
   "Recommends the right intervention",
 ] as const;
 
+const MARQUEE = [
+  "Skills Graph",
+  "Gap intelligence",
+  "Risk prioritisation",
+  "Certification renewals",
+  "Explainable recommendations",
+  "Provider-agnostic action",
+  "Workforce readiness",
+] as const;
+
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-bg text-fg">
+    <div className="mkt-page min-h-screen text-fg">
       <LaunchPopup />
       <MarketingHeader />
 
       <main>
         {/* —— Hero —— */}
-        <section className="relative overflow-hidden border-b border-border" aria-labelledby="hero-heading">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 opacity-[0.35]"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgb(var(--border) / 0.7) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--border) / 0.7) 1px, transparent 1px)",
-              backgroundSize: "48px 48px",
-              maskImage: "radial-gradient(ellipse 70% 60% at 70% 40%, black, transparent)",
-            }}
-          />
-          <div className="relative mx-auto grid max-w-[1280px] items-center gap-10 px-5 pb-14 pt-8 sm:px-6 sm:pb-16 sm:pt-10 lg:grid-cols-[44%_56%] lg:gap-12 lg:pb-20 lg:pt-12">
+        <section className="relative overflow-hidden" aria-labelledby="hero-heading">
+          <div aria-hidden className="mkt-blob mkt-blob-a" />
+          <div aria-hidden className="mkt-blob mkt-blob-b" />
+          <div aria-hidden className="mkt-blob mkt-blob-c" />
+          <div aria-hidden className="mkt-hero-grid" />
+
+          <div className="relative mx-auto grid max-w-[1280px] items-center gap-10 px-5 pb-12 pt-6 sm:px-6 sm:pb-14 sm:pt-8 lg:grid-cols-[44%_56%] lg:gap-12 lg:pb-16 lg:pt-10">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
+              <p className="rise inline-flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
+                <span className="h-px w-7 bg-accentTeal" aria-hidden />
                 Workforce readiness, without the guesswork
               </p>
-              <h1 id="hero-heading" className="font-display mt-4 text-[2.1rem] font-semibold leading-[1.12] tracking-tight text-fg sm:text-4xl lg:text-[2.75rem] lg:leading-[1.08]">
-                See every skills and compliance gap before it becomes a risk.
+              <h1
+                id="hero-heading"
+                className="rise rise-d1 font-display mt-5 text-[2.25rem] font-semibold leading-[1.08] tracking-tight text-fg sm:text-5xl lg:text-[3.15rem] lg:leading-[1.05]"
+              >
+                See every skills and compliance gap{" "}
+                <span className="mkt-accent-line">before it becomes a risk.</span>
               </h1>
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
+              <p className="rise rise-d2 mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
                 RiyadaIntel connects your learning, workforce and certification data to show who needs training, what to prioritise and why—across every team and provider.
               </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <a
-                  href="#book-demo"
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-brand px-6 text-sm font-semibold text-white transition hover:opacity-95 sm:w-auto"
-                >
+              <div className="rise rise-d3 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <a href="#book-demo" className="mkt-btn-demo inline-flex min-h-12 w-full items-center justify-center rounded-full px-7 text-sm font-semibold sm:w-auto">
                   Book a demo
                 </a>
                 <a
                   href="#how-it-works"
-                  className="inline-flex min-h-11 items-center justify-start px-1 text-sm font-semibold text-brand underline-offset-4 hover:underline"
+                  className="inline-flex min-h-12 items-center justify-start gap-2 rounded-full border border-border bg-card/80 px-5 text-sm font-semibold text-fg shadow-sm transition hover:-translate-y-0.5 hover:border-brand/25 hover:shadow-md"
                 >
                   See how it works
+                  <span aria-hidden className="text-accentTeal">→</span>
                 </a>
               </div>
             </div>
@@ -113,29 +120,51 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Proof — connected to hero, not a stats spreadsheet */}
-          <div id="customers" className="relative border-t border-border bg-card/60">
-            <div className="mx-auto max-w-[1280px] px-5 py-10 sm:px-6 sm:py-12">
-              <p className="max-w-3xl text-base font-medium text-fg sm:text-lg">
-                Built for learning, compliance and workforce teams operating across complex organisations.
-              </p>
-              <ul className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-8">
-                {OUTCOMES.map((item) => (
-                  <li key={item.title} className="border-s-2 border-accentTeal ps-4">
-                    <p className="text-sm font-semibold text-fg">{item.title}</p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-muted">{item.desc}</p>
-                  </li>
-                ))}
-              </ul>
+          {/* Proof */}
+          <div id="customers" className="relative">
+            <div className="mx-auto max-w-[1280px] px-5 pb-4 sm:px-6">
+              <Reveal className="rounded-2xl border border-border/80 bg-card/80 p-6 shadow-[0_20px_50px_-30px_rgba(15,23,42,0.25)] backdrop-blur sm:p-8">
+                <p className="max-w-3xl text-base font-medium text-fg sm:text-lg">
+                  Built for learning, compliance and workforce teams operating across complex organisations.
+                </p>
+                <ul className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-6">
+                  {OUTCOMES.map((item) => (
+                    <li
+                      key={item.title}
+                      className="group rounded-xl border border-border bg-bg/60 p-4 transition duration-200 hover:-translate-y-1 hover:border-accentTeal/40 hover:shadow-md"
+                    >
+                      <span className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg bg-accentTeal/15 text-accentTeal transition group-hover:scale-110" aria-hidden>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
+                      <p className="text-sm font-semibold text-fg">{item.title}</p>
+                      <p className="mt-1.5 text-sm leading-relaxed text-muted">{item.desc}</p>
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
             </div>
           </div>
         </section>
 
+        {/* Capability marquee */}
+        <div className="mkt-marquee relative overflow-hidden border-y border-border bg-card/50 py-3.5" aria-hidden>
+          <div className="mkt-marquee-track">
+            {[...MARQUEE, ...MARQUEE].map((item, i) => (
+              <span key={`${item}-${i}`} className="flex shrink-0 items-center gap-8 px-4">
+                <span className="text-sm font-medium tracking-wide text-muted">{item}</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-accentTeal/70" />
+              </span>
+            ))}
+          </div>
+        </div>
+
         {/* —— Intelligence layer —— */}
-        <section id="product" className="bg-heroPanel py-16 text-white sm:py-20" aria-labelledby="moat-heading">
-          <div className="mx-auto max-w-[1280px] px-5 sm:px-6">
+        <section id="product" className="mkt-mesh relative overflow-hidden py-16 text-white sm:py-20" aria-labelledby="moat-heading">
+          <div className="relative mx-auto max-w-[1280px] px-5 sm:px-6">
             <Reveal className="max-w-3xl">
-              <h2 id="moat-heading" className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+              <h2 id="moat-heading" className="font-display text-3xl font-semibold tracking-tight sm:text-4xl lg:text-[2.75rem]">
                 The content is not the moat.
                 <span className="mt-2 block text-accentTeal">The intelligence layer is.</span>
               </h2>
@@ -145,7 +174,7 @@ export default function Landing() {
             </Reveal>
 
             <div className="mt-12 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5">
-              <Reveal className="rounded-lg border border-white/10 bg-white/[0.03] p-6 sm:p-7">
+              <Reveal className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm sm:p-7">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-white/50">Course aggregation</h3>
                 <ul className="mt-5 space-y-3">
                   {AGGREGATION.map((line) => (
@@ -156,7 +185,7 @@ export default function Landing() {
                   ))}
                 </ul>
               </Reveal>
-              <Reveal delayMs={80} className="rounded-lg border border-accentTeal/40 bg-accentTeal/10 p-6 sm:p-7 ring-1 ring-accentTeal/20">
+              <Reveal delayMs={80} className="rounded-2xl border border-accentTeal/45 bg-accentTeal/10 p-6 shadow-[0_0_40px_-12px_rgba(45,212,191,0.35)] backdrop-blur-sm sm:p-7">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-accentTeal">RiyadaIntel intelligence</h3>
                 <ul className="mt-5 space-y-3">
                   {INTELLIGENCE.map((line) => (
@@ -171,10 +200,13 @@ export default function Landing() {
               </Reveal>
             </div>
 
-            {/* Capability cards */}
             <div id="solutions" className="mt-14 grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
               {CAPABILITIES.map((cap, i) => (
-                <Reveal key={cap.title} delayMs={i * 70} className="rounded-lg border border-white/10 bg-white/[0.04] p-6">
+                <Reveal
+                  key={cap.title}
+                  delayMs={i * 70}
+                  className="group rounded-2xl border border-white/10 bg-white/[0.05] p-6 transition duration-200 hover:-translate-y-1 hover:border-accentTeal/40 hover:bg-white/[0.08]"
+                >
                   <p className="font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-accentTeal">
                     {String(i + 1).padStart(2, "0")}
                   </p>
@@ -187,8 +219,9 @@ export default function Landing() {
         </section>
 
         {/* —— Workflow —— */}
-        <section id="how-it-works" className="border-b border-border py-16 sm:py-20" aria-labelledby="workflow-heading">
-          <div className="mx-auto max-w-[1280px] px-5 sm:px-6">
+        <section id="how-it-works" className="relative border-b border-border py-16 sm:py-20" aria-labelledby="workflow-heading">
+          <div aria-hidden className="mkt-blob mkt-blob-d" />
+          <div className="relative mx-auto max-w-[1280px] px-5 sm:px-6">
             <Reveal className="max-w-2xl">
               <h2 id="workflow-heading" className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
                 From signal to action in one workflow
@@ -197,9 +230,14 @@ export default function Landing() {
                 A focused path from connected data to prioritised interventions—without turning the homepage into a catalogue.
               </p>
             </Reveal>
-            <ol className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+            <ol className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {WORKFLOW.map((item, i) => (
-                <Reveal key={item.step} delayMs={i * 60} as="li" className="relative border-t border-border pt-5">
+                <Reveal
+                  key={item.step}
+                  delayMs={i * 60}
+                  as="li"
+                  className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-brand/25 hover:shadow-lg"
+                >
                   <p className="font-display text-xs font-semibold tracking-wider text-accentTeal">{item.step}</p>
                   <h3 className="mt-2 text-base font-semibold text-fg">{item.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted">{item.desc}</p>
@@ -210,7 +248,7 @@ export default function Landing() {
         </section>
 
         {/* —— Integrations —— */}
-        <section id="integrations" className="border-b border-border bg-card py-16 sm:py-20" aria-labelledby="integrations-heading">
+        <section id="integrations" className="border-b border-border bg-card/70 py-16 sm:py-20" aria-labelledby="integrations-heading">
           <div className="mx-auto max-w-[1280px] px-5 sm:px-6">
             <Reveal className="max-w-2xl">
               <h2 id="integrations-heading" className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -224,7 +262,7 @@ export default function Landing() {
               {PROVIDERS.map((p) => (
                 <li
                   key={p}
-                  className="rounded-md border border-border bg-bg px-4 py-2.5 text-sm font-medium text-fg"
+                  className="rounded-full border border-border bg-bg px-5 py-2.5 text-sm font-medium text-fg shadow-sm transition hover:-translate-y-0.5 hover:border-accentTeal/40 hover:shadow-md"
                 >
                   {p}
                 </li>
@@ -236,28 +274,28 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* —— Resources (thin, factual) —— */}
+        {/* —— Resources —— */}
         <section id="resources" className="border-b border-border py-14 sm:py-16" aria-labelledby="resources-heading">
           <div className="mx-auto max-w-[1280px] px-5 sm:px-6">
             <h2 id="resources-heading" className="font-display text-xl font-semibold tracking-tight sm:text-2xl">
               Resources
             </h2>
-            <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <li>
-                <Link href="/login" className="block rounded-lg border border-border px-4 py-4 transition hover:border-brand/30 hover:bg-card">
-                  <p className="text-sm font-semibold text-fg">Log in to the platform</p>
+                <Link href="/login" className="group block rounded-2xl border border-border bg-card px-5 py-5 shadow-sm transition hover:-translate-y-1 hover:border-brand/30 hover:shadow-lg">
+                  <p className="text-sm font-semibold text-fg group-hover:text-brand">Log in to the platform</p>
                   <p className="mt-1 text-sm text-muted">Access learner and admin portals.</p>
                 </Link>
               </li>
               <li>
-                <a href="#book-demo" className="block rounded-lg border border-border px-4 py-4 transition hover:border-brand/30 hover:bg-card">
-                  <p className="text-sm font-semibold text-fg">Request a walkthrough</p>
+                <a href="#book-demo" className="group block rounded-2xl border border-border bg-card px-5 py-5 shadow-sm transition hover:-translate-y-1 hover:border-brand/30 hover:shadow-lg">
+                  <p className="text-sm font-semibold text-fg group-hover:text-brand">Request a walkthrough</p>
                   <p className="mt-1 text-sm text-muted">See gap intelligence on your use cases.</p>
                 </a>
               </li>
               <li>
-                <Link href="/courses" className="block rounded-lg border border-border px-4 py-4 transition hover:border-brand/30 hover:bg-card">
-                  <p className="text-sm font-semibold text-fg">Public catalogue</p>
+                <Link href="/courses" className="group block rounded-2xl border border-border bg-card px-5 py-5 shadow-sm transition hover:-translate-y-1 hover:border-brand/30 hover:shadow-lg">
+                  <p className="text-sm font-semibold text-fg group-hover:text-brand">Public catalogue</p>
                   <p className="mt-1 text-sm text-muted">Optional content browsing — secondary to readiness.</p>
                 </Link>
               </li>
@@ -266,19 +304,21 @@ export default function Landing() {
         </section>
 
         {/* —— Final CTA —— */}
-        <section id="book-demo" className="bg-brand py-16 text-white sm:py-20" aria-labelledby="demo-heading">
-          <div className="mx-auto grid max-w-[1280px] gap-10 px-5 sm:px-6 lg:grid-cols-2 lg:items-start lg:gap-16">
-            <div>
+        <section id="book-demo" className="relative overflow-hidden bg-brand py-16 text-white sm:py-20" aria-labelledby="demo-heading">
+          <div aria-hidden className="marketing-cta-wash pointer-events-none absolute inset-0" />
+          <div aria-hidden className="mkt-orb mkt-orb-cta" />
+          <div className="relative mx-auto grid max-w-[1280px] gap-10 px-5 sm:px-6 lg:grid-cols-2 lg:items-start lg:gap-16">
+            <Reveal>
               <h2 id="demo-heading" className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
                 See readiness risk before it shows up in an audit
               </h2>
               <p className="mt-4 max-w-md text-base leading-relaxed text-white/75">
                 Book a demo and we&apos;ll walk through how RiyadaIntel maps skills, compliance and certifications onto the teams that need action.
               </p>
-            </div>
-            <div className="rounded-xl border border-white/15 bg-white p-5 text-fg shadow-sm sm:p-6">
+            </Reveal>
+            <Reveal delayMs={80} className="rounded-2xl border border-white/20 bg-white p-5 text-fg shadow-2xl shadow-black/25 sm:p-6">
               <BookDemoForm />
-            </div>
+            </Reveal>
           </div>
         </section>
       </main>

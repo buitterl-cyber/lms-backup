@@ -1,16 +1,29 @@
-/** Simplified hero product visual — one workflow: readiness → priority gaps → risk → action.
- *  Intentionally sparse vs the old dense dashboard mock so laptop widths stay readable. */
+/** Simplified hero product visual with layered depth — readiness → gaps → action.
+ *  Floating chips + soft glow borrow Docebo’s layering language without leaving our tokens. */
 export function HeroProductVisual() {
   return (
     <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -inset-3 rounded-2xl bg-accentTeal/15 blur-2xl sm:-inset-4"
-      />
+      <div aria-hidden className="mkt-visual-glow pointer-events-none absolute -inset-6 rounded-[2rem]" />
 
-      <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        {/* App chrome — minimal */}
-        <div className="flex items-center gap-2 border-b border-border bg-bg px-3 py-2.5 sm:px-4">
+      {/* Floating live chip */}
+      <div className="mkt-float rise rise-d5 absolute -left-1 top-10 z-20 hidden rounded-2xl border border-border bg-card/95 px-3 py-2 shadow-lg shadow-black/10 backdrop-blur md:block lg:-left-8">
+        <p className="flex items-center gap-2 text-[11px] font-medium text-fg">
+          <span className="relative flex h-2 w-2">
+            <span className="mkt-pulse absolute inset-0 rounded-full bg-accentTeal opacity-60" />
+            <span className="relative h-2 w-2 rounded-full bg-accentTeal" />
+          </span>
+          Gap closed — SOC 2
+        </p>
+        <p className="mt-0.5 ps-4 text-[10px] text-muted">Security · just now</p>
+      </div>
+
+      <div className="mkt-float-slow rise rise-d6 absolute -bottom-3 -right-1 z-20 hidden rounded-2xl border border-border bg-heroPanel px-3.5 py-2.5 text-white shadow-xl sm:block lg:-right-6">
+        <p className="text-[10px] uppercase tracking-wider text-white/55">Readiness</p>
+        <p className="tnum text-xl font-semibold text-accentTeal">72%</p>
+      </div>
+
+      <div className="mkt-float relative overflow-hidden rounded-2xl border border-border bg-card shadow-[0_24px_60px_-28px_rgba(15,23,42,0.35)]">
+        <div className="flex items-center gap-2 border-b border-border bg-bg/80 px-3 py-2.5 sm:px-4">
           <span className="h-2 w-2 rounded-full bg-red/70" aria-hidden />
           <span className="h-2 w-2 rounded-full bg-amber/70" aria-hidden />
           <span className="h-2 w-2 rounded-full bg-green/70" aria-hidden />
@@ -18,7 +31,6 @@ export function HeroProductVisual() {
         </div>
 
         <div className="space-y-4 p-4 sm:p-5">
-          {/* Step 1 — readiness score */}
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Workforce readiness</p>
@@ -38,22 +50,20 @@ export function HeroProductVisual() {
             </div>
           </div>
 
-          <div className="h-2 overflow-hidden rounded-full bg-border">
-            <div className="h-full w-[72%] rounded-full bg-accentTeal" />
+          <div className="h-2.5 overflow-hidden rounded-full bg-border">
+            <div className="mkt-bar-fill h-full w-[72%] rounded-full bg-gradient-to-r from-accentTeal to-brand" />
           </div>
 
-          {/* Step 2–3 — priority gaps + risk */}
           <div>
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Highest-priority gaps</p>
-            <ul className="mt-2 divide-y divide-border rounded-lg border border-border">
+            <ul className="mt-2 divide-y divide-border overflow-hidden rounded-xl border border-border">
               <GapRow name="SOC 2 Auditing" team="Security" risk="Critical" riskTone="red" />
               <GapRow name="ISO 27001 Awareness" team="All staff" risk="High" riskTone="amber" />
               <GapRow name="Cloud Architecture" team="Solutions Eng." risk="Watch" riskTone="teal" />
             </ul>
           </div>
 
-          {/* Step 4 — recommended action */}
-          <div className="rounded-lg border border-accentTeal/30 bg-accentTeal/5 px-3.5 py-3 sm:px-4">
+          <div className="rounded-xl border border-accentTeal/35 bg-gradient-to-br from-accentTeal/10 to-transparent px-3.5 py-3 sm:px-4">
             <p className="text-[11px] font-medium uppercase tracking-wider text-accentTeal">Recommended action</p>
             <p className="mt-1 text-sm font-medium text-fg">
               Assign ISO 27001 Awareness to 12 people in Security &amp; Ops
@@ -85,12 +95,12 @@ function GapRow({
         : "border-accentTeal/30 bg-accentTeal/10 text-accentTealInk";
 
   return (
-    <li className="flex items-center justify-between gap-3 px-3 py-2.5 sm:px-3.5">
+    <li className="flex items-center justify-between gap-3 bg-card px-3 py-2.5 transition hover:bg-bg sm:px-3.5">
       <div className="min-w-0">
         <p className="truncate text-sm font-medium text-fg">{name}</p>
         <p className="truncate text-xs text-muted">{team}</p>
       </div>
-      <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone}`}>
+      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone}`}>
         {risk}
       </span>
     </li>
