@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Brand } from "@/components/Brand";
 import { InquiryForm } from "@/components/InquiryForm";
+import { PublicChrome } from "@/components/PublicChrome";
+import { Button, Card } from "@/components/ui";
 
-// PUBLIC sales catalogue (Carl's "sales website"): best sellers up top, instant search across
-// the whole catalogue, promotions, and an inquiry CTA that feeds the CRM pipeline.
+// PUBLIC sales catalogue — chrome matches the marketing homepage language.
 export const dynamic = "force-dynamic";
 
 const API = (process.env.API_INTERNAL_URL || process.env.API_URL || "http://localhost:4400") + "/api/v1";
@@ -38,39 +38,42 @@ export default async function PublicCatalog({ searchParams }: { searchParams: Pr
   const { featured, results } = await load(q);
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 text-sm">
-          <Link href="/"><Brand size={26} className="text-lg" /></Link>
-          <nav className="flex items-center gap-4">
-            <Link href="/courses" className="font-medium text-fg">Courses</Link>
-            <Link href="/signup" className="text-muted hover:text-fg">Sign up</Link>
-            <Link href="/login" className="text-muted hover:text-fg">Log in</Link>
-            <Link href="/learner" className="rounded-lg bg-brand px-4 py-2 font-medium text-white">Launch platform</Link>
-          </nav>
-        </div>
-      </header>
+    <div className="mkt-page min-h-screen">
+      <PublicChrome active="courses" />
 
-      <main className="mx-auto max-w-6xl space-y-10 px-6 py-10">
-        <section className="text-center">
-          <h1 className="font-display text-3xl font-semibold sm:text-4xl">Find your next course</h1>
-          <p className="mt-2 text-sm text-muted">Search {featured?.catalogSize?.toLocaleString() ?? "the"} courses across every major provider.</p>
-          <form action="/courses" className="mx-auto mt-5 flex max-w-xl gap-2">
-            <input
-              name="q" defaultValue={q} placeholder="Try ITIL, security, cloud, leadership…"
-              className="min-w-0 flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-brand"
-            />
-            <button type="submit" className="rounded-xl bg-brand px-5 py-3 text-sm font-medium text-white">Search</button>
-          </form>
+      <main className="mx-auto max-w-[1280px] space-y-10 px-5 py-10 sm:px-6">
+        <section className="relative overflow-hidden rounded-2xl border border-border/80 bg-card/80 px-6 py-10 text-center shadow-[0_20px_50px_-30px_rgba(15,23,42,0.3)] backdrop-blur sm:px-10 sm:py-12">
+          <div aria-hidden className="mkt-blob mkt-blob-a !opacity-40" />
+          <div aria-hidden className="mkt-blob mkt-blob-b !opacity-30" />
+          <div className="relative">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Content catalogue</p>
+            <h1 className="font-display mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+              Find training that closes the gaps you already see
+            </h1>
+            <p className="mx-auto mt-3 max-w-xl text-sm text-muted sm:text-base">
+              Search {featured?.catalogSize?.toLocaleString() ?? "the"} courses across connected providers — secondary to readiness, useful when you act.
+            </p>
+            <form action="/courses" className="mx-auto mt-6 flex max-w-xl flex-col gap-2 sm:flex-row">
+              <input
+                name="q"
+                defaultValue={q}
+                placeholder="Try ITIL, security, cloud, leadership…"
+                className="min-h-12 min-w-0 flex-1 rounded-xl border border-border bg-bg/70 px-4 text-sm outline-none focus:border-brand"
+              />
+              <Button type="submit" size="lg" className="min-h-12 rounded-xl sm:rounded-full sm:px-7">
+                Search
+              </Button>
+            </form>
+          </div>
         </section>
 
         {featured && featured.promotions.length > 0 && (
           <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {featured.promotions.map((p) => (
-              <div key={p.id} className="rounded-xl border border-amber/40 bg-amber/10 p-4">
+              <Card key={p.id} tone="amber" padding="md" radius="2xl" interactive>
                 <p className="text-sm font-semibold">{p.title}{p.discountPct ? ` — ${p.discountPct}% off` : ""}</p>
                 {p.subtitle && <p className="mt-1 text-xs text-muted">{p.subtitle}</p>}
-              </div>
+              </Card>
             ))}
           </section>
         )}
@@ -80,14 +83,22 @@ export default async function PublicCatalog({ searchParams }: { searchParams: Pr
             <h2 className="font-display text-lg font-semibold">Best sellers</h2>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {featured.bestSellers.map((c) => (
-                <Link key={c.id} href={`/courses/${c.id}`} className="group rounded-xl border border-border bg-card p-5 transition hover:border-brand/50">
+                <Link
+                  key={c.id}
+                  href={`/courses/${c.id}`}
+                  className="group rounded-2xl border border-border bg-card p-5 shadow-[0_10px_30px_-22px_rgba(15,23,42,0.35)] transition duration-200 hover:-translate-y-1 hover:border-brand/30 hover:shadow-lg"
+                >
                   <div className="flex items-center justify-between">
-                    <span className="rounded-full bg-amber/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber">Best seller</span>
+                    <span className="rounded-full bg-amber/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber">
+                      Best seller
+                    </span>
                     <span className="text-sm font-semibold">{price(c.priceCents)}</span>
                   </div>
                   <p className="mt-3 font-medium group-hover:text-brand">{c.title}</p>
                   <p className="mt-1 line-clamp-2 text-xs text-muted">{c.description}</p>
-                  <p className="mt-3 text-xs uppercase tracking-wide text-muted">{c.provider}{c.level ? ` · ${c.level}` : ""}</p>
+                  <p className="mt-3 text-xs uppercase tracking-wide text-muted">
+                    {c.provider}{c.level ? ` · ${c.level}` : ""}
+                  </p>
                 </Link>
               ))}
             </div>
@@ -101,7 +112,11 @@ export default async function PublicCatalog({ searchParams }: { searchParams: Pr
           ) : (
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {results.map((c) => (
-                <Link key={c.id} href={`/courses/${c.id}`} className="group rounded-xl border border-border bg-card p-5 transition hover:border-brand/50">
+                <Link
+                  key={c.id}
+                  href={`/courses/${c.id}`}
+                  className="group rounded-2xl border border-border bg-card p-5 shadow-[0_10px_30px_-22px_rgba(15,23,42,0.35)] transition duration-200 hover:-translate-y-1 hover:border-brand/30 hover:shadow-lg"
+                >
                   <p className="font-medium group-hover:text-brand">{c.title}</p>
                   <p className="mt-1 line-clamp-2 text-xs text-muted">{c.description}</p>
                   <div className="mt-3 flex items-center justify-between text-xs">
@@ -114,11 +129,15 @@ export default async function PublicCatalog({ searchParams }: { searchParams: Pr
           )}
         </section>
 
-        <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+        <Card as="section" radius="2xl" padding="xl" className="sm:p-8">
           <h2 className="font-display text-lg font-semibold">Training a team?</h2>
-          <p className="mt-1 text-sm text-muted">Tell us what you need — volume pricing, learning paths, and compliance tracking included.</p>
-          <div className="mt-4"><InquiryForm /></div>
-        </section>
+          <p className="mt-1 text-sm text-muted">
+            Tell us what you need — volume pricing, learning paths, and compliance tracking included.
+          </p>
+          <div className="mt-4">
+            <InquiryForm />
+          </div>
+        </Card>
       </main>
     </div>
   );

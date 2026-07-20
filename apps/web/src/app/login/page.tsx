@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AUTH, AuthShell } from "@/components/auth/AuthShell";
+import { Chevron } from "@/components/ui";
 
 // Role selection — the front door. Two clear paths, nothing else.
 export const dynamic = "force-dynamic";
@@ -22,17 +23,17 @@ function RoleCard({
   return (
     <Link
       href={href}
-      className="group flex flex-col p-6 transition-transform hover:-translate-y-0.5"
+      className="group flex flex-col p-6 transition duration-200 hover:-translate-y-1"
       style={{
         background: AUTH.card,
         border: `1px solid ${AUTH.border}`,
-        borderRadius: 12,
-        boxShadow: "0 4px 16px rgba(22, 35, 60, 0.06)",
+        borderRadius: 16,
+        boxShadow: "0 18px 40px -24px rgb(var(--auth-ink) / 0.28)",
       }}
     >
       <span
-        className="flex h-11 w-11 items-center justify-center"
-        style={{ background: `${accent}14`, color: accent, borderRadius: 10 }}
+        className="flex h-11 w-11 items-center justify-center transition group-hover:scale-105"
+        style={{ background: `color-mix(in srgb, ${accent} 10%, transparent)`, color: accent, borderRadius: 12 }}
       >
         {icon}
       </span>
@@ -45,8 +46,8 @@ function RoleCard({
       <span className="mt-1 flex-1 text-sm leading-relaxed" style={{ color: AUTH.muted }}>
         {description}
       </span>
-      <span className="mt-4 text-sm font-semibold" style={{ color: accent }}>
-        {cta} →
+      <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold" style={{ color: accent }}>
+        {cta} <Chevron />
       </span>
     </Link>
   );

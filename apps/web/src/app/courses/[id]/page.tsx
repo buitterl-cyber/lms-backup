@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Brand } from "@/components/Brand";
 import { InquiryForm } from "@/components/InquiryForm";
+import { PublicChrome } from "@/components/PublicChrome";
+import { Card, Chevron } from "@/components/ui";
 
-// PUBLIC course page: full description, module outline, rating — with the inquiry CTA.
+// PUBLIC course page — same chrome language as marketing + catalogue.
 export const dynamic = "force-dynamic";
 
 const API = (process.env.API_INTERNAL_URL || process.env.API_URL || "http://localhost:4400") + "/api/v1";
@@ -22,55 +23,66 @@ export default async function PublicCoursePage({ params }: { params: Promise<{ i
 
   if (!course) {
     return (
-      <div className="mx-auto max-w-3xl px-6 py-16 text-center">
-        <p>Course not found.</p>
-        <Link href="/courses" className="text-brand underline">Back to the catalogue</Link>
+      <div className="mkt-page min-h-screen">
+        <PublicChrome active="courses" />
+        <div className="mx-auto max-w-3xl px-6 py-16 text-center">
+          <p>Course not found.</p>
+          <Link href="/courses" className="text-brand underline">
+            Back to the catalogue
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 text-sm">
-          <Link href="/"><Brand size={26} className="text-lg" /></Link>
-          <nav className="flex items-center gap-4">
-            <Link href="/courses" className="text-muted hover:text-fg">Courses</Link>
-            <Link href="/signup" className="text-muted hover:text-fg">Sign up</Link>
-            <Link href="/login" className="text-muted hover:text-fg">Log in</Link>
-          </nav>
-        </div>
-      </header>
+    <div className="mkt-page min-h-screen">
+      <PublicChrome active="courses" />
 
-      <main className="mx-auto max-w-4xl space-y-8 px-6 py-10">
-        <Link href="/courses" className="text-sm text-muted hover:text-fg">← All courses</Link>
+      <main className="mx-auto max-w-4xl space-y-8 px-5 py-10 sm:px-6">
+        <Link href="/courses" className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
+          <Chevron direction="left" /> All courses
+        </Link>
 
-        <header>
+        <header className="rounded-2xl border border-border/80 bg-card/80 p-6 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur sm:p-8">
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            {course.bestSeller && <span className="rounded-full bg-amber/15 px-2.5 py-0.5 font-semibold uppercase tracking-wide text-amber">Best seller</span>}
-            <span className="uppercase tracking-wide text-muted">{course.provider}{course.level ? ` · ${course.level}` : ""}{course.durationMinutes ? ` · ${Math.round(course.durationMinutes / 60)}h` : ""}</span>
-          </div>
-          <h1 className="font-display mt-2 text-3xl font-semibold">{course.title}</h1>
-          <div className="mt-2 flex items-center gap-3 text-sm">
-            {course.rating && (
-              <span className="text-amber">{"★".repeat(Math.round(course.rating))} <span className="text-fg">{course.rating}</span> <span className="text-muted">({course.ratingCount})</span></span>
+            {course.bestSeller && (
+              <span className="rounded-full bg-amber/15 px-2.5 py-0.5 font-semibold uppercase tracking-wide text-amber">
+                Best seller
+              </span>
             )}
-            <span className="font-semibold">{course.priceCents ? `$${(course.priceCents / 100).toFixed(0)}` : "Included in platform plans"}</span>
+            <span className="uppercase tracking-wide text-muted">
+              {course.provider}
+              {course.level ? ` · ${course.level}` : ""}
+              {course.durationMinutes ? ` · ${Math.round(course.durationMinutes / 60)}h` : ""}
+            </span>
+          </div>
+          <h1 className="font-display mt-3 text-3xl font-semibold tracking-tight">{course.title}</h1>
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+            {course.rating && (
+              <span className="text-amber">
+                {"★".repeat(Math.round(course.rating))} <span className="text-fg">{course.rating}</span>{" "}
+                <span className="text-muted">({course.ratingCount})</span>
+              </span>
+            )}
+            <span className="font-semibold">
+              {course.priceCents ? `$${(course.priceCents / 100).toFixed(0)}` : "Included in platform plans"}
+            </span>
           </div>
         </header>
 
-        <section className="rounded-xl border border-border bg-card p-6">
+        <Card as="section" padding="xl" radius="2xl">
           <h2 className="text-sm font-medium text-muted">About this course</h2>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{course.description}</p>
-        </section>
+        </Card>
 
         {course.modules.length > 0 && (
-          <section className="rounded-xl border border-border bg-card p-6">
+          <Card as="section" padding="xl" radius="2xl">
             <h2 className="text-sm font-medium text-muted">What you&apos;ll cover</h2>
             <ol className="mt-3 space-y-2">
               {course.modules.map((m) => (
-                <li key={m.position} className="flex items-baseline gap-3 text-sm">
-                  <span className="text-xs font-semibold text-brand">{m.position}.</span>
+                <li key={m.position} className="flex items-baseline gap-3 rounded-xl border border-border/70 bg-bg/40 px-3 py-2.5 text-sm">
+                  <span className="text-xs font-semibold text-accentTeal">{m.position}.</span>
                   <span>
                     <span className="font-medium">{m.title}</span>
                     {m.summary && <span className="text-muted"> — {m.summary}</span>}
@@ -79,14 +91,16 @@ export default async function PublicCoursePage({ params }: { params: Promise<{ i
                 </li>
               ))}
             </ol>
-          </section>
+          </Card>
         )}
 
-        <section className="rounded-2xl border border-brand/30 bg-card p-6">
+        <Card as="section" tone="brand" radius="2xl" padding="xl">
           <h2 className="font-display text-lg font-semibold">Interested in this course?</h2>
           <p className="mt-1 text-sm text-muted">Leave your details and our team will get straight back to you.</p>
-          <div className="mt-4"><InquiryForm courseId={course.id} courseTitle={course.title} /></div>
-        </section>
+          <div className="mt-4">
+            <InquiryForm courseId={course.id} courseTitle={course.title} />
+          </div>
+        </Card>
       </main>
     </div>
   );

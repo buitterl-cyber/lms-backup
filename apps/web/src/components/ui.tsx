@@ -6,15 +6,14 @@ export type ButtonVariant = "primary" | "secondary" | "outline" | "success" | "d
 export type ButtonSize = "sm" | "md" | "lg";
 
 const BUTTON_BASE =
-  "inline-flex items-center justify-center rounded-lg font-medium transition duration-200 ease-out will-change-transform disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none";
+  "inline-flex items-center justify-center rounded-xl font-medium transition duration-200 ease-out will-change-transform disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none";
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-brand text-white shadow-sm shadow-brand/20 hover:-translate-y-0.5 hover:opacity-95 hover:shadow-md hover:shadow-brand/30",
-  secondary: "border border-border shadow-sm shadow-black/5 hover:-translate-y-0.5 hover:bg-card hover:shadow-md hover:shadow-black/10 dark:shadow-black/20",
-  // Tinted-outline action (join/nudge/review-toggle style) — same brand token, no fill.
+  primary:
+    "bg-brand text-white shadow-[0_10px_24px_-12px_rgb(var(--brand)/0.55)] hover:-translate-y-0.5 hover:opacity-95 hover:shadow-[0_14px_28px_-12px_rgb(var(--brand)/0.6)]",
+  secondary:
+    "border border-border bg-card/80 shadow-sm shadow-black/5 hover:-translate-y-0.5 hover:bg-card hover:shadow-md hover:shadow-black/10 dark:shadow-black/20",
   outline: "border border-brand/40 text-brand hover:-translate-y-0.5 hover:bg-brand/10 hover:shadow-sm hover:shadow-brand/15",
-  // Terminal states (e.g. EnrollButton once it's succeeded/failed) — the same green/red
-  // RiskBadge already uses, so a completed action reads the same way everywhere.
   success: "border border-green/30 bg-green/15 text-green",
   danger: "border border-red/30 bg-red/15 text-red",
 };
@@ -140,11 +139,17 @@ type CardProps = CardOwnProps & Omit<FormHTMLAttributes<HTMLFormElement>, "class
  *  variation found across the app instead of one-off className overrides. `as="section"` keeps
  *  semantic sectioning on public content pages; `as="form"` lets a Card double as its own form. */
 export function Card({ children, className = "", tone = "default", padding = "lg", radius = "xl", translucent = false, interactive = false, as = "div", ...rest }: CardProps) {
-  const toneClass = translucent ? "border-border bg-card/70 backdrop-blur" : CARD_TONE[tone];
+  const toneClass = translucent
+    ? "border-border/80 bg-card/75 shadow-sm shadow-black/5 backdrop-blur-md"
+    : CARD_TONE[tone];
   const interactClass = interactive
     ? "transition duration-200 ease-out will-change-transform hover:-translate-y-1 hover:shadow-lg hover:shadow-black/10 dark:hover:shadow-black/40 hover:border-brand/25"
     : "";
-  const cls = `border ${CARD_RADIUS[radius]} ${toneClass} ${CARD_PADDING[padding]} ${interactClass} ${className}`.trim();
+  const elevation =
+    tone === "none" || translucent
+      ? ""
+      : "shadow-[0_10px_30px_-22px_rgba(15,23,42,0.35)]";
+  const cls = `border ${CARD_RADIUS[radius]} ${toneClass} ${CARD_PADDING[padding]} ${elevation} ${interactClass} ${className}`.trim();
   if (as === "form") {
     return (
       <form className={cls} {...rest}>
@@ -398,13 +403,13 @@ export function EmptyState({
   icon = "empty", title, description, action, className = "",
 }: { icon?: StateIconKind; title: string; description?: string; action?: ReactNode; className?: string }) {
   return (
-    <div className={`flex flex-col items-center gap-3 py-8 text-center ${className}`.trim()}>
-      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-bg text-muted ring-1 ring-border">
+    <div className={`flex flex-col items-center gap-3 py-10 text-center ${className}`.trim()}>
+      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand/10 to-accentTeal/10 text-brand ring-1 ring-border">
         <StateIcon kind={icon} />
       </span>
       <div>
-        <p className="font-medium">{title}</p>
-        {description && <p className="mt-1 text-sm text-muted">{description}</p>}
+        <p className="font-display font-semibold">{title}</p>
+        {description && <p className="mt-1 max-w-sm text-sm text-muted">{description}</p>}
       </div>
       {action}
     </div>

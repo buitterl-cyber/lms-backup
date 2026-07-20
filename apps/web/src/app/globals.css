@@ -24,10 +24,21 @@
 }
 
 body {
-  background: rgb(var(--bg));
+  background:
+    radial-gradient(80% 50% at 8% -8%, rgb(var(--accent-teal) / 0.07), transparent 55%),
+    radial-gradient(70% 40% at 96% 0%, rgb(var(--brand) / 0.06), transparent 50%),
+    rgb(var(--bg));
   color: rgb(var(--fg));
   font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   font-feature-settings: "cv02", "cv03", "cv04";
+}
+
+.dark body,
+html.dark body {
+  background:
+    radial-gradient(70% 45% at 10% -5%, rgb(var(--accent-teal) / 0.08), transparent 50%),
+    radial-gradient(60% 40% at 90% 0%, rgb(var(--brand) / 0.12), transparent 55%),
+    rgb(var(--bg));
 }
 
 /* Display face for the identity moments: logo, page titles, hero metrics. */
@@ -73,11 +84,12 @@ a:focus-visible,
 .aurora {
   position: fixed;
   inset: 0 0 auto 0;
-  height: 260px;
+  height: 320px;
   pointer-events: none;
   background:
-    radial-gradient(60% 100% at 20% 0%, rgb(var(--aurora1) / 0.14), transparent 70%),
-    radial-gradient(50% 90% at 75% 0%, rgb(var(--aurora2) / 0.09), transparent 70%);
+    radial-gradient(55% 100% at 15% 0%, rgb(var(--aurora1) / 0.16), transparent 70%),
+    radial-gradient(45% 90% at 78% 0%, rgb(var(--accent-teal) / 0.12), transparent 68%),
+    radial-gradient(40% 80% at 55% 10%, rgb(var(--aurora2) / 0.08), transparent 70%);
 }
 
 /* ============================================================================
