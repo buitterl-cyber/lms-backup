@@ -71,7 +71,9 @@ export function LaunchPopup() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.sessionStorage.getItem(DISMISS_KEY) === "1") return;
-    const t = setTimeout(() => setOpen(true), 600);
+    // Delay so the hero entrance + ambient motion land first (Docebo-style: promo
+    // shouldn't eclipse the first impression).
+    const t = setTimeout(() => setOpen(true), 5200);
     return () => clearTimeout(t);
   }, []);
 
