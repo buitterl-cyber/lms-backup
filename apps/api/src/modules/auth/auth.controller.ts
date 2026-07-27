@@ -1,8 +1,13 @@
 import { Body, Controller, Get, Headers, Post } from "@nestjs/common";
 import { IsIn, IsOptional, IsString } from "class-validator";
 import { ApiTags } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import { DomainError } from "@riyada/shared";
 import { AuthService } from "./auth.service";
+
+// Tight, IP-scoped limit for the endpoints brute-force/credential-stuffing actually targets —
+// well below the module's generous 300/min default (see app.module.ts).
+const AUTH_THROTTLE = { default: { ttl: 60_000, limit: 8 } };
 
 class LoginDto {
   @IsString() email!: string;
@@ -32,21 +37,25 @@ class SignupDto {
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
+  @Throttle(AUTH_THROTTLE)
   @Post("login")
   login(@Body() dto: LoginDto) {
     return this.auth.login(dto.email, dto.password, dto.portal);
   }
 
+  @Throttle(AUTH_THROTTLE)
   @Post("forgot")
   forgot(@Body() dto: ForgotDto) {
     return this.auth.forgotPassword(dto.email);
   }
 
+  @Throttle(AUTH_THROTTLE)
   @Post("reset")
   reset(@Body() dto: ResetDto) {
     return this.auth.resetPassword(dto.token, dto.password);
   }
 
+  @Throttle(AUTH_THROTTLE)
   @Post("signup")
   signup(@Body() dto: SignupDto) {
     return this.auth.signup(dto);

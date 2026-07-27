@@ -5,7 +5,15 @@ import * as jwt from "jsonwebtoken";
 import { PrismaService } from "../../common/prisma/prisma.service";
 import { MailerService } from "../../common/mailer/mailer.service";
 
-const secret = () => process.env.JWT_SECRET || "dev-insecure-secret";
+// Fails loudly rather than silently signing/verifying with a publicly-known default — a missing
+// JWT_SECRET in production is a total auth-bypass waiting to happen, not something to paper over.
+const secret = () => {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET is not set — refusing to run with an insecure default in production");
+  }
+  return "dev-insecure-secret";
+};
 
 export interface JwtClaims {
   sub: string;
@@ -50,6 +58,7 @@ export class AuthService {
         "not_admin",
       );
     }
+    await this.acceptPendingInvitations(user.id, user.tenantId);
     const claims: JwtClaims = {
       sub: user.id,
       tenantId: user.tenantId,
@@ -65,8 +74,28 @@ export class AuthService {
     return { token, user: { id: user.id, email: user.email, name: claims.name, roles: claims.roles } };
   }
 
+  /** A manager's invite (IdentityService#inviteUser) pre-creates the user record and — if a course
+   *  was assigned — an Invitation row. This applies any unaccepted ones the moment the invitee has
+   *  a working account: enroll in the course, mark accepted. Safe to call on every login/signup;
+   *  it's a no-op once there's nothing pending. */
+  private async acceptPendingInvitations(userId: string, tenantId: string) {
+    const pending = await this.prisma.db.invitation.findMany({
+      where: { userId, acceptedAt: null, courseId: { not: null } },
+    });
+    for (const inv of pending) {
+      await this.prisma.db.enrollment.upsert({
+        where: { userId_courseId: { userId, courseId: inv.courseId! } },
+        update: {},
+        create: { tenantId, userId, courseId: inv.courseId!, assignedBy: inv.invitedBy, assignedReason: "Invited by manager", status: "enrolled" },
+      });
+      await this.prisma.db.invitation.update({ where: { id: inv.id }, data: { acceptedAt: new Date() } });
+    }
+  }
+
   /** Email/password signup: new learner in the default tenant/org, logged in immediately.
-   *  Disable by setting SIGNUP_ENABLED=false. */
+   *  If this email belongs to a manager-invited account (status "invited", no password yet),
+   *  this completes it in place instead of rejecting as a duplicate.
+   *  Disable self-signup by setting SIGNUP_ENABLED=false. */
   async signup(input: { firstName: string; lastName: string; email: string; password: string }) {
     if (process.env.SIGNUP_ENABLED === "false") {
       throw new DomainError("Self-signup is disabled", 403, "signup_disabled");
@@ -77,41 +106,68 @@ export class AuthService {
     if (!input.firstName?.trim()) throw new DomainError("First name is required", 400, "invalid_name");
 
     const existing = await this.prisma.db.user.findFirst({ where: { email } });
-    if (existing) throw new DomainError("An account with this email already exists — sign in instead", 409, "email_taken");
+    if (existing?.passwordHash) {
+      throw new DomainError("An account with this email already exists — sign in instead", 409, "email_taken");
+    }
 
-    const tenant = await this.prisma.db.tenant.findFirst({ orderBy: { createdAt: "asc" } });
-    const org = tenant
-      ? await this.prisma.db.organization.findFirst({ where: { tenantId: tenant.id }, orderBy: { createdAt: "asc" } })
-      : null;
-    if (!tenant || !org) throw new DomainError("Platform has no tenant to sign up into", 500, "no_tenant");
+    const passwordHash = await bcrypt.hash(input.password, 10);
+    let user: { id: string; tenantId: string; organizationId: string; email: string; firstName: string; lastName: string };
+    let tenantId: string;
+    let organizationId: string;
 
-    const user = await this.prisma.db.user.create({
-      data: {
-        tenantId: tenant.id,
-        organizationId: org.id,
-        email,
-        firstName: input.firstName.trim(),
-        lastName: input.lastName?.trim() ?? "",
-        passwordHash: await bcrypt.hash(input.password, 10),
-        status: "active",
-      },
-    });
-    let learnerRole = await this.prisma.db.role.findFirst({ where: { tenantId: tenant.id, key: "learner" } });
+    if (existing) {
+      // Completing a manager-issued invite: keep the org/tenant the manager placed them in.
+      user = await this.prisma.db.user.update({
+        where: { id: existing.id },
+        data: {
+          passwordHash,
+          status: "active",
+          firstName: input.firstName.trim(),
+          lastName: input.lastName?.trim() || existing.lastName,
+        },
+      });
+      tenantId = user.tenantId;
+      organizationId = user.organizationId;
+    } else {
+      const tenant = await this.prisma.db.tenant.findFirst({ orderBy: { createdAt: "asc" } });
+      const org = tenant
+        ? await this.prisma.db.organization.findFirst({ where: { tenantId: tenant.id }, orderBy: { createdAt: "asc" } })
+        : null;
+      if (!tenant || !org) throw new DomainError("Platform has no tenant to sign up into", 500, "no_tenant");
+      user = await this.prisma.db.user.create({
+        data: {
+          tenantId: tenant.id,
+          organizationId: org.id,
+          email,
+          firstName: input.firstName.trim(),
+          lastName: input.lastName?.trim() ?? "",
+          passwordHash,
+          status: "active",
+        },
+      });
+      tenantId = tenant.id;
+      organizationId = org.id;
+    }
+
+    let learnerRole = await this.prisma.db.role.findFirst({ where: { tenantId, key: "learner" } });
     if (!learnerRole) {
       learnerRole = await this.prisma.db.role.create({
-        data: { tenantId: tenant.id, organizationId: org.id, key: "learner", name: "Learner", permissions: [] },
+        data: { tenantId, organizationId, key: "learner", name: "Learner", permissions: [] },
       });
     }
     await this.prisma.db.roleAssignment.create({ data: { userId: user.id, roleId: learnerRole.id } }).catch(() => undefined);
+    await this.acceptPendingInvitations(user.id, tenantId);
     void this.prisma.db.activityEvent
-      .create({ data: { tenantId: tenant.id, userId: user.id, kind: "login", refId: "signup" } })
+      .create({ data: { tenantId, userId: user.id, kind: "login", refId: "signup" } })
       .catch(() => undefined);
 
+    const roleAssignments = await this.prisma.db.roleAssignment.findMany({ where: { userId: user.id }, include: { role: true } });
+    const roles = roleAssignments.map((ra) => ra.role.key);
     const claims: JwtClaims = {
       sub: user.id,
-      tenantId: user.tenantId,
-      organizationId: user.organizationId,
-      roles: ["learner"],
+      tenantId,
+      organizationId,
+      roles: roles.length ? roles : ["learner"],
       name: `${user.firstName} ${user.lastName}`.trim(),
     };
     const token = jwt.sign(claims, secret(), { expiresIn: "12h" });

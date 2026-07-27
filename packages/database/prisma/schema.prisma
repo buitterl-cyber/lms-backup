@@ -124,6 +124,7 @@ model User {
   teamMemberships TeamMembership[]
   userSkills      UserSkill[]
   enrollments     Enrollment[]
+  invitations     Invitation[]
   certificates    EarnedCertificate[]
   complianceAssignments ComplianceAssignment[]
   careerPlans     CareerPlan[]
@@ -299,6 +300,7 @@ model Course {
 
   skills      CourseSkill[]
   enrollments Enrollment[]
+  invitations Invitation[]
   pathItems   LearningPathItem[]
   modules     CourseModule[]
   threads     ForumThread[]
@@ -363,6 +365,24 @@ model Enrollment {
   @@unique([userId, courseId])
   @@index([tenantId])
   @@index([status])
+}
+
+// A manager's invite, with an optional course assignment that's applied automatically the
+// moment the invitee has an account (signup completes the invite, or a subsequent login for
+// invites sent after the account already existed).
+model Invitation {
+  id             String    @id @default(cuid())
+  tenantId       String
+  organizationId String
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  courseId       String?
+  course         Course?   @relation(fields: [courseId], references: [id])
+  invitedBy      String
+  acceptedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  @@index([tenantId])
+  @@index([userId])
 }
 
 model Assessment {

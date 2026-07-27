@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
-import { APP_INTERCEPTOR } from "@nestjs/core";
+import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { PrismaModule } from "./common/prisma/prisma.module";
 import { TenantMiddleware } from "./common/tenant/tenant.middleware";
 import { AuditInterceptor } from "./common/audit/audit.interceptor";
@@ -30,6 +31,9 @@ import { SalesModule } from "./modules/sales/sales.module";
 
 @Module({
   imports: [
+    // Generous global default (this guard applies to every route) — the auth endpoints that
+    // actually need tight brute-force protection override it with their own @Throttle() below.
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]),
     PrismaModule,
     MailerModule,
     GamificationModule,
@@ -56,7 +60,10 @@ import { SalesModule } from "./modules/sales/sales.module";
     AuthModule,
   ],
   controllers: [HealthController],
-  providers: [{ provide: APP_INTERCEPTOR, useClass: AuditInterceptor }],
+  providers: [
+    { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

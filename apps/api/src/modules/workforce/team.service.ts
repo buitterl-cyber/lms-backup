@@ -21,11 +21,12 @@ export class TeamService {
   ) {}
 
   async dashboard() {
-    const { tenantId, organizationId } = getTenantContext();
+    const { tenantId, organizationId, userId: manager } = getTenantContext();
     const now = Date.now();
 
     const users = await this.prisma.db.user.findMany({
-      where: { tenantId, organizationId, status: "active" },
+      // The manager isn't their own report — exclude self from "the team".
+      where: { tenantId, organizationId, status: "active", id: { not: manager ?? undefined } },
       include: { enrollments: { include: { course: { select: { title: true } } }, orderBy: { enrolledAt: "desc" } } },
     });
     const userIds = users.map((u) => u.id);
@@ -168,7 +169,25 @@ export class TeamService {
 
     const leaderboard = await this.gamification.leaderboard(30, 5);
 
-    return { kpis, learners, alerts, heatmap: heat, ratings, leaderboard };
+    // "Your team's courses" — what the team is taking, so the manager can optionally join in
+    // too (self-enrollment, same as any learner — this just surfaces the option).
+    const teamCourseMap = new Map<string, { courseId: string; title: string; learnerCount: number }>();
+    for (const u of users) {
+      for (const e of u.enrollments) {
+        const cur = teamCourseMap.get(e.courseId) ?? { courseId: e.courseId, title: e.course.title, learnerCount: 0 };
+        cur.learnerCount++;
+        teamCourseMap.set(e.courseId, cur);
+      }
+    }
+    const managerEnrollments = manager
+      ? await this.prisma.db.enrollment.findMany({ where: { tenantId, userId: manager }, select: { courseId: true } })
+      : [];
+    const managerEnrolledIds = new Set(managerEnrollments.map((e) => e.courseId));
+    const teamCourses = [...teamCourseMap.values()]
+      .map((c) => ({ ...c, managerEnrolled: managerEnrolledIds.has(c.courseId) }))
+      .sort((a, b) => b.learnerCount - a.learnerCount);
+
+    return { kpis, learners, alerts, heatmap: heat, ratings, leaderboard, teamCourses };
   }
 
   /**

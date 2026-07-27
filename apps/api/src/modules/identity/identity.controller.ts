@@ -12,6 +12,7 @@ class InviteDto {
   @IsString() lastName!: string;
   @IsOptional() @IsString() departmentId?: string;
   @IsOptional() @IsString() role?: UserRoleKey;
+  @IsOptional() @IsString() courseId?: string;
 }
 class AssignRoleDto {
   @IsString() userId!: string;

@@ -5,9 +5,29 @@ import { AuthService } from "../../modules/auth/auth.service";
 
 /**
  * Resolves tenant + identity for every request and runs the rest of the pipeline inside the
- * AsyncLocalStorage tenant context. In production the principal comes from a verified Keycloak
- * JWT; here we read a decoded-claims header set by the gateway/auth guard. The host is also used
- * to resolve white-label custom domains to a tenant.
+ * AsyncLocalStorage tenant context. The principal comes from a verified JWT (issued by
+ * /auth/login); the host is also used to resolve white-label custom domains to a tenant.
+ *
+ * SECURITY (2026-07-21, two-part fix):
+ *
+ * 1) This middleware used to fall back to trusting client-supplied X-Tenant-Id / X-Org-Id /
+ *    X-User-Id / X-Roles headers verbatim whenever there was no valid Bearer JWT, with no
+ *    environment gate and no allowlist. Any anonymous caller could set those headers to an
+ *    arbitrary tenant/org id plus "X-Roles: org_admin" and the API would grant full org-admin
+ *    authority over that tenant — confirmed live against production (GET
+ *    /api/v1/workforce/team returned 200 with no Authorization header at all, for a
+ *    completely made-up tenant id).
+ *
+ * 2) The first fix (resolve the fixed public-demo tenant server-side instead of trusting
+ *    headers) closed the cross-tenant impersonation vector, but surfaced a deeper problem:
+ *    self-signup (auth.service.ts `signup()`) places every new learner in that same "default"
+ *    tenant, and that tenant is what the anonymous fallback exposed with full org-admin
+ *    visibility. Real signed-up users' names and emails were reachable by anyone, unauthenticated
+ *    (confirmed live: GET /api/v1/workforce/team with no auth returned real learners, not just
+ *    seed data). Per product decision, anonymous requests beyond the public marketing/catalog
+ *    endpoints below now require a real login — there is no tenant-context fallback anymore.
+ *    The already-public /sales/* marketing catalog (a separate code path, see PUBLIC_SEGMENTS)
+ *    is unaffected and still works without login.
  */
 /** Paths that must work without a tenant (probes, login, the pre-auth demo bootstrap). Checked
  *  by suffix so it's robust to the global prefix. */
@@ -44,7 +64,10 @@ export class TenantMiddleware implements NestMiddleware {
       return next();
     }
 
-    // 1. Verified identity: a signed JWT from /auth/login is the real path.
+    // Everything else requires a verified identity — a signed JWT from /auth/login. There is
+    // deliberately no anonymous/demo fallback here (see security note above): tenant-scoped
+    // data, including anything that could contain a real user's name or email, is never served
+    // without a real session.
     const authz = req.headers.authorization;
     if (authz?.startsWith("Bearer ")) {
       try {
@@ -57,37 +80,9 @@ export class TenantMiddleware implements NestMiddleware {
         };
         return runWithTenant(ctx, () => next());
       } catch {
-        /* invalid/expired token -> fall through to demo headers */
+        throw new UnauthorizedException("Invalid or expired session");
       }
     }
-
-    // 2. Demo fallback: claims via headers (so the public demo works without login). Remove this
-    //    branch to require real auth everywhere.
-    const tenantId = (req.headers["x-tenant-id"] as string) || claimsFromAuth(req)?.tenantId;
-    const organizationId =
-      (req.headers["x-org-id"] as string) || claimsFromAuth(req)?.organizationId;
-
-    if (!tenantId || !organizationId) {
-      // Allow unauthenticated access to public/marketing + auth endpoints upstream of this.
-      throw new UnauthorizedException("Missing tenant/organization context");
-    }
-
-    const ctx: TenantContext = {
-      tenantId,
-      organizationId,
-      userId: (req.headers["x-user-id"] as string) || null,
-      roles: parseRoles(req.headers["x-roles"] as string),
-    };
-    runWithTenant(ctx, () => next());
+    throw new UnauthorizedException("Authentication required");
   }
-}
-
-function parseRoles(raw?: string): UserRoleKey[] {
-  if (!raw) return ["guest"];
-  return raw.split(",").map((r) => r.trim()) as UserRoleKey[];
-}
-
-function claimsFromAuth(req: Request): { tenantId?: string; organizationId?: string } | null {
-  // Placeholder for JWT verification. The auth guard populates req.user in production.
-  return (req as unknown as { user?: { tenantId?: string; organizationId?: string } }).user ?? null;
 }

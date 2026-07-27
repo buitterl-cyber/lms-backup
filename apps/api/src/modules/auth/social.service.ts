@@ -4,7 +4,15 @@ import * as jwt from "jsonwebtoken";
 import { PrismaService } from "../../common/prisma/prisma.service";
 import { AuthService, type JwtClaims } from "./auth.service";
 
-const secret = () => process.env.JWT_SECRET || "dev-insecure-secret";
+// Fails loudly rather than silently signing/verifying with a publicly-known default — a missing
+// JWT_SECRET in production is a total auth-bypass waiting to happen, not something to paper over.
+const secret = () => {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET is not set — refusing to run with an insecure default in production");
+  }
+  return "dev-insecure-secret";
+};
 const PUBLIC_URL = () => process.env.WEB_URL || "https://lms.excisone.com";
 const redirectUri = (provider: string) => `${PUBLIC_URL()}/api/v1/auth/social/${provider}/callback`;
 
