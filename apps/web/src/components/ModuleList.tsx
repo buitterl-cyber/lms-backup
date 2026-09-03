@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiPost, type DemoContext } from "@/lib/api";
+import { Chevron } from "@/components/ui";
 
 export interface ModuleRow {
   id: string; position: number; title: string; summary?: string | null;
@@ -39,7 +40,7 @@ export function ModuleList({ ctx, modules }: { ctx: DemoContext; modules: Module
             <button
               disabled={m.locked}
               onClick={() => setOpenId(open ? null : m.id)}
-              className="flex w-full items-center gap-3 text-left"
+              className="flex w-full items-center gap-3 text-start"
             >
               <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
                 m.completed ? "bg-green/20 text-green" : isCurrent ? "bg-brand/20 text-brand" : "bg-border/50 text-muted"
@@ -53,10 +54,10 @@ export function ModuleList({ ctx, modules }: { ctx: DemoContext; modules: Module
                   {m.durationMinutes ? ` · ${m.durationMinutes} min` : ""}
                 </span>
               </span>
-              {!m.locked && <span className="text-xs text-muted">{open ? "▾" : "▸"}</span>}
+              {!m.locked && <Chevron direction={open ? "down" : "right"} className="text-muted" />}
             </button>
             {open && !m.locked && (
-              <div className="ml-9 mt-2 space-y-3">
+              <div className="ms-9 mt-2 space-y-3">
                 {m.summary && <p className="text-xs text-muted">{m.summary}</p>}
                 {m.content && <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.content}</p>}
                 {!m.completed && (

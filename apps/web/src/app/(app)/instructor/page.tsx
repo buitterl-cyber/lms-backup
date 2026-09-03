@@ -1,4 +1,4 @@
-import { Card, MetricCard } from "@/components/ui";
+import { Card, EmptyState, MetricCard, Table, Td, Th, Thead } from "@/components/ui";
 import { CourseBuilder, ReviewAction } from "@/components/InstructorTools";
 import { isAdmin, apiGet, getContext } from "@/lib/api";
 import { AccessDenied } from "@/components/AccessDenied";
@@ -23,12 +23,12 @@ export default async function InstructorPage() {
     apiGet<Overview>("/instructor/overview", ctx).catch(() => null),
     apiGet<QueueItem[]>("/peer-reviews?status=pending", ctx).catch(() => [] as QueueItem[]),
   ]);
-  if (!overview) return <Card>Could not load the instructor overview.</Card>;
+  if (!overview) return <Card><EmptyState icon="alert" title="Could not load the instructor overview" description="Try refreshing — if this keeps happening, check the API connection." /></Card>;
 
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-2xl font-semibold">Instructor Overview</h1>
+        <h1 className="font-display text-xl font-semibold sm:text-2xl">Instructor Overview</h1>
         <p className="text-sm text-muted">Your courses, learners, and what needs attention.</p>
       </header>
 
@@ -42,31 +42,38 @@ export default async function InstructorPage() {
         </Card>
       </div>
 
-      <Card className="p-0">
+      <Card padding="none">
         <div className="border-b border-border p-4 text-sm font-medium">Course performance</div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px] text-sm">
-            <thead className="text-left text-xs text-muted">
-              <tr className="border-b border-border">
-                <th className="p-4 font-medium">Course</th><th className="font-medium">Enrolled</th>
-                <th className="font-medium">Completion</th><th className="font-medium">Avg score</th>
-                <th className="font-medium">Rating</th><th className="p-4 font-medium">Forum</th>
-              </tr>
-            </thead>
-            <tbody>
-              {overview.performance.map((c) => (
-                <tr key={c.courseId} className="border-b border-border/60 last:border-0">
-                  <td className="max-w-[220px] truncate p-4 font-medium">{c.title}</td>
-                  <td>{c.enrolled}</td>
-                  <td>{c.completion}%</td>
-                  <td>{c.avgScore ?? "—"}</td>
-                  <td>{c.rating ?? "—"}</td>
-                  <td className="p-4">{c.forumPosts} posts</td>
+        {overview.performance.length === 0 ? (
+          <EmptyState
+            icon="course"
+            title="No courses yet"
+            description="Course performance shows up here once you've published a course and learners start enrolling."
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <Table className="min-w-[560px]">
+              <Thead>
+                <tr className="border-b border-border">
+                  <Th>Course</Th><Th>Enrolled</Th><Th>Completion</Th>
+                  <Th>Avg score</Th><Th>Rating</Th><Th>Forum</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </Thead>
+              <tbody>
+                {overview.performance.map((c) => (
+                  <tr key={c.courseId} className="border-b border-border/60 last:border-0">
+                    <Td className="max-w-[220px] truncate font-medium">{c.title}</Td>
+                    <Td>{c.enrolled}</Td>
+                    <Td>{c.completion}%</Td>
+                    <Td>{c.avgScore ?? "—"}</Td>
+                    <Td>{c.rating ?? "—"}</Td>
+                    <Td>{c.forumPosts} posts</Td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        )}
       </Card>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -75,7 +82,7 @@ export default async function InstructorPage() {
           <div className="mt-3 space-y-3">
             {queue.length === 0 && <p className="text-xs text-muted">Nothing waiting for review.</p>}
             {queue.map((q) => (
-              <div key={q.id} className="rounded-lg border border-border p-3">
+              <Card key={q.id} tone="none" radius="lg" padding="sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="text-sm font-medium">{q.submitter} → {q.title}</p>
@@ -84,7 +91,7 @@ export default async function InstructorPage() {
                   <ReviewAction ctx={ctx} id={q.id} />
                 </div>
                 <p className="mt-2 line-clamp-2 text-xs text-muted">{q.content}</p>
-              </div>
+              </Card>
             ))}
           </div>
         </Card>
@@ -94,7 +101,7 @@ export default async function InstructorPage() {
           <div className="mt-3 space-y-3">
             {overview.recentFeedback.length === 0 && <p className="text-xs text-muted">No written feedback yet.</p>}
             {overview.recentFeedback.map((f, i) => (
-              <blockquote key={i} className="border-l-2 border-border pl-3">
+              <blockquote key={i} className="border-s-2 border-border ps-3">
                 <p className="text-sm italic leading-relaxed">&ldquo;{f.comment}&rdquo;</p>
                 <p className="mt-1 text-xs text-muted">{f.anonymous ? "Anonymous" : "Learner"} · {f.course} · {"★".repeat(f.rating)}</p>
               </blockquote>

@@ -5,13 +5,13 @@ import { Area, AreaChart, Cell, Pie, PieChart, PolarAngleAxis, PolarGrid, PolarR
 
 // recharts needs real color values (SVG fill/stroke), not Tailwind classes — these are the
 // exact same fixed literals tailwind.config.ts uses for green/amber/red (not new colors), and
-// "rgb(var(--brand))"/"rgb(var(--accent-teal))" resolve live against whichever skin is active
-// (accent-teal is fixed across skins, same as brand-gold), same as everywhere else.
+// "rgb(var(--brand))"/"rgb(var(--accent-orange))" resolve live against whichever skin is active
+// (accent-orange is fixed across skins, same as brand-gold), same as everywhere else.
 const GREEN = "rgb(16 185 129)";
 const AMBER = "rgb(245 158 11)";
 const RED = "rgb(239 68 68)";
 const BRAND = "rgb(var(--brand))";
-const ACCENT_TEAL = "rgb(var(--accent-teal))";
+const ACCENT_TEAL = "rgb(var(--accent-orange))";
 const BORDER = "rgb(var(--border))";
 const MUTED = "rgb(var(--muted))";
 

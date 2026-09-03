@@ -1,15 +1,12 @@
 import Link from "next/link";
-import { Card, courseGlyph } from "@/components/ui";
+import { Button, Card, Chevron, EmptyState } from "@/components/ui";
+import { ProviderAttribution, providerLabel } from "@/components/CourseProvider";
+import { CourseThumb } from "@/components/CourseImage";
 import { apiGet, getContext, type CatalogResult } from "@/lib/api";
 
 // Content Aggregation Hub — one catalog across every connected provider. Live data from
-// /catalog/courses (seeded across GO1, MS Learn, AWS, Cybrary, O'Reilly).
+// /catalog/courses (seeded under GO1, the one confirmed provider relationship today).
 export const dynamic = "force-dynamic";
-
-const PROVIDER_LABEL: Record<string, string> = {
-  go1: "GO1", "ms-learn": "Microsoft Learn", aws: "AWS Skill Builder", cybrary: "Cybrary",
-  oreilly: "O'Reilly", "open-sesame": "OpenSesame", "ai-generated": "AI Generated",
-};
 
 async function load() {
   try {
@@ -33,11 +30,11 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-2xl font-semibold">Course Catalog</h1>
+        <h1 className="font-display text-xl font-semibold sm:text-2xl">Course Catalog</h1>
         <p className="text-sm text-muted">
           {q
             ? `${courses.length} course${courses.length === 1 ? "" : "s"} matching “${q}”`
-            : `${courses.length} courses aggregated across ${providers.length} providers — one catalog, every source.`}
+            : `${courses.length} courses aggregated across ${providers.length} provider${providers.length === 1 ? "" : "s"} — one catalog, every source.`}
         </p>
       </header>
 
@@ -45,13 +42,24 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
         <span className="rounded-full bg-brand/15 px-3 py-1 text-xs text-brand">All providers</span>
         {providers.map((p) => (
           <span key={p} className="rounded-full border border-border px-3 py-1 text-xs text-muted">
-            {PROVIDER_LABEL[p] ?? p}
+            {providerLabel(p)}
           </span>
         ))}
       </div>
 
       {courses.length === 0 ? (
-        <Card>No courses found. Connect a provider or run a catalog sync.</Card>
+        <Card>
+          {needle ? (
+            <EmptyState icon="search" title={`No courses matching “${q}”`} description="Try a broader search or a different keyword." />
+          ) : (
+            <EmptyState
+              icon="empty"
+              title="No courses in the catalog yet"
+              description="Connect a provider or run a catalog sync to start populating it."
+              action={<Button href="/providers" variant="secondary" size="sm">Go to Providers</Button>}
+            />
+          )}
+        </Card>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {courses.map((c) => (
@@ -60,13 +68,11 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
                 {/* Icon in its own fixed box (shrink-0 + overflow-hidden) beside a min-w-0 text
                     column — the two can never overlap at any card width. */}
                 <div className="flex items-start gap-3">
-                  <span className="glyph flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-bg text-xl ring-1 ring-border">
-                    {courseGlyph(`${c.title} ${c.skills.join(" ")}`)}
-                  </span>
+                  <CourseThumb title={c.title} skills={c.skills} imageUrl={c.imageUrl} />
                   <span className="min-w-0 flex-1">
                     <h3 className="font-medium leading-snug">{c.title}</h3>
                     <span className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className="truncate text-xs uppercase tracking-wide text-muted">{PROVIDER_LABEL[c.provider] ?? c.provider}</span>
+                      <span className="truncate text-xs uppercase tracking-wide text-muted">{c.publisher || providerLabel(c.provider)}</span>
                       {c.level && <span className="shrink-0 rounded-full bg-border/60 px-2 py-0.5 text-[10px] uppercase text-muted">{c.level}</span>}
                     </span>
                   </span>
@@ -76,10 +82,11 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
                     <span key={s} className="rounded-full bg-card px-2 py-0.5 text-[11px] text-muted ring-1 ring-border">{s}</span>
                   ))}
                 </div>
-                <div className="mt-3 flex-1 text-xs text-muted">
-                  {c.durationMinutes ? `${Math.round(c.durationMinutes / 60)}h` : "Self-paced"}
+                <div className="mt-3 flex flex-1 items-start justify-between gap-2">
+                  <span className="text-xs text-muted">{c.durationMinutes ? `${Math.round(c.durationMinutes / 60)}h` : "Self-paced"}</span>
+                  <ProviderAttribution providerKey={c.provider} />
                 </div>
-                <span className="mt-4 text-sm font-medium text-brand">View course →</span>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand">View course <Chevron /></span>
               </Card>
             </Link>
           ))}

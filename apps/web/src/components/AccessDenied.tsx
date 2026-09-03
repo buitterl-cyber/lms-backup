@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Card } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 
 /** Shown when a learner account opens an admin/manager surface. */
 export function AccessDenied() {
@@ -11,9 +10,9 @@ export function AccessDenied() {
         This area is for admin and manager accounts. If you should have access, ask your
         organization admin to grant it.
       </p>
-      <Link href="/learner" className="mt-4 inline-block rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white">
+      <Button href="/learner" className="mt-4">
         Back to my dashboard
-      </Link>
+      </Button>
     </Card>
   );
 }

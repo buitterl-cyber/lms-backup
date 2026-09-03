@@ -35,4 +35,10 @@ export class JobsController {
   nudgeSweep() {
     return this.jobs.nudgeSweep();
   }
+
+  @Post("provider-progress-poll")
+  @RequirePermissions("provider:manage")
+  providerProgressPoll() {
+    return this.jobs.providerProgressPoll();
+  }
 }

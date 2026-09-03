@@ -23,6 +23,9 @@ export class CertificationService {
       expiresAt: c.expiresAt,
       status: c.status,
       fileUrl: c.fileUrl,
+      // externalId is set when a connected provider (GO1, etc.) issued this certificate;
+      // null/absent means it was earned/recorded directly in RiyadaIntel.
+      source: c.externalId ? "external" : "internal",
     }));
   }
 
@@ -42,6 +45,7 @@ export class CertificationService {
       id: c.id,
       user: `${c.user.firstName} ${c.user.lastName}`,
       certification: c.certification?.name ?? "Certificate",
+      source: c.externalId ? "external" : "internal",
       expiresAt: c.expiresAt,
       status: certStatus({ expiresAt: c.expiresAt, now }),
       reminders: c.expiresAt ? dueReminders(c.expiresAt, now) : [],

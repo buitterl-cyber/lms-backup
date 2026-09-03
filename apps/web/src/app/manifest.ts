@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 // PWA manifest — installable on iOS/Android home screens (Carl: mobile-friendly at launch).
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "RiyadaIntel LMS",
-    short_name: "RiyadaIntel",
+    name: "Riyada Intelligence LMS",
+    short_name: "Riyada Intelligence",
     description: "AI-powered learning & workforce intelligence platform",
     start_url: "/learner",
     display: "standalone",

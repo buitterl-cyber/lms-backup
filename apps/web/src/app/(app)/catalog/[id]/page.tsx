@@ -1,16 +1,13 @@
 import Link from "next/link";
-import { Card } from "@/components/ui";
+import { Button, Card, Chevron } from "@/components/ui";
 import { CoursePlayer } from "@/components/CoursePlayer";
 import { ModuleList, type ModuleRow } from "@/components/ModuleList";
 import { RateCourse } from "@/components/RateCourse";
+import { ProviderAttribution, providerLabel } from "@/components/CourseProvider";
+import { CourseHeroImage } from "@/components/CourseImage";
 import { apiGet, getContext, type CourseDetail } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
-
-const PROVIDER_LABEL: Record<string, string> = {
-  go1: "GO1", "ms-learn": "Microsoft Learn", aws: "AWS Skill Builder", cybrary: "Cybrary",
-  oreilly: "O'Reilly", "open-sesame": "OpenSesame", "ai-generated": "AI Generated",
-};
 
 async function load(id: string) {
   try {
@@ -32,7 +29,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   if (!loaded || !course) {
     return (
       <Card>
-        Course not found. <Link href="/catalog" className="text-brand underline">Back to catalog</Link>
+        Course not found. <Link href="/catalog" className="text-brand underline transition hover:text-brand/70">Back to catalog</Link>
       </Card>
     );
   }
@@ -40,14 +37,22 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   const { ctx, modules } = loaded;
   return (
     <div className="space-y-6">
-      <Link href="/catalog" className="text-sm text-muted hover:text-fg">← Course Catalog</Link>
+      <Link href="/catalog" className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
+        <Chevron direction="left" /> Course Catalog
+      </Link>
 
       <header>
-        <p className="text-xs uppercase tracking-wide text-muted">
-          {PROVIDER_LABEL[course.provider] ?? course.provider}
-          {course.level ? ` · ${course.level}` : ""}
-          {course.durationMinutes ? ` · ${Math.round(course.durationMinutes / 60)}h` : ""}
-        </p>
+        {course.imageUrl && (
+          <CourseHeroImage src={course.imageUrl} title={course.title} className="mb-4 h-40 w-full rounded-2xl border border-border object-cover sm:h-56" />
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-xs uppercase tracking-wide text-muted">
+            {course.publisher || providerLabel(course.provider)}
+            {course.level ? ` · ${course.level}` : ""}
+            {course.durationMinutes ? ` · ${Math.round(course.durationMinutes / 60)}h` : ""}
+          </p>
+          <ProviderAttribution providerKey={course.provider} />
+        </div>
         <h1 className="font-display mt-1 text-2xl font-semibold">{course.title}</h1>
       </header>
 
@@ -58,7 +63,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             <p className="mt-2 text-sm leading-relaxed">{course.description}</p>
           </Card>
           {modules.length > 0 && (
-            <Card className="p-0">
+            <Card padding="none">
               <div className="border-b border-border p-4">
                 <h2 className="text-sm font-medium">Modules</h2>
                 <p className="text-xs text-muted">{modules.filter((m) => m.completed).length} of {modules.length} complete · unlocked in order</p>
@@ -84,9 +89,9 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
           <Card>
             <h2 className="text-sm font-medium">Course forum</h2>
             <p className="mt-1 text-xs text-muted">Questions, answers, and the AI Study Assistant.</p>
-            <Link href={`/catalog/${course.id}/forum`} className="mt-3 block rounded-lg border border-brand/40 px-3 py-2 text-center text-sm font-medium text-brand hover:bg-brand/10">
-              Open forum →
-            </Link>
+            <Button href={`/catalog/${course.id}/forum`} variant="outline" className="mt-3 w-full">
+              Open forum <Chevron className="ms-1" />
+            </Button>
           </Card>
           <Card>
             <h2 className="text-sm font-medium">Rate this course</h2>
@@ -96,9 +101,9 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             <Card>
               <h2 className="text-sm font-medium">Knowledge check</h2>
               <p className="mt-1 text-xs text-muted">Test what you learned and earn your completion.</p>
-              <Link href={`/assessment/${course.assessmentId}`} className="mt-3 block rounded-lg bg-brand px-3 py-2 text-center text-sm font-medium text-white">
-                Take assessment →
-              </Link>
+              <Button href={`/assessment/${course.assessmentId}`} className="mt-3 w-full">
+                Take assessment <Chevron className="ms-1" />
+              </Button>
             </Card>
           )}
         </div>

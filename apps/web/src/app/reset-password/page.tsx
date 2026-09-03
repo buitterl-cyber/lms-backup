@@ -14,8 +14,12 @@ function ResetForm() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setState("busy");
     setError("");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    setState("busy");
     try {
       const res = await fetch("/api/v1/auth/reset", {
         method: "POST",
@@ -43,7 +47,7 @@ function ResetForm() {
     );
   }
   return (
-    <form onSubmit={submit} className="mt-5 space-y-3">
+    <form onSubmit={submit} className="mt-5 space-y-3" noValidate>
       <input
         required
         type="password"
@@ -56,7 +60,7 @@ function ResetForm() {
           background: AUTH.field, padding: "9px 12px", fontSize: 14, color: AUTH.ink, outline: "none",
         }}
       />
-      {error && <p className="text-xs" style={{ color: "#C0392B" }}>{error}</p>}
+      {error && <p className="text-xs text-red">{error}</p>}
       <button
         disabled={state === "busy" || !token}
         className="w-full py-2.5 text-sm font-semibold text-white disabled:opacity-60"

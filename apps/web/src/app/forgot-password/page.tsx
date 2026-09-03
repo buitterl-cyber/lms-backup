@@ -3,13 +3,23 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AUTH, AuthCard, AuthHeading, AuthShell } from "@/components/auth/AuthShell";
+import { Chevron } from "@/components/ui";
+import { isValidEmail } from "@/lib/validation";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "sent">("idle");
+  const [error, setError] = useState("");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
+    // Format-only check — never reveals whether the address has an account, same as the
+    // always-"sent" response below.
+    if (!isValidEmail(email)) {
+      setError("Enter a valid email address.");
+      return;
+    }
     setState("busy");
     try {
       await fetch("/api/v1/auth/forgot", {
@@ -34,7 +44,7 @@ export default function ForgotPasswordPage() {
             its way. Check your inbox.
           </p>
         ) : (
-          <form onSubmit={submit} className="mt-5 space-y-3">
+          <form onSubmit={submit} className="mt-5 space-y-3" noValidate>
             <input
               required
               type="email"
@@ -46,6 +56,7 @@ export default function ForgotPasswordPage() {
                 background: AUTH.field, padding: "9px 12px", fontSize: 14, color: AUTH.ink, outline: "none",
               }}
             />
+            {error && <p className="text-xs text-red" role="alert">{error}</p>}
             <button
               disabled={state === "busy"}
               className="w-full py-2.5 text-sm font-semibold text-white disabled:opacity-60"
@@ -57,7 +68,9 @@ export default function ForgotPasswordPage() {
         )}
       </AuthCard>
       <p className="mt-4 text-center text-xs">
-        <Link href="/login" className="hover:underline" style={{ color: AUTH.muted }}>← Back to sign in</Link>
+        <Link href="/login" className="inline-flex items-center gap-1 hover:underline" style={{ color: AUTH.muted }}>
+          <Chevron direction="left" /> Back to sign in
+        </Link>
       </p>
     </AuthShell>
   );

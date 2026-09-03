@@ -1,0 +1,61 @@
+{
+  "_comment": "INFERRED PLACEHOLDER — not a confirmed GO1 API response. Shaped after GO1's publicly documented 'learning-objects' concept (id/type/title/tags) and common content-aggregator conventions, so the mock provider has something realistic to normalize. Replace with a real captured GO1 sandbox response once we have API docs/access from Luke Barnes at GO1.",
+  "data": [
+    {
+      "id": "lo-9f21a3",
+      "type": "course",
+      "title": "Cybersecurity Awareness Fundamentals",
+      "description": "Covers phishing recognition, password hygiene, and social engineering red flags for general staff.",
+      "language": "en",
+      "duration_seconds": 2700,
+      "level": "beginner",
+      "delivery": "self-paced",
+      "tags": ["security", "compliance", "awareness"],
+      "image_url": "https://example.invalid/covers/cyberaware.png",
+      "launch_url": "https://example.invalid/content/lo-9f21a3",
+      "publisher": "GO1 Content Library",
+      "updated_at": "2026-06-01T00:00:00Z"
+    },
+    {
+      "id": "lo-4b7710",
+      "type": "course",
+      "title": "Leading Distributed Teams",
+      "description": "Practical management techniques for leading remote and hybrid teams across time zones.",
+      "language": "en",
+      "duration_seconds": 5400,
+      "level": "intermediate",
+      "delivery": "self-paced",
+      "tags": ["leadership", "management", "remote-work"],
+      "image_url": "https://example.invalid/covers/distributed-teams.png",
+      "launch_url": "https://example.invalid/content/lo-4b7710",
+      "publisher": "GO1 Content Library",
+      "updated_at": "2026-05-14T00:00:00Z"
+    },
+    {
+      "id": "lo-2ac590",
+      "type": "course",
+      "title": "Introduction to Cloud Cost Management",
+      "description": "Foundational FinOps concepts: tagging, budgets, and rightsizing for cloud workloads.",
+      "language": "en",
+      "duration_seconds": 3600,
+      "level": "intermediate",
+      "delivery": "self-paced",
+      "tags": ["cloud", "finops", "cost-management"],
+      "image_url": "https://example.invalid/covers/finops.png",
+      "launch_url": "https://example.invalid/content/lo-2ac590",
+      "publisher": "GO1 Content Library",
+      "updated_at": "2026-04-22T00:00:00Z"
+    },
+    {
+      "id": "lo-7d3c21",
+      "type": "learning_pathway",
+      "title": "New Manager Essentials",
+      "description": "A pathway bundling onboarding, feedback, and 1:1 fundamentals for first-time managers.",
+      "language": "en",
+      "tags": ["leadership", "onboarding"],
+      "items": ["lo-4b7710"],
+      "updated_at": "2026-03-02T00:00:00Z"
+    }
+  ],
+  "paging": { "next_cursor": null, "total": 4 }
+}

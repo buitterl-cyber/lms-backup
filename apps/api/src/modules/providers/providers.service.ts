@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { getTenantContext, NotFoundError } from "@riyada/shared";
 import { createProvider, listRegisteredProviders } from "@riyada/providers";
 import { PrismaService } from "../../common/prisma/prisma.service";
+import { decryptProviderCredentials, encryptProviderCredentials } from "./provider-credentials";
 
 /**
  * Provider connection management + catalog sync orchestration. Wraps the Provider Abstraction
@@ -36,13 +37,13 @@ export class ProvidersService {
     const { tenantId, organizationId } = getTenantContext();
     return this.prisma.db.providerConnection.upsert({
       where: { organizationId_providerKey: { organizationId, providerKey: input.providerKey } },
-      update: { displayName: input.displayName, credentialsEnc: encrypt(input.credentials) },
+      update: { displayName: input.displayName, credentialsEnc: encryptProviderCredentials(input.credentials) },
       create: {
         tenantId,
         organizationId,
         providerKey: input.providerKey,
         displayName: input.displayName,
-        credentialsEnc: encrypt(input.credentials),
+        credentialsEnc: encryptProviderCredentials(input.credentials),
       },
       select: { id: true, providerKey: true, status: true },
     });
@@ -62,7 +63,7 @@ export class ProvidersService {
     const provider = createProvider(conn.providerKey, {
       tenantId,
       organizationId,
-      credentials: decrypt(conn.credentialsEnc),
+      credentials: decryptProviderCredentials(conn.credentialsEnc),
     });
 
     const page = await provider.listCourses({ limit });
@@ -113,17 +114,5 @@ export class ProvidersService {
 
     await this.prisma.db.providerConnection.update({ where: { id: conn.id }, data: { lastSyncedAt: new Date() } });
     return { providerKey: conn.providerKey, coursesUpserted, skillsCreated, skillLinks: linksUpserted };
-  }
-}
-
-// Placeholder crypto — production uses a KMS envelope (see schema ProviderConnection.credentialsEnc).
-function encrypt(creds: Record<string, string>): string {
-  return Buffer.from(JSON.stringify(creds)).toString("base64");
-}
-function decrypt(enc: string): Record<string, string> {
-  try {
-    return JSON.parse(Buffer.from(enc, "base64").toString("utf8"));
-  } catch {
-    return {};
   }
 }

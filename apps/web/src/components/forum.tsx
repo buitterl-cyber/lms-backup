@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiPost, type DemoContext } from "@/lib/api";
+import { Button, Card } from "@/components/ui";
 
 /** Client interactivity for the course forum: compose, reply, vote, pin, accept. */
 
@@ -56,13 +57,9 @@ export function NewThreadForm({ ctx, courseId }: { ctx: DemoContext; courseId: s
   }
 
   if (!open)
-    return (
-      <button onClick={() => setOpen(true)} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white">
-        + New Post
-      </button>
-    );
+    return <Button onClick={() => setOpen(true)}>+ New Post</Button>;
   return (
-    <div className="w-full rounded-xl border border-border bg-card p-4">
+    <Card padding="md" className="w-full">
       <input
         value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title — what's your question?"
         className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-brand"
@@ -77,13 +74,13 @@ export function NewThreadForm({ ctx, courseId }: { ctx: DemoContext; courseId: s
           Post anonymously
         </label>
         <div className="flex gap-2">
-          <button onClick={() => setOpen(false)} className="rounded-lg border border-border px-3 py-1.5 text-xs">Cancel</button>
-          <button onClick={submit} disabled={busy} className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50">
+          <Button onClick={() => setOpen(false)} variant="secondary" size="sm" className="hover:bg-bg!">Cancel</Button>
+          <Button onClick={submit} disabled={busy} size="sm">
             {busy ? "Posting…" : "Post"}
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -104,7 +101,7 @@ export function ReplyBox({ ctx, threadId }: { ctx: DemoContext; threadId: string
     }
   }
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <Card padding="md">
       <textarea
         value={body} onChange={(e) => setBody(e.target.value)} rows={2} placeholder="Write a reply…"
         className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-brand"
@@ -114,11 +111,11 @@ export function ReplyBox({ ctx, threadId }: { ctx: DemoContext; threadId: string
           <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
           Reply anonymously
         </label>
-        <button onClick={submit} disabled={busy} className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50">
+        <Button onClick={submit} disabled={busy} size="sm">
           {busy ? "Sending…" : "Reply"}
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }
 

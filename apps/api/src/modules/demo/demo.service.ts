@@ -13,7 +13,10 @@ export class DemoService {
     const tenant = await prisma.tenant.findFirst({ orderBy: { createdAt: "asc" } });
     if (!tenant) return null;
     const org = await prisma.organization.findFirst({ where: { tenantId: tenant.id } });
-    const user = await prisma.user.findFirst({ where: { tenantId: tenant.id }, orderBy: { createdAt: "asc" } });
+    const user = await prisma.user.findFirst({
+      where: { tenantId: tenant.id, status: { not: "suspended" } },
+      orderBy: { createdAt: "asc" },
+    });
     return {
       tenantId: tenant.id,
       organizationId: org?.id ?? "",

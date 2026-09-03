@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { apiPost, getContext } from "@/lib/api";
+import { Button, type ButtonVariant } from "@/components/ui";
 
 // Real enroll action: resolves the demo context, then POSTs an enrollment. Clicking does
 // something (the whole point) — and reflects state.
@@ -19,20 +20,16 @@ export function EnrollButton({ courseId, label = "Enroll", className = "" }: { c
     }
   }
 
-  const styles =
-    state === "done"
-      ? "bg-green/15 text-green border border-green/30"
-      : state === "error"
-        ? "bg-red/15 text-red border border-red/30"
-        : "bg-brand text-white";
+  const variant: ButtonVariant = state === "done" ? "success" : state === "error" ? "danger" : "primary";
 
   return (
-    <button
+    <Button
       onClick={enroll}
       disabled={state === "loading" || state === "done"}
-      className={`rounded-lg px-3 py-2 text-sm font-medium disabled:opacity-80 ${styles} ${className}`}
+      variant={variant}
+      className={`disabled:opacity-80! ${className}`}
     >
       {state === "done" ? "Enrolled ✓" : state === "loading" ? "Enrolling…" : state === "error" ? "Retry" : label}
-    </button>
+    </Button>
   );
 }

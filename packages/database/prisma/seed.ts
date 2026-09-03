@@ -76,13 +76,15 @@ async function main() {
     ],
   });
 
-  // Catalog: courses mapped to skills
+  // Catalog: courses mapped to skills. All seeded as GO1 — GO1 is the only provider we have a
+  // confirmed relationship with today; don't reintroduce other provider keys here without a real
+  // connection to back them (see /company page copy + the "Providers" admin page for context).
   const courseDefs = [
-    ["ms-learn", "Azure Security Engineer", "azure-sec", 4],
-    ["aws", "Terraform on AWS", "terraform", 3],
-    ["cybrary", "SOC2 Readiness", "soc2", 3],
+    ["go1", "Azure Security Engineer", "azure-sec", 4],
+    ["go1", "Terraform on AWS", "terraform", 3],
+    ["go1", "SOC2 Readiness", "soc2", 3],
     ["go1", "ISO 27001 Foundations", "iso27001", 2],
-    ["oreilly", "Python for Security", "python", 3],
+    ["go1", "Python for Security", "python", 3],
   ] as const;
   for (const [provider, title, slug, level] of courseDefs) {
     const c = await db.course.create({

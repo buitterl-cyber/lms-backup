@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { TOKEN_COOKIE } from "@/lib/api";
+import { Chevron } from "@/components/ui";
 
 export function LogoutButton({ className }: { className?: string }) {
   const router = useRouter();
@@ -12,7 +13,7 @@ export function LogoutButton({ className }: { className?: string }) {
   }
   return (
     <button onClick={logout} className={className}>
-      ← Sign out
+      <Chevron direction="left" className="me-1" /> Sign out
     </button>
   );
 }

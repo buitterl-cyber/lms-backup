@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { DM_Sans } from "next/font/google";
+import { Brand } from "@/components/Brand";
 
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-auth" });
 
@@ -20,30 +20,30 @@ export const AUTH = {
 export function AuthShell({ children, width = "max-w-sm" }: { children: ReactNode; width?: string }) {
   return (
     <div
-      className={`${dmSans.variable} relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 py-10`}
+      className={`${dmSans.variable} relative flex min-h-screen flex-col items-center justify-center overflow-x-clip px-4 py-8 sm:px-6 sm:py-10`}
       style={{ background: AUTH.field, color: AUTH.ink }}
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full opacity-70 blur-3xl"
-        style={{ background: "rgb(var(--accent-teal) / 0.18)" }}
+        className="pointer-events-none absolute -start-24 -top-24 h-72 w-72 rounded-full opacity-70 blur-3xl"
+        style={{ background: "rgb(var(--accent-orange) / 0.18)" }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-16 top-24 h-64 w-64 rounded-full opacity-60 blur-3xl"
+        className="pointer-events-none absolute -end-16 top-24 h-64 w-64 rounded-full opacity-60 blur-3xl"
         style={{ background: "rgb(var(--auth-brand) / 0.14)" }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute bottom-10 left-1/3 h-52 w-52 rounded-full opacity-50 blur-3xl"
+        className="pointer-events-none absolute bottom-10 start-1/3 h-52 w-52 rounded-full opacity-50 blur-3xl"
         style={{ background: "rgb(var(--brand-gold) / 0.16)" }}
       />
 
-      <Link href="/" className="relative mb-8">
-        <img src="/brand/riyada-logo.png" alt="Riyada Intelligence" width={200} height={65} />
+      <Link href="/" className="relative mb-6 sm:mb-8">
+        <Brand size={32} className="text-lg sm:text-xl" />
       </Link>
       <div className={`relative w-full ${width}`}>{children}</div>
-      <p className="relative mt-8 text-center text-xs" style={{ color: AUTH.muted }}>
+      <p className="relative mt-6 text-center text-xs sm:mt-8" style={{ color: AUTH.muted }}>
         Riyada Intelligence · AI-Powered Workforce Intelligence
       </p>
     </div>

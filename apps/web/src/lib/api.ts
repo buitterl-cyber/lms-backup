@@ -1,4 +1,4 @@
-// Typed API client for the RiyadaIntel backend.
+// Typed API client for the Riyada Intelligence backend.
 //
 // Auth: a signed JWT (from /auth/login) is stored in the `riyada_token` cookie. When present,
 // requests send it as a Bearer token and identity comes from /auth/me. When absent (public demo
@@ -66,9 +66,22 @@ export interface DemoContext {
   roles?: string[];
 }
 
-/** Resolve the current identity: /auth/me when logged in, else the demo bootstrap. A stale or
- *  rotated-secret cookie must never take pages down — fall back to the demo context so the app
- *  renders and the user can simply log in again. */
+/** Thrown by getContext() specifically when a `riyada_token` cookie is present but the API
+ *  rejects it (expired, or invalidated by a JWT_SECRET rotation) — as opposed to no cookie at
+ *  all, which is genuine anonymous/demo browsing. Callers that can redirect (the app shell)
+ *  should treat this as "send them to login with a clear message", not silently fall back to
+ *  demo data — someone who was actually signed in should never see a fabricated dashboard with
+ *  no indication their session died. */
+export class SessionExpiredError extends Error {
+  constructor() {
+    super("Session expired or invalid");
+    this.name = "SessionExpiredError";
+  }
+}
+
+/** Resolve the current identity: /auth/me when logged in, else the demo bootstrap for genuinely
+ *  anonymous visitors. A rejected token throws SessionExpiredError (see above) rather than
+ *  silently falling through to the demo context. */
 export async function getContext(): Promise<DemoContext> {
   const token = await authToken();
   if (token) {
@@ -77,6 +90,7 @@ export async function getContext(): Promise<DemoContext> {
       cache: "no-store",
     });
     if (res.ok) return res.json() as Promise<DemoContext>;
+    if (res.status === 401) throw new SessionExpiredError();
   }
   const res = await fetch(`${baseUrl()}/demo/context`, { cache: "no-store" });
   if (!res.ok) throw new Error(`context -> ${res.status}`);
@@ -170,6 +184,8 @@ export interface CatalogCourse {
   id: string;
   title: string;
   provider: string;
+  publisher?: string | null;
+  imageUrl?: string | null;
   level?: string;
   durationMinutes?: number;
   skills: string[];
@@ -182,6 +198,7 @@ export interface CertExpiring {
   id: string;
   user: string;
   certification: string;
+  source?: "internal" | "external";
   expiresAt: string | null;
   status: string;
   reminders: number[];

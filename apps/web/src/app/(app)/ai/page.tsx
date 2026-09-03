@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import { apiPost, getContext, type DemoContext } from "@/lib/api";
 
 // RIYADA AI surface. Sends the prompt to the grounded assistant; renders the answer plus the
@@ -45,7 +45,7 @@ export default function AiPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-2xl font-semibold">RIYADA AI</h1>
+        <h1 className="font-display text-xl font-semibold sm:text-2xl">RIYADA AI</h1>
         <p className="text-sm text-muted">Grounded in your Skills Graph, compliance state, and recommendations.</p>
       </header>
 
@@ -67,9 +67,9 @@ export default function AiPage() {
           placeholder="Ask about skills, compliance, certifications, or your career…"
           className="flex-1 rounded-lg border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-brand"
         />
-        <button disabled={loading} className="rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50">
+        <Button disabled={loading}>
           {loading ? "Thinking…" : "Ask"}
-        </button>
+        </Button>
       </form>
 
       {error && <Card className="text-sm text-amber">{error}</Card>}

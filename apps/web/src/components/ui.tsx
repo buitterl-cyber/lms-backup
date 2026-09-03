@@ -6,7 +6,7 @@ export type ButtonVariant = "primary" | "secondary" | "outline" | "success" | "d
 export type ButtonSize = "sm" | "md" | "lg";
 
 const BUTTON_BASE =
-  "inline-flex items-center justify-center rounded-xl font-medium transition duration-200 ease-out will-change-transform disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none";
+  "inline-flex items-center justify-center rounded-xl font-medium transition-[transform,box-shadow,opacity,background-color,border-color,filter] duration-200 ease-out will-change-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none disabled:active:scale-100";
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
   primary:
@@ -14,8 +14,8 @@ const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
   secondary:
     "border border-border bg-card/80 shadow-sm shadow-black/5 hover:-translate-y-0.5 hover:bg-card hover:shadow-md hover:shadow-black/10 dark:shadow-black/20",
   outline: "border border-brand/40 text-brand hover:-translate-y-0.5 hover:bg-brand/10 hover:shadow-sm hover:shadow-brand/15",
-  success: "border border-green/30 bg-green/15 text-green",
-  danger: "border border-red/30 bg-red/15 text-red",
+  success: "border border-green/30 bg-green/15 text-green hover:bg-green/20 hover:border-green/45 active:brightness-95",
+  danger: "border border-red/30 bg-red/15 text-red hover:bg-red/20 hover:border-red/45 active:brightness-95",
 };
 
 const BUTTON_SIZES: Record<ButtonSize, string> = {
@@ -142,9 +142,16 @@ export function Card({ children, className = "", tone = "default", padding = "lg
   const toneClass = translucent
     ? "border-border/80 bg-card/75 shadow-sm shadow-black/5 backdrop-blur-md"
     : CARD_TONE[tone];
+  // Every standalone card gets a quiet hover refinement (border/shadow only, no lift) so the
+  // surface never reads as inert — `interactive` layers a stronger lift+shadow on top for
+  // surfaces that are actually a single click target (whole card wrapped in a Link/button).
+  // Nested sub-panels (tone="none", no fill of their own) stay static — they're not a distinct
+  // surface, just a divider inside another card.
   const interactClass = interactive
-    ? "transition duration-200 ease-out will-change-transform hover:-translate-y-1 hover:shadow-lg hover:shadow-black/10 dark:hover:shadow-black/40 hover:border-brand/25"
-    : "";
+    ? "transition-[transform,box-shadow,border-color] duration-200 ease-out will-change-transform hover:-translate-y-1 hover:shadow-lg hover:shadow-black/10 dark:hover:shadow-black/40 hover:border-brand/25 active:scale-[0.99]"
+    : tone !== "none"
+      ? "transition-[box-shadow,border-color] duration-200 ease-out hover:border-brand/20 hover:shadow-md hover:shadow-black/8 dark:hover:shadow-black/25"
+      : "";
   const elevation =
     tone === "none" || translucent
       ? ""
@@ -161,6 +168,77 @@ export function Card({ children, className = "", tone = "default", padding = "lg
     return <section className={cls}>{children}</section>;
   }
   return <div className={cls}>{children}</div>;
+}
+
+/** Headline percentage treatment from the marketing hero mock (HeroProductVisual) — big bold
+ *  accentOrange number under an uppercase tracked-out label. Use for the one "how are we doing
+ *  overall" number on a dashboard (workforce/audit/skills readiness), not for generic KPI tiles. */
+export function ReadinessScore({ label, value, size = "lg" }: { label: string; value: number; size?: "md" | "lg" }) {
+  return (
+    <div>
+      <p className="text-[10px] font-medium uppercase tracking-wider text-muted sm:text-[11px]">{label}</p>
+      <p
+        className={`font-display tnum mt-0.5 font-semibold tracking-tight text-accentOrange sm:mt-1 ${
+          size === "lg" ? "text-3xl sm:text-5xl" : "text-2xl sm:text-3xl"
+        }`}
+      >
+        {Math.round(value)}%
+      </p>
+    </div>
+  );
+}
+
+/** The teal-to-brand gradient readiness bar from the hero mock — pairs with ReadinessScore.
+ *  Distinct from Meter (plain green/amber/red fill) by design: this is specifically the
+ *  "headline readiness" bar, not a generic status meter. */
+export function ReadinessBar({ value }: { value: number }) {
+  const pct = Math.min(100, Math.max(0, value));
+  return (
+    <div className="h-2 overflow-hidden rounded-full bg-border sm:h-2.5">
+      <div className="h-full rounded-full bg-gradient-to-r from-accentOrange to-brand" style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
+
+export type PriorityTone = "critical" | "high" | "watch";
+
+const PRIORITY_LABEL: Record<PriorityTone, string> = { critical: "Critical", high: "High", watch: "Watch" };
+const PRIORITY_STYLES: Record<PriorityTone, string> = {
+  critical: "border-red/30 bg-red/10 text-red",
+  high: "border-amber/30 bg-amber/10 text-amber",
+  watch: "border-accentOrange/30 bg-accentOrange/10 text-accentOrange",
+};
+
+/** Row shape from the hero mock's "Highest-priority gaps" list: title + subtitle on the left,
+ *  a colored critical/high/watch pill on the right. Wrap a list of these in <PriorityList>. */
+export function PriorityRow({ title, subtitle, tone, label }: { title: string; subtitle?: string; tone: PriorityTone; label?: string }) {
+  return (
+    <li className="flex items-center justify-between gap-3 bg-card px-3 py-2.5 transition hover:bg-bg sm:px-3.5">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium text-fg">{title}</p>
+        {subtitle && <p className="truncate text-xs text-muted">{subtitle}</p>}
+      </div>
+      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${PRIORITY_STYLES[tone]}`}>
+        {label ?? PRIORITY_LABEL[tone]}
+      </span>
+    </li>
+  );
+}
+
+export function PriorityList({ children }: { children: ReactNode }) {
+  return <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">{children}</ul>;
+}
+
+/** The soft-teal "Recommended action" callout from the hero mock: uppercase teal label, bold
+ *  headline, optional muted subtext. One clear next action, not a browsable list. */
+export function RecommendedActionCard({ headline, subtext, label = "Recommended action" }: { headline: ReactNode; subtext?: string; label?: string }) {
+  return (
+    <div className="rounded-xl border border-accentOrange/35 bg-gradient-to-br from-accentOrange/10 to-transparent px-3 py-2.5 sm:px-4 sm:py-3">
+      <p className="text-[10px] font-medium uppercase tracking-wider text-accentOrange sm:text-[11px]">{label}</p>
+      <p className="mt-1 text-sm font-medium leading-snug text-fg">{headline}</p>
+      {subtext && <p className="mt-1 text-xs text-muted">{subtext}</p>}
+    </div>
+  );
 }
 
 export function MetricCard({ label, value, sub, delta, down, trend }: {
@@ -210,15 +288,15 @@ export function Meter({ value }: { value: number }) {
 
 /** A 0..100 progress ring for headline single-stat surfaces (e.g. skill coverage) — the same
  *  SVG-arc technique Avatar's level ring already uses, standalone and bigger. Color follows the
- *  green/amber/red risk convention (or an explicit brand/accentTeal override) so it reads
+ *  green/amber/red risk convention (or an explicit brand/accentOrange override) so it reads
  *  consistently with RiskBadge/Meter, not as a one-off gauge. */
 export function ProgressRing({
   value, size = 96, label, sub, color,
-}: { value: number; size?: number; label?: string; sub?: string; color?: "auto" | "brand" | "accentTeal" }) {
+}: { value: number; size?: number; label?: string; sub?: string; color?: "auto" | "brand" | "accentOrange" }) {
   const pct = Math.min(100, Math.max(0, value));
   const strokeColor =
     color === "brand" ? "rgb(var(--brand))"
-    : color === "accentTeal" ? "rgb(var(--accent-teal))"
+    : color === "accentOrange" ? "rgb(var(--accent-orange))"
     : pct >= 75 ? "rgb(16 185 129)" : pct >= 50 ? "rgb(245 158 11)" : "rgb(239 68 68)";
   const r = (size - 12) / 2;
   const c = 2 * Math.PI * r;
@@ -404,7 +482,7 @@ export function EmptyState({
 }: { icon?: StateIconKind; title: string; description?: string; action?: ReactNode; className?: string }) {
   return (
     <div className={`flex flex-col items-center gap-3 py-10 text-center ${className}`.trim()}>
-      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand/10 to-accentTeal/10 text-brand ring-1 ring-border">
+      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand/10 to-accentOrange/10 text-brand ring-1 ring-border">
         <StateIcon kind={icon} />
       </span>
       <div>

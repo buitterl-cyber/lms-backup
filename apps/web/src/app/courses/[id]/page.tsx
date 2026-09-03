@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { InquiryForm } from "@/components/InquiryForm";
 import { PublicChrome } from "@/components/PublicChrome";
@@ -13,6 +14,19 @@ interface PublicCourse {
   durationMinutes?: number | null; bestSeller: boolean; priceCents?: number | null;
   modules: { position: number; title: string; summary?: string | null; durationMinutes?: number | null }[];
   rating: number | null; ratingCount: number;
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const course = await fetch(`${API}/sales/courses/${id}`, { cache: "no-store" })
+    .then((r) => (r.ok ? (r.json() as Promise<PublicCourse>) : null))
+    .catch(() => null);
+  if (!course) return { title: "Course not found — Riyada Intelligence" };
+  return {
+    title: `${course.title} — Riyada Intelligence`,
+    description: course.description?.trim() || `${course.title} — training course available through Riyada Intelligence.`,
+    alternates: { canonical: `/courses/${id}` },
+  };
 }
 
 export default async function PublicCoursePage({ params }: { params: Promise<{ id: string }> }) {
@@ -39,12 +53,12 @@ export default async function PublicCoursePage({ params }: { params: Promise<{ i
     <div className="mkt-page min-h-screen">
       <PublicChrome active="courses" />
 
-      <main className="mx-auto max-w-4xl space-y-8 px-5 py-10 sm:px-6">
+      <main className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-10">
         <Link href="/courses" className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
           <Chevron direction="left" /> All courses
         </Link>
 
-        <header className="rounded-2xl border border-border/80 bg-card/80 p-6 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur sm:p-8">
+        <header className="rounded-md border border-border/80 bg-card/80 p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.35)] sm:p-8">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             {course.bestSeller && (
               <span className="rounded-full bg-amber/15 px-2.5 py-0.5 font-semibold uppercase tracking-wide text-amber">
@@ -57,7 +71,7 @@ export default async function PublicCoursePage({ params }: { params: Promise<{ i
               {course.durationMinutes ? ` · ${Math.round(course.durationMinutes / 60)}h` : ""}
             </span>
           </div>
-          <h1 className="font-display mt-3 text-3xl font-semibold tracking-tight">{course.title}</h1>
+          <h1 className="font-display mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">{course.title}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
             {course.rating && (
               <span className="text-amber">
@@ -71,18 +85,21 @@ export default async function PublicCoursePage({ params }: { params: Promise<{ i
           </div>
         </header>
 
-        <Card as="section" padding="xl" radius="2xl">
-          <h2 className="text-sm font-medium text-muted">About this course</h2>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{course.description}</p>
-        </Card>
+        {course.description.trim() &&
+          course.description.trim().toLowerCase() !== course.title.trim().toLowerCase() && (
+          <Card as="section" padding="xl" radius="lg">
+            <h2 className="text-sm font-medium text-muted">About this course</h2>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{course.description}</p>
+          </Card>
+        )}
 
         {course.modules.length > 0 && (
-          <Card as="section" padding="xl" radius="2xl">
+          <Card as="section" padding="xl" radius="lg">
             <h2 className="text-sm font-medium text-muted">What you&apos;ll cover</h2>
             <ol className="mt-3 space-y-2">
               {course.modules.map((m) => (
                 <li key={m.position} className="flex items-baseline gap-3 rounded-xl border border-border/70 bg-bg/40 px-3 py-2.5 text-sm">
-                  <span className="text-xs font-semibold text-accentTeal">{m.position}.</span>
+                  <span className="text-xs font-semibold text-accentOrange">{m.position}.</span>
                   <span>
                     <span className="font-medium">{m.title}</span>
                     {m.summary && <span className="text-muted"> — {m.summary}</span>}
@@ -94,7 +111,7 @@ export default async function PublicCoursePage({ params }: { params: Promise<{ i
           </Card>
         )}
 
-        <Card as="section" tone="brand" radius="2xl" padding="xl">
+        <Card as="section" tone="brand" radius="lg" padding="xl">
           <h2 className="font-display text-lg font-semibold">Interested in this course?</h2>
           <p className="mt-1 text-sm text-muted">Leave your details and our team will get straight back to you.</p>
           <div className="mt-4">

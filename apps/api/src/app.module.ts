@@ -28,6 +28,8 @@ import { GamificationModule } from "./modules/gamification/gamification.module";
 import { ForumsModule } from "./modules/forums/forums.module";
 import { InstructorModule } from "./modules/instructor/instructor.module";
 import { SalesModule } from "./modules/sales/sales.module";
+import { ErrorsModule } from "./modules/errors/errors.module";
+import { AnalyticsModule } from "./modules/analytics/analytics.module";
 
 @Module({
   imports: [
@@ -56,6 +58,8 @@ import { SalesModule } from "./modules/sales/sales.module";
     ForumsModule,
     InstructorModule,
     SalesModule,
+    ErrorsModule,
+    AnalyticsModule,
     DemoModule,
     AuthModule,
   ],

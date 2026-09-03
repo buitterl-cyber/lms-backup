@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 
 // Marketplace — intelligence-led subscriptions + content packages. Tiers reflect the business
 // model (value metric = active learner / year); content is BYOL or bought here.
@@ -19,7 +19,7 @@ export default function MarketplacePage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="font-display text-2xl font-semibold">Marketplace</h1>
+        <h1 className="font-display text-xl font-semibold sm:text-2xl">Marketplace</h1>
         <p className="text-sm text-muted">Intelligence subscriptions, skill tracks, and certification bundles.</p>
       </header>
 
@@ -34,7 +34,7 @@ export default function MarketplacePage() {
             <ul className="mt-3 space-y-1 text-xs text-muted">
               {t.feats.map((f) => <li key={f}>{f}</li>)}
             </ul>
-            <button className="mt-4 w-full rounded-lg bg-brand px-3 py-2 text-sm font-medium text-white">Choose plan</button>
+            <Button className="mt-4 w-full">Choose plan</Button>
           </Card>
         ))}
       </div>

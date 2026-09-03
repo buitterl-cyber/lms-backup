@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, courseGlyph, RiskBadge } from "@/components/ui";
+import { Button, Card, Chevron, courseGlyph, EmptyState, RiskBadge } from "@/components/ui";
 import { apiGet, getContext, type EnrollmentRow } from "@/lib/api";
 
 // My Learning — the learner's enrolled courses with live progress. Continue opens the course;
@@ -28,18 +28,23 @@ export default async function MyLearningPage() {
     <div className="space-y-6">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-semibold">My Learning</h1>
+          <h1 className="font-display text-xl font-semibold sm:text-2xl">My Learning</h1>
           <p className="text-sm text-muted">{rows.length} enrolled · {done} completed</p>
         </div>
-        <Link href="/catalog" className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-card">Browse catalog</Link>
+        <Button href="/catalog" variant="secondary">Browse catalog</Button>
       </header>
 
       {rows.length === 0 ? (
         <Card>
-          You haven&apos;t enrolled in anything yet. <Link href="/catalog" className="text-brand underline">Find a course →</Link>
+          <EmptyState
+            icon="course"
+            title="Nothing enrolled yet"
+            description="Find your first course in the catalog and it'll show up here."
+            action={<Button href="/catalog" size="sm">Browse the catalog</Button>}
+          />
         </Card>
       ) : (
-        <Card className="p-0">
+        <Card padding="none">
           {rows.map((r) => (
             <Link key={r.id} href={`/catalog/${r.courseId}`} className="flex items-center gap-4 border-b border-border/60 p-4 last:border-0 hover:bg-bg">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bg text-lg ring-1 ring-border">{courseGlyph(r.course?.title ?? "")}</span>
@@ -64,7 +69,7 @@ export default async function MyLearningPage() {
                 risk={r.status === "completed" ? "green" : r.status === "in-progress" ? "amber" : "red"}
                 label={r.status === "completed" ? "Completed" : r.status === "in-progress" ? "In progress" : "Enrolled"}
               />
-              <span className="text-sm font-medium text-brand">{r.status === "completed" ? "Revisit" : "Continue"} →</span>
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-brand">{r.status === "completed" ? "Revisit" : "Continue"} <Chevron /></span>
             </Link>
           ))}
         </Card>

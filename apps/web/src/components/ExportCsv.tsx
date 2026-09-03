@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui";
+
 /** Downloads the given rows as a CSV file, entirely client-side. */
 export function ExportCsv({ filename, header, rows, label = "Export CSV" }: {
   filename: string;
@@ -21,8 +23,8 @@ export function ExportCsv({ filename, header, rows, label = "Export CSV" }: {
     URL.revokeObjectURL(url);
   }
   return (
-    <button onClick={download} className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-card">
+    <Button onClick={download} variant="secondary">
       {label}
-    </button>
+    </Button>
   );
 }

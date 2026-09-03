@@ -1,4 +1,8 @@
-/** Dial codes for the launch popup's phone field — every UN member state, alphabetical by name. */
+/** Dial codes for the launch popup's phone field — UN member states, alphabetical by name, minus
+ *  North Korea (DPRK), excluded 2026-08-20 as a comprehensively sanctioned country under
+ *  US/EU/UN sanctions regimes — not appropriate as a selectable customer country on a B2B SaaS
+ *  site. Other countries with sanctions exposure were reviewed and flagged separately for a
+ *  compliance decision rather than removed here without confirmation. */
 export const COUNTRY_CODES: { name: string; iso: string; dial: string }[] = [
   { name: "Afghanistan", iso: "AF", dial: "+93" },
   { name: "Albania", iso: "AL", dial: "+355" },
@@ -125,7 +129,6 @@ export const COUNTRY_CODES: { name: string; iso: string; dial: string }[] = [
   { name: "Nicaragua", iso: "NI", dial: "+505" },
   { name: "Niger", iso: "NE", dial: "+227" },
   { name: "Nigeria", iso: "NG", dial: "+234" },
-  { name: "North Korea", iso: "KP", dial: "+850" },
   { name: "North Macedonia", iso: "MK", dial: "+389" },
   { name: "Norway", iso: "NO", dial: "+47" },
   { name: "Oman", iso: "OM", dial: "+968" },

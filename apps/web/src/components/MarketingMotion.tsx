@@ -23,7 +23,7 @@ export function CapabilityMarquee({ items }: { items: readonly string[] }) {
         {doubled.map((item, i) => (
           <span key={`${item}-${i}`} className="flex shrink-0 items-center gap-8 px-4">
             <span className="text-sm font-medium tracking-wide text-white/70">{item}</span>
-            <span className="h-1 w-1 rounded-full bg-accentTeal/70" />
+            <span className="h-1 w-1 rounded-full bg-accentOrange/70" />
           </span>
         ))}
       </div>

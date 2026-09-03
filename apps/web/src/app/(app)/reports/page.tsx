@@ -55,7 +55,7 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-2xl font-semibold">Reports</h1>
+        <h1 className="font-display text-xl font-semibold sm:text-2xl">Reports</h1>
         <p className="text-sm text-muted">Export workforce, compliance and learning data. CSV now; PDF/Excel/PowerBI on the roadmap.</p>
       </header>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

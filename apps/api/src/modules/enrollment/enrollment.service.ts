@@ -3,6 +3,7 @@ import { ForbiddenError, getTenantContext, hasPermission, NotFoundError } from "
 import { createProvider } from "@riyada/providers";
 import { PrismaService } from "../../common/prisma/prisma.service";
 import { GamificationService } from "../gamification/gamification.service";
+import { decryptProviderCredentials } from "../providers/provider-credentials";
 
 /**
  * LMS enrollment + progress. Completing a course levels up the learner's skills (course->skills),
@@ -53,20 +54,50 @@ export class EnrollmentService {
     });
     if (!conn) return;
 
-    const provider = createProvider(conn.providerKey, { tenantId, organizationId, credentials: decryptCreds(conn.credentialsEnc) });
+    const provider = createProvider(conn.providerKey, { tenantId, organizationId, credentials: decryptProviderCredentials(conn.credentialsEnc) });
     if (!provider.descriptor.capabilities.enrollment) return;
 
     const user = await this.prisma.db.user.findFirst({ where: { id: userId } });
     if (!user) return;
 
-    const { externalLearnerId } = await provider.createLearner({
-      internalUserId: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, locale: user.locale,
-    });
+    const externalLearnerId = await this.resolveExternalLearnerId(user, conn.id, provider);
     const ext = await provider.enrollLearner({ externalLearnerId, externalCourseId: course.externalId, idempotencyKey: `${userId}:${courseId}` });
     await this.prisma.db.enrollment.update({
       where: { userId_courseId: { userId, courseId } },
       data: { externalEnrollmentId: ext.externalEnrollmentId },
     });
+  }
+
+  /**
+   * A learner should exist exactly once per provider connection — calling provider.createLearner()
+   * fresh on every enrollment would ask the provider to (re)create the same portal user repeatedly,
+   * and there'd be nowhere to look up their external id for later getProgress/getCertificate/
+   * getLaunchUrl calls. ProviderLearnerLink caches that mapping the first time, and every
+   * subsequent enrollment (into any course on the same connection) reuses it.
+   */
+  private async resolveExternalLearnerId(
+    user: { id: string; email: string; firstName: string; lastName: string; locale: string },
+    connectionId: string,
+    provider: ReturnType<typeof createProvider>,
+  ): Promise<string> {
+    const { tenantId } = getTenantContext();
+    const existing = await this.prisma.db.providerLearnerLink.findUnique({
+      where: { userId_connectionId: { userId: user.id, connectionId } },
+    });
+    if (existing) return existing.externalLearnerId;
+
+    const { externalLearnerId } = await provider.createLearner({
+      internalUserId: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, locale: user.locale,
+    });
+    await this.prisma.db.providerLearnerLink.upsert({
+      where: { userId_connectionId: { userId: user.id, connectionId } },
+      update: { externalLearnerId, lastSyncedAt: new Date() },
+      create: {
+        tenantId, userId: user.id, connectionId, providerKey: provider.descriptor.key,
+        externalLearnerId, lastSyncedAt: new Date(),
+      },
+    });
+    return externalLearnerId;
   }
 
   async setProgress(enrollmentId: string, percent: number, score?: number) {
@@ -120,14 +151,5 @@ export class EnrollmentService {
       include: { course: { select: { title: true, providerKey: true, durationMinutes: true } } },
       orderBy: { enrolledAt: "desc" },
     });
-  }
-}
-
-// Mirror of providers.service crypto (placeholder base64; KMS envelope in production).
-function decryptCreds(enc: string): Record<string, string> {
-  try {
-    return JSON.parse(Buffer.from(enc, "base64").toString("utf8"));
-  } catch {
-    return {};
   }
 }

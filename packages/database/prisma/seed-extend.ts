@@ -15,7 +15,7 @@ async function main() {
   const tenantId = tenant.id;
   const user = await db.user.findFirst({ where: { tenantId }, orderBy: { createdAt: "asc" } });
   if (!user) throw new Error("no user");
-  const anyCourse = await db.course.findFirst({ where: { tenantId, providerKey: "ms-learn" } });
+  const anyCourse = await db.course.findFirst({ where: { tenantId, providerKey: "go1" } });
   const isoCourse = await db.course.findFirst({ where: { tenantId, title: { contains: "ISO 27001" } } });
   const past = new Date("2026-04-01");
 

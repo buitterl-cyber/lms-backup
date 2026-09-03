@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card } from "@/components/ui";
+import { Card, Chevron, EmptyState } from "@/components/ui";
 import { NewThreadForm, VoteButton } from "@/components/forum";
 import { StudyAssistant } from "@/components/StudyAssistant";
 import { Avatar } from "@/components/Avatar";
@@ -49,11 +49,13 @@ export default async function ForumPage({
 
   return (
     <div className="space-y-6">
-      <Link href={`/catalog/${id}`} className="text-sm text-muted hover:text-fg">‹ {course.title}</Link>
+      <Link href={`/catalog/${id}`} className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
+        <Chevron direction="left" /> {course.title}
+      </Link>
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-semibold">{course.title} · Forum</h1>
+          <h1 className="font-display text-xl font-semibold sm:text-2xl">{course.title} · Forum</h1>
           <p className="text-sm text-muted">{stats?.enrolled ?? 0} learners enrolled</p>
         </div>
         <NewThreadForm ctx={ctx} courseId={id} />
@@ -73,7 +75,15 @@ export default async function ForumPage({
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-3 lg:col-span-2">
-          {threads.length === 0 && <Card>No discussions {filter !== "all" ? "matching this filter" : "yet — start the first one"}.</Card>}
+          {threads.length === 0 && (
+            <Card>
+              <EmptyState
+                icon="empty"
+                title={filter !== "all" ? "No discussions matching this filter" : "No discussions yet"}
+                description={filter !== "all" ? "Try a different filter." : "Start the first one using the button above."}
+              />
+            </Card>
+          )}
           {threads.map((t) => (
             <Card key={t.id} className={t.pinned ? "border-brand/40" : ""}>
               {t.pinned && <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-brand">— Pinned by instructor</p>}

@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { Card, courseGlyph, RiskBadge } from "@/components/ui";
+import {
+  Button, Card, Chevron, courseGlyph, EmptyState, PriorityList, PriorityRow, PriorityTone,
+  ReadinessBar, ReadinessScore, RecommendedActionCard, RiskBadge,
+} from "@/components/ui";
 import { EnrollButton } from "@/components/EnrollButton";
 import { apiGet, apiPost, getContext, type EnrollmentRow, type Recommendation, type SkillGap } from "@/lib/api";
 
@@ -14,7 +17,7 @@ interface GamificationProfile {
   badges: { key: string; name: string; description: string; icon: string; earned: boolean }[];
   badgesEarned: number; badgesTotal: number;
 }
-interface CertRow { id: string; name: string; issuedAt: string; fileUrl: string | null; status: string }
+interface CertRow { id: string; name: string; issuedAt: string; fileUrl: string | null; status: string; source?: "internal" | "external" }
 interface NotifRow { id: string; kind: string; payload: Record<string, unknown>; readAt: string | null; createdAt: string }
 interface ModuleRow { position: number; completed: boolean; locked: boolean; title: string }
 
@@ -66,7 +69,7 @@ async function load() {
 }
 
 export default async function LearnerDashboard() {
-  const { ctx, game, enrollments, certs, notifs, recs, resume, modules } = await load();
+  const { ctx, game, enrollments, certs, notifs, gap, recs, resume, modules } = await load();
   const today = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
   const currentModule = modules.find((m) => !m.completed && !m.locked);
   const remainingMin = resume?.course && resume.percent < 100
@@ -77,17 +80,19 @@ export default async function LearnerDashboard() {
     <div className="space-y-6">
       {/* Greeting */}
       <header>
-        <h1 className="font-display text-2xl font-semibold">Good morning, {(ctx.userName || "there").split(" ")[0]}</h1>
+        <h1 className="font-display text-xl font-semibold sm:text-2xl">Good morning, {(ctx.userName || "there").split(" ")[0]}</h1>
         <p className="text-sm text-muted">{today} · keep your streak going.</p>
       </header>
 
-      {/* Resume hero — flat navy (bg-brand = #1E3A6E on the default skin), gold CTA, streak corner */}
+      {/* Resume hero — flat navy (bg-brand, follows the active skin), fixed gold CTA
+          (bg-brandGold/text-brandGoldInk — the official Riyada gold, same fixed token the
+          auth shell uses, deliberately not skin-reactive), streak corner */}
       {resume ? (
-        <div className="relative overflow-hidden rounded-xl bg-brand p-6 text-white">
-          <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="relative overflow-hidden rounded-xl bg-brand p-4 text-white sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
             <div className="min-w-0">
               <p className="text-[11px] font-medium uppercase tracking-wider text-white/70">Continue learning</p>
-              <p className="font-display mt-1 truncate text-xl font-semibold">{resume.course?.title ?? "Your course"}</p>
+              <p className="font-display mt-1 truncate text-lg font-semibold sm:text-xl">{resume.course?.title ?? "Your course"}</p>
               <p className="mt-1 text-sm text-white/80">
                 {currentModule ? `Module ${currentModule.position}${modules.length ? ` of ${modules.length}` : ""} · ${currentModule.title}` : "Pick up where you left off"}
               </p>
@@ -98,10 +103,10 @@ export default async function LearnerDashboard() {
               </span>
             )}
           </div>
-          <div className="mt-5 flex flex-wrap items-center gap-4">
+          <div className="mt-4 flex flex-col gap-3 sm:mt-5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
             <div className="min-w-0 flex-1">
               <div className="h-[5px] w-full overflow-hidden rounded-full bg-white/20">
-                <div className="h-full rounded-full bg-[#F5A623]" style={{ width: `${resume.percent}%` }} />
+                <div className="h-full rounded-full bg-brandGold" style={{ width: `${resume.percent}%` }} />
               </div>
               <p className="tnum mt-1.5 text-xs text-white/75">
                 {resume.percent}% complete{remainingMin ? ` · ~${remainingMin >= 60 ? `${Math.round(remainingMin / 60)}h` : `${remainingMin} min`} remaining` : ""}
@@ -109,17 +114,20 @@ export default async function LearnerDashboard() {
             </div>
             <Link
               href={`/catalog/${resume.courseId}`}
-              className="shrink-0 rounded-lg bg-[#F5A623] px-5 py-2.5 text-sm font-semibold text-[#3A2A05]"
+              className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-lg bg-brandGold px-5 py-2.5 text-sm font-semibold text-brandGoldInk sm:w-auto"
             >
-              Continue →
+              Continue <Chevron className="ms-1" />
             </Link>
           </div>
         </div>
       ) : (
         <Card>
-          <p className="font-medium">No courses in progress yet.</p>
-          <p className="mt-1 text-sm text-muted">Pick your first course and it will appear here.</p>
-          <Link href="/catalog" className="mt-3 inline-block rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white">Browse the catalog →</Link>
+          <EmptyState
+            icon="course"
+            title="Nothing in motion yet"
+            description="Pick a course and this becomes your control center — progress, streaks, and all."
+            action={<Button href="/catalog" size="sm">Browse the catalog</Button>}
+          />
         </Card>
       )}
 
@@ -171,10 +179,17 @@ export default async function LearnerDashboard() {
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold">My courses</h2>
-          <Link href="/my-learning" className="text-xs font-medium text-brand">See all →</Link>
+          <Link href="/my-learning" className="inline-flex items-center gap-1 text-xs font-medium text-brand transition hover:text-brand/70">See all <Chevron /></Link>
         </div>
         {enrollments.length === 0 ? (
-          <Card>No courses assigned yet. <Link href="/catalog" className="text-brand underline">Find your first course →</Link></Card>
+          <Card>
+            <EmptyState
+              icon="course"
+              title="Your course list is empty"
+              description="Browse the catalog and pick something worth leveling up for."
+              action={<Button href="/catalog" size="sm">Browse the catalog</Button>}
+            />
+          </Card>
         ) : (
           <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-3">
             {enrollments.slice(0, 6).map((e) => (
@@ -200,6 +215,53 @@ export default async function LearnerDashboard() {
         )}
       </section>
 
+      {/* Skills readiness — same teal readiness-card treatment used on /skills, /compliance,
+          /team: headline %, gradient bar, priority gap list, one recommended action. */}
+      {gap && (() => {
+        const pct = Math.round(gap.coverage * 100);
+        const sorted = [...gap.gaps].sort((a, b) => b.deficit - a.deficit);
+        const top = sorted.find((g) => g.importance === "required") ?? sorted[0];
+        const toneFor = (g: (typeof sorted)[number]): PriorityTone =>
+          g.importance === "required" ? (g.deficit >= 3 ? "critical" : "high") : "watch";
+        return (
+          <Card padding="none">
+            <div className="space-y-3 p-4 sm:space-y-4 sm:p-5">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <ReadinessScore label={`Skills readiness · ${gap.roleName}`} value={pct} />
+                <Link href="/skills" className="inline-flex items-center gap-1 text-xs font-medium text-brand transition hover:text-brand/70">
+                  View skills & gaps <Chevron />
+                </Link>
+              </div>
+
+              <ReadinessBar value={pct} />
+
+              {sorted.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted sm:text-[11px]">Highest-priority skill gaps</p>
+                  <PriorityList>
+                    {sorted.slice(0, 3).map((g) => (
+                      <PriorityRow
+                        key={g.skillId}
+                        title={g.name}
+                        subtitle={`lvl ${g.currentLevel} → ${g.targetLevel} · ${g.importance}`}
+                        tone={toneFor(g)}
+                      />
+                    ))}
+                  </PriorityList>
+                </div>
+              )}
+
+              {top && (
+                <RecommendedActionCard
+                  headline={`Close the ${top.name} gap — lvl ${top.currentLevel} → ${top.targetLevel}`}
+                  subtext="Prioritised by importance and coverage deficit · updates as you complete courses"
+                />
+              )}
+            </div>
+          </Card>
+        );
+      })()}
+
       {/* Achievements + Certificates */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
@@ -210,12 +272,15 @@ export default async function LearnerDashboard() {
           {game && game.badges.length ? (
             <div className="mt-3 flex flex-wrap gap-3">
               {game.badges.map((b) => (
-                <span
-                  key={b.key}
-                  title={`${b.name} — ${b.description}`}
-                  className={`flex h-10 w-10 items-center justify-center rounded-xl bg-bg text-xl ring-1 ring-border ${b.earned ? "glyph" : "opacity-25 grayscale"}`}
-                >
-                  {b.icon}
+                <span key={b.key} title={`${b.name} — ${b.description}`} className="flex w-14 flex-col items-center gap-1">
+                  <span
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl text-xl ${
+                      b.earned ? "glyph bg-accentOrange/10 ring-2 ring-accentOrange" : "bg-bg opacity-25 grayscale ring-1 ring-border"
+                    }`}
+                  >
+                    {b.icon}
+                  </span>
+                  <span className="w-full truncate text-center text-[10px] text-muted">{b.name}</span>
                 </span>
               ))}
             </div>
@@ -227,24 +292,28 @@ export default async function LearnerDashboard() {
         <Card>
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-medium text-muted">Latest certificate</h2>
-            <Link href="/certifications" className="text-xs font-medium text-brand">View all →</Link>
+            <Link href="/certifications" className="inline-flex items-center gap-1 text-xs font-medium text-brand transition hover:text-brand/70">View all <Chevron /></Link>
           </div>
           {certs.length ? (
             <div className="mt-3">
-              <p className="font-medium">{certs[0].name}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-medium">{certs[0].name}</p>
+                {certs[0].source === "external" && (
+                  <span className="rounded-full bg-bg px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted ring-1 ring-border">
+                    External provider
+                  </span>
+                )}
+              </div>
               <p className="mt-0.5 text-xs text-muted">
                 Awarded {new Date(certs[0].issuedAt).toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
               </p>
               <div className="mt-3 flex gap-2">
-                <a
-                  href={certs[0].fileUrl ?? "/certifications"}
-                  className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white"
-                >
+                <Button href={certs[0].fileUrl ?? "/certifications"} size="sm">
                   Download
-                </a>
-                <Link href="/certifications" className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-bg">
+                </Button>
+                <Button href="/certifications" variant="secondary" size="sm" className="hover:bg-bg!">
                   Share
-                </Link>
+                </Button>
               </div>
               {certs.length > 1 && <p className="tnum mt-2 text-xs text-muted">{certs.length} certificates earned total</p>}
             </div>
@@ -255,10 +324,10 @@ export default async function LearnerDashboard() {
       </div>
 
       {/* Notifications panel */}
-      <Card className="p-0">
+      <Card padding="none">
         <div className="flex items-center justify-between border-b border-border p-4">
           <h2 className="text-sm font-medium">Notifications</h2>
-          <Link href="/notifications" className="text-xs font-medium text-brand">See all →</Link>
+          <Link href="/notifications" className="inline-flex items-center gap-1 text-xs font-medium text-brand transition hover:text-brand/70">See all <Chevron /></Link>
         </div>
         {notifs.length === 0 ? (
           <p className="p-4 text-sm text-muted">You&apos;re all caught up.</p>

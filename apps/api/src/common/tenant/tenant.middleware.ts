@@ -34,11 +34,23 @@ import { AuthService } from "../../modules/auth/auth.service";
 const PUBLIC_SUFFIXES = [
   "/api/v1/health", "/api/v1/demo/context", "/api/v1/auth/login", "/api/v1/auth/signup",
   "/api/v1/auth/forgot", "/api/v1/auth/reset", "/api/v1/auth/me",
+  // Exact path only (not a PUBLIC_SEGMENTS prefix) — a broken page for a logged-out/session-
+  // expired visitor must still be reportable, but this must not accidentally widen to cover
+  // GET /api/v1/errors (the admin list), which stays behind the normal auth+RBAC gate below.
+  "/api/v1/errors/report",
+  // Same reasoning: an anonymous marketing-site visitor firing a pageview beacon has no tenant
+  // context yet. /api/v1/analytics/summary (the admin dashboard) is a different path and stays
+  // behind the normal auth+RBAC gate below.
+  "/api/v1/analytics/pageview",
 ];
 // Public site sections (marketing/sales). Auth is still honored when a Bearer token is present
 // (the sales pipeline admin endpoints live under the same prefix), but absence of tenant
 // context is not an error here.
-const PUBLIC_SEGMENTS = ["/api/v1/sales/", "/api/v1/auth/social/"];
+// "/api/v1/providers/webhooks/" is here for the same reason: an external provider (GO1 etc.)
+// posting a completion/catalog event can never present one of our user JWTs. That controller
+// authenticates itself instead (connectionId in the path + a per-provider HMAC webhook secret —
+// see provider-webhooks.controller.ts), so skipping the JWT gate here does not skip auth entirely.
+const PUBLIC_SEGMENTS = ["/api/v1/sales/", "/api/v1/auth/social/", "/api/v1/providers/webhooks/"];
 
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {

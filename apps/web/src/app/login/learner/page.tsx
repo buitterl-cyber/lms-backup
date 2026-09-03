@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 import { AUTH, AuthCard, AuthHeading, AuthShell } from "@/components/auth/AuthShell";
 import { PortalLoginForm } from "@/components/auth/PortalLoginForm";
+import { Chevron } from "@/components/ui";
+
+export const metadata: Metadata = {
+  title: "Learner Sign In — Riyada Intelligence",
+  description: "Sign in to continue your courses and track your progress.",
+};
 
 // Learner sign-in → learner dashboard. Social sign-in lives here (learners self-serve).
 export const dynamic = "force-dynamic";
@@ -24,12 +31,9 @@ export default function LearnerLoginPage() {
         </p>
       </AuthCard>
       <p className="mt-4 text-center text-xs">
-        <Link href="/login" className="hover:underline" style={{ color: AUTH.muted }}>
-          ← Not a learner? Go back
+        <Link href="/login" className="inline-flex items-center gap-1 hover:underline" style={{ color: AUTH.muted }}>
+          <Chevron direction="left" /> Not a learner? Go back
         </Link>
-      </p>
-      <p className="mt-2 text-center text-xs" style={{ color: AUTH.muted }}>
-        Demo: amir@excis.com / demo1234
       </p>
     </AuthShell>
   );

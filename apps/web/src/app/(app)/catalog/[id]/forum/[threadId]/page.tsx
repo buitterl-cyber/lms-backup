@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card } from "@/components/ui";
+import { Card, Chevron } from "@/components/ui";
 import { ModerateButton, ReplyBox, VoteButton } from "@/components/forum";
 import { Avatar } from "@/components/Avatar";
 import { apiGet, getContext } from "@/lib/api";
@@ -17,7 +17,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
   const { id, threadId } = await params;
   const ctx = await getContext();
   const t = await apiGet<ThreadDetail>(`/forums/threads/${threadId}`, ctx).catch(() => null);
-  if (!t) return <Card>Thread not found. <Link href={`/catalog/${id}/forum`} className="text-brand underline">Back to the forum</Link></Card>;
+  if (!t) return <Card>Thread not found. <Link href={`/catalog/${id}/forum`} className="text-brand underline transition hover:text-brand/70">Back to the forum</Link></Card>;
 
   const canModerate = (ctx.roles ?? []).some((r) => ["instructor", "trainer", "org_admin", "super_admin"].includes(r));
   const accepted = t.replies.find((r) => r.accepted);
@@ -25,7 +25,9 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="space-y-6">
-      <Link href={`/catalog/${id}/forum`} className="text-sm text-muted hover:text-fg">‹ {t.courseTitle} · Forum</Link>
+      <Link href={`/catalog/${id}/forum`} className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
+        <Chevron direction="left" /> {t.courseTitle} · Forum
+      </Link>
 
       <Card className={t.pinned ? "border-brand/40" : ""}>
         <div className="flex items-center gap-2 text-xs text-muted">

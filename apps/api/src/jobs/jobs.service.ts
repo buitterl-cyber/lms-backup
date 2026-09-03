@@ -1,8 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { runWithTenant } from "@riyada/shared";
 import { certStatus } from "@riyada/intelligence";
+import { createProvider } from "@riyada/providers";
 import { prisma } from "@riyada/database";
 import { TeamService } from "../modules/workforce/team.service";
+import { decryptProviderCredentials } from "../modules/providers/provider-credentials";
 
 /**
  * Scheduled background jobs. In production a cron producer enqueues these to RabbitMQ and KEDA
@@ -17,6 +19,9 @@ export class JobsService {
     // after boot. unref() so a hanging timer never keeps a dying process alive.
     setTimeout(() => void this.nudgeSweep().catch(() => undefined), 2 * 60_000).unref();
     setInterval(() => void this.nudgeSweep().catch(() => undefined), 12 * 3600_000).unref();
+    // Same pattern for provider progress polling — cheap to leave scheduled since the method
+    // itself no-ops unless PROVIDER_POLLING_ENABLED="true" (see providerProgressPoll() above).
+    setInterval(() => void this.providerProgressPoll().catch(() => undefined), 3600_000).unref();
   }
 
   /** Transition cert statuses (valid->expiring->expired) across all tenants. Emits would-be
@@ -75,6 +80,72 @@ export class JobsService {
     const conns = await prisma.providerConnection.findMany({ where: { status: "active" }, select: { id: true, providerKey: true } });
     // In production: publish one `catalog.sync.requested` event per connection.
     return { job: "catalog-sync", enqueued: conns.length, connections: conns.map((c) => c.providerKey) };
+  }
+
+  /**
+   * Poll connected providers for enrollment progress/completion — the alternative to (or a
+   * reconciliation backstop for) webhook-pushed events. See provider-webhooks.controller.ts for
+   * the webhook side.
+   *
+   * STATUS (2026-08-03): we do not yet know whether GO1 offers webhooks, requires polling, or
+   * both, nor its real rate limits — no GO1 API docs yet (waiting on Luke Barnes). This job is
+   * off by default (PROVIDER_POLLING_ENABLED must be exactly "true") so nothing hits a real GO1
+   * connection with unconfirmed request volume before that's settled; the logic itself is real
+   * and ready to flip on once we know it's needed.
+   */
+  async providerProgressPoll() {
+    if (process.env.PROVIDER_POLLING_ENABLED !== "true") {
+      return { job: "provider-progress-poll", skipped: true, reason: 'PROVIDER_POLLING_ENABLED is not "true"' };
+    }
+    const conns = await prisma.providerConnection.findMany({ where: { status: "active" } });
+    let checked = 0;
+    let updated = 0;
+    for (const conn of conns) {
+      updated += await runWithTenant(
+        { tenantId: conn.tenantId, organizationId: conn.organizationId, userId: null, roles: ["super_admin"] },
+        async () => {
+          const provider = createProvider(conn.providerKey, {
+            tenantId: conn.tenantId, organizationId: conn.organizationId,
+            credentials: decryptProviderCredentials(conn.credentialsEnc),
+          });
+          if (!provider.descriptor.capabilities.progressTracking) return 0;
+
+          const links = await prisma.providerLearnerLink.findMany({ where: { connectionId: conn.id } });
+          const externalLearnerIdByUser = new Map(links.map((l) => [l.userId, l.externalLearnerId]));
+
+          const enrollments = await prisma.enrollment.findMany({
+            where: {
+              tenantId: conn.tenantId,
+              course: { providerKey: conn.providerKey, connectionId: conn.id },
+              status: { notIn: ["completed", "failed", "expired"] },
+            },
+            include: { course: { select: { externalId: true } } },
+          });
+
+          let n = 0;
+          for (const e of enrollments) {
+            checked++;
+            const externalLearnerId = externalLearnerIdByUser.get(e.userId);
+            if (!externalLearnerId || !e.course.externalId) continue;
+            const progress = await provider.getProgress({ externalLearnerId, externalCourseId: e.course.externalId });
+            const changed = progress.percent !== e.percent || progress.status !== e.status;
+            await prisma.enrollment.update({
+              where: { id: e.id },
+              data: {
+                percent: progress.percent,
+                status: progress.status,
+                score: progress.score,
+                completedAt: progress.completedAt ?? (progress.status === "completed" ? new Date() : e.completedAt),
+                lastSyncedAt: new Date(),
+              },
+            });
+            if (changed) n++;
+          }
+          return n;
+        },
+      );
+    }
+    return { job: "provider-progress-poll", checked, updated };
   }
 
   /**

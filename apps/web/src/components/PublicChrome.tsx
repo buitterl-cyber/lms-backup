@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import { Brand } from "@/components/Brand";
+import { PageviewBeacon } from "@/components/PageviewBeacon";
 
 /** Floating public chrome for catalogue / secondary marketing pages — matches homepage style. */
 export function PublicChrome({
@@ -30,28 +31,48 @@ export function PublicChrome({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  function close() {
+    setOpen(false);
+  }
+
   return (
-    <header className="sticky top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-4">
+    <header className="sticky top-0 z-50 px-2 pt-2 sm:px-4 sm:pt-4">
+      <PageviewBeacon />
       <div
-        className={`mx-auto flex max-w-[1280px] items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 transition duration-300 sm:px-4 sm:py-3 ${
+        className={`relative z-50 mx-auto flex max-w-[1280px] items-center justify-between gap-2 rounded-2xl border px-2.5 py-2 transition duration-300 sm:gap-3 sm:px-4 sm:py-3 ${
           scrolled || open
-            ? "border-border/80 bg-card/95 shadow-[0_12px_40px_-16px_rgba(15,23,42,0.28)] backdrop-blur-xl"
-            : "border-border/50 bg-card/70 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] backdrop-blur-md"
+            ? "border-border/80 bg-card/95 shadow-[0_12px_40px_-16px_rgba(15,23,42,0.28)] backdrop-blur-sm sm:backdrop-blur-xl"
+            : "border-border/50 bg-card/70 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] backdrop-blur-sm sm:backdrop-blur-md"
         }`}
       >
-        <Link href="/" className="shrink-0 ps-1" onClick={() => setOpen(false)}>
-          <Brand size={28} className="text-[1.05rem]" />
+        <Link href="/" className="min-w-0 shrink ps-0.5 sm:ps-1" onClick={close}>
+          <Brand size={26} className="text-[0.95rem] sm:text-[1.05rem]" />
         </Link>
 
         <nav className="hidden items-center gap-6 text-[13px] font-medium text-muted lg:flex" aria-label="Primary">
-          <Link href="/" className={active === "home" ? "text-fg" : "hover:text-fg"}>
+          <Link href="/#product" className={active === "home" ? "text-fg" : "hover:text-fg"}>
             Product
           </Link>
-          <Link href="/courses" className={active === "courses" ? "text-fg" : "hover:text-fg"}>
-            Catalogue
+          <Link href="/security" className="hover:text-fg">
+            Compliance
           </Link>
-          <Link href="/#integrations" className="hover:text-fg">
-            Integrations
+          <Link href="/courses" className={active === "courses" ? "text-fg" : "hover:text-fg"}>
+            Content Library
+          </Link>
+          <Link href="/pricing" className="hover:text-fg">
+            Pricing
+          </Link>
+          <Link href="/company" className="hover:text-fg">
+            Company
           </Link>
         </nav>
 
@@ -79,22 +100,48 @@ export function PublicChrome({
       </div>
 
       {open && (
-        <div id={menuId} className="mx-auto mt-2 max-w-[1280px] overflow-hidden rounded-2xl border border-border bg-card shadow-lg lg:hidden">
-          <nav className="flex flex-col gap-1 px-3 py-3" aria-label="Mobile">
-            <Link href="/" onClick={() => setOpen(false)} className="flex min-h-11 items-center rounded-xl px-3 text-sm font-medium hover:bg-bg">
-              Product
-            </Link>
-            <Link href="/courses" onClick={() => setOpen(false)} className="flex min-h-11 items-center rounded-xl px-3 text-sm font-medium hover:bg-bg">
-              Catalogue
-            </Link>
-            <Link href="/login" onClick={() => setOpen(false)} className="flex min-h-11 items-center rounded-xl px-3 text-sm font-medium hover:bg-bg">
-              Log in
-            </Link>
-            <Link href="/#book-demo" onClick={() => setOpen(false)} className="mkt-btn-demo mt-1 flex min-h-11 items-center justify-center rounded-full text-sm font-semibold">
-              Book a demo
-            </Link>
-          </nav>
-        </div>
+        <>
+          <button
+            type="button"
+            aria-label="Dismiss menu"
+            className="fixed inset-0 z-40 bg-black/45 lg:hidden"
+            onClick={close}
+          />
+          <div
+            id={menuId}
+            className="relative z-50 mx-auto mt-2 max-w-[1280px] overflow-hidden rounded-2xl border border-border bg-card shadow-xl lg:hidden"
+          >
+            <nav className="flex flex-col px-2 py-2" aria-label="Mobile">
+              <Link href="/#product" onClick={close} className="flex min-h-12 items-center rounded-xl px-3 text-[15px] font-medium active:bg-bg">
+                Product
+              </Link>
+              <Link href="/security" onClick={close} className="flex min-h-12 items-center rounded-xl px-3 text-[15px] font-medium active:bg-bg">
+                Compliance
+              </Link>
+              <Link href="/courses" onClick={close} className="flex min-h-12 items-center rounded-xl px-3 text-[15px] font-medium active:bg-bg">
+                Content Library
+              </Link>
+              <Link href="/pricing" onClick={close} className="flex min-h-12 items-center rounded-xl px-3 text-[15px] font-medium active:bg-bg">
+                Pricing
+              </Link>
+              <Link href="/company" onClick={close} className="flex min-h-12 items-center rounded-xl px-3 text-[15px] font-medium active:bg-bg">
+                Company
+              </Link>
+              <Link href="/login" onClick={close} className="flex min-h-12 items-center rounded-xl px-3 text-[15px] font-medium active:bg-bg">
+                Log in
+              </Link>
+              <div className="px-2 pb-2 pt-1">
+                <Link
+                  href="/#book-demo"
+                  onClick={close}
+                  className="mkt-btn-demo flex min-h-12 items-center justify-center rounded-full text-sm font-semibold"
+                >
+                  Book a demo
+                </Link>
+              </div>
+            </nav>
+          </div>
+        </>
       )}
     </header>
   );

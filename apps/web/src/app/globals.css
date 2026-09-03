@@ -23,9 +23,15 @@
   --brand: 129 140 248;
 }
 
+html {
+  scroll-padding-top: 5.75rem;
+  overflow-x: clip;
+}
+
 body {
+  overflow-x: clip;
   background:
-    radial-gradient(80% 50% at 8% -8%, rgb(var(--accent-teal) / 0.07), transparent 55%),
+    radial-gradient(80% 50% at 8% -8%, rgb(var(--accent-orange) / 0.07), transparent 55%),
     radial-gradient(70% 40% at 96% 0%, rgb(var(--brand) / 0.06), transparent 50%),
     rgb(var(--bg));
   color: rgb(var(--fg));
@@ -36,7 +42,7 @@ body {
 .dark body,
 html.dark body {
   background:
-    radial-gradient(70% 45% at 10% -5%, rgb(var(--accent-teal) / 0.08), transparent 50%),
+    radial-gradient(70% 45% at 10% -5%, rgb(var(--accent-orange) / 0.08), transparent 50%),
     radial-gradient(60% 40% at 90% 0%, rgb(var(--brand) / 0.12), transparent 55%),
     rgb(var(--bg));
 }
@@ -71,6 +77,51 @@ a:focus-visible,
   outline-offset: 2px;
 }
 
+/* Text fields specifically also get a soft brand-token ring on ordinary :focus (not just
+   :focus-visible) — a mouse click into a field benefits from the same visible cue a keyboard
+   user gets, unlike buttons/links where a ring on every click would be noisy. Sits alongside
+   each field's existing focus:border-brand color change; transition already covers box-shadow
+   via the `transition` utility already present on these fields. */
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 3px rgb(var(--brand) / 0.15);
+}
+/* Most fields across the app pair `outline-none` with a bare `focus:border-brand`, with no
+   `transition` utility of their own — so the border/ring above would otherwise snap instantly.
+   One shared rule (matching the 180ms ease-out already used for nav/button motion) instead of
+   touching ~25 input/textarea/select usages across ~15 files individually. */
+input,
+textarea,
+select {
+  transition: border-color 180ms ease-out, box-shadow 180ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  input,
+  textarea,
+  select {
+    transition: none;
+  }
+}
+
+/* Every data-table row across the app (team, skills, compliance, people, certifications,
+   instructor, reports…) is hand-rolled per page as a bare `<tr>` — one shared rule instead of
+   touching every table file individually. Header rows live in `<thead>`, never `<tbody>`, so
+   this only ever touches body rows. Purely a scannability cue (which row is my cursor on), not
+   a claim that the row itself is clickable — a `<button>`/`<a>` inside the row still gets its
+   own hover under this. */
+tbody tr {
+  transition: background-color 150ms ease-out;
+}
+tbody tr:hover {
+  background-color: rgb(var(--border) / 0.35);
+}
+@media (prefers-reduced-motion: reduce) {
+  tbody tr {
+    transition: none;
+  }
+}
+
 /* The shell's aurora — one quiet two-tone wash bleeding from the top edge. Its colors follow
    the active skin (--aurora1/--aurora2); it is the only ambient decoration in the app. */
 :root {
@@ -88,7 +139,7 @@ a:focus-visible,
   pointer-events: none;
   background:
     radial-gradient(55% 100% at 15% 0%, rgb(var(--aurora1) / 0.16), transparent 70%),
-    radial-gradient(45% 90% at 78% 0%, rgb(var(--accent-teal) / 0.12), transparent 68%),
+    radial-gradient(45% 90% at 78% 0%, rgb(var(--accent-orange) / 0.12), transparent 68%),
     radial-gradient(40% 80% at 55% 10%, rgb(var(--aurora2) / 0.08), transparent 70%);
 }
 
@@ -207,13 +258,15 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
   --hero-coral: 255 111 97;      /* #FF6F61 */
   --hero-panel: 11 29 46;        /* #0B1D2E */
 
-  /* Our second brand accent (identified from the hero card, the site's strongest visual
-     moment): teal, paired with the dark navy panel above. Fixed like brand-gold — a
-     recognizable RiyadaIntel color regardless of the visitor's active skin — used to extend
-     that hero moment's look into more of the marketing site and dashboard chrome. Same value
-     as --hero-teal (not a new color), just named for general reuse beyond that one component. */
-  --accent-teal: 45 212 191;      /* #2DD4BF */
-  --accent-teal-ink: 11 29 46;    /* #0B1D2E — text color safe on top of --accent-teal */
+  /* Second brand accent — corrected 2026-08-04: this used to be a teal (#2DD4BF) picked from
+     the hero mock's chart colors, which doesn't exist anywhere in the actual Riyada Intelligence
+     logo (navy diamond + orange sweep — see /public/brand/riyada-logo.png) and was never anyone's
+     deliberate brand decision. Now aliased to the same orange as --brand-gold so every surface
+     using accentOrange (readiness scores, priority badges, "Powered by" pills, marketing CTAs)
+     matches the real logo instead of an invented color. Fixed like brand-gold — a recognizable
+     brand color regardless of the visitor's active in-app personalization skin. */
+  --accent-orange: 245 166 35;      /* #F5A623 — same value as --brand-gold */
+  --accent-orange-ink: 58 42 5;      /* #3A2A05 — text color safe on top of --accent-orange */
 }
 
 /* Marketing landing — soft aurora wash behind the hero (token-driven, not hard-coded hex). */
@@ -225,96 +278,578 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
 
 .marketing-cta-wash {
   background:
-    radial-gradient(50% 80% at 80% 20%, rgb(var(--accent-teal) / 0.22), transparent 60%),
+    radial-gradient(50% 80% at 80% 20%, rgb(var(--accent-orange) / 0.22), transparent 60%),
     radial-gradient(40% 60% at 10% 90%, rgb(var(--aurora2) / 0.18), transparent 55%);
 }
 
 /* —— Page atmosphere (Docebo depth, Riyada tokens) —— */
 .mkt-page {
+  overflow-x: clip;
   background:
-    radial-gradient(80% 50% at 10% -10%, rgb(var(--accent-teal) / 0.08), transparent 55%),
+    radial-gradient(80% 50% at 10% -10%, rgb(var(--accent-orange) / 0.08), transparent 55%),
     radial-gradient(70% 45% at 95% 5%, rgb(var(--brand) / 0.07), transparent 50%),
     rgb(var(--bg));
 }
-.mkt-blob {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(70px);
-  pointer-events: none;
-  will-change: transform;
+
+/* Site has no Arabic translation yet (marketing AND the learner/admin portal) — under dir="rtl"
+   the browser's bidi algorithm still reorders trailing punctuation on these English sentences (a
+   "?" or "." jumps to the start of the line). `unicode-bidi: plaintext` fixes that by making each
+   text node resolve its own paragraph direction from its first strong character (Latin letters
+   here) instead of inheriting the ambient rtl context.
+   CORRECTION (2026-08-05): the original version of this comment claimed plaintext "does not
+   touch text-align" — that's wrong, confirmed by direct testing. `text-align: start/end` (both
+   explicit Tailwind `text-start`/`text-end` utilities AND the browser's own initial "start"
+   default that untouched elements inherit) resolves against whatever direction plaintext
+   auto-detects, not the ambient rtl `direction` property — so every one of these elements was
+   silently rendering LEFT-aligned under RTL, undermining most of the "mirrored layout" this same
+   selector was supposed to help with. Physical values (center/left/right) aren't logical, so
+   they're unaffected — hence needing an explicit physical `text-align: right` below rather than
+   relying on `start`, plus the companion rules further down to keep genuinely-centered content
+   centered. Revisit/simplify once real Arabic copy ships (a real first-strong-RTL character makes
+   plaintext's auto-detection agree with the ambient direction, so this stops being a conflict). */
+html[dir="rtl"] :is(h1, h2, h3, h4, p, li, label, span, a, button, input, textarea) {
+  unicode-bidi: plaintext;
+  text-align: right;
 }
-.mkt-blob-a {
-  width: min(520px, 55vw);
-  height: min(520px, 55vw);
-  top: -8%;
-  left: -12%;
-  background: rgb(var(--accent-teal) / 0.22);
-  opacity: 0.85;
+/* Restore centering for content that's deliberately centered (Tailwind's text-center), either on
+   the element itself or inherited from a centered ancestor — text-align:center is physical, so it
+   was never broken by plaintext above, but the blanket `text-align: right` just above needs to
+   explicitly step aside for it (it targets the same elements directly, which beats inherited
+   center on specificity terms). */
+html[dir="rtl"] :is(h1, h2, h3, h4, p, li, label, span, a, button, input, textarea).text-center:not(.mkt-center-mobile),
+html[dir="rtl"] .text-center :is(h1, h2, h3, h4, p, li, label, span, a, button, input, textarea):not(.mkt-center-mobile) {
+  text-align: center;
 }
-.mkt-blob-b {
-  width: min(460px, 48vw);
-  height: min(460px, 48vw);
-  top: 8%;
-  right: -14%;
-  background: rgb(var(--brand) / 0.18);
-  opacity: 0.9;
+/* Two spots (the homepage trust bar) are centered only below the sm breakpoint, then switch to
+   text-start above it — a responsive case the rule above can't express on its own (it would keep
+   forcing center at desktop too, since the text-center class stays physically present in the
+   markup even where an sm: override should win there instead). .text-center is kept in the JSX
+   for these two (LTR still needs it — none of this file's rules apply outside dir="rtl") and
+   :not(.mkt-center-mobile) above excludes them from the unconditional rule so this scoped
+   exception is the only one governing them under RTL. */
+@media (max-width: 639.98px) {
+  html[dir="rtl"] .mkt-center-mobile {
+    text-align: center;
+  }
 }
-.mkt-blob-c {
-  width: min(320px, 40vw);
-  height: min(320px, 40vw);
-  bottom: 18%;
-  left: 38%;
-  background: rgb(var(--brand-gold) / 0.14);
+
+@media (max-width: 639px) {
+  .mkt-marquee {
+    mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent);
+  }
+  /* Keep sticky header clear of section titles when jumping via in-page nav. */
+  #product,
+  #solutions,
+  #integrations,
+  #customers,
+  #resources,
+  #book-demo,
+  #how-it-works {
+    scroll-margin-top: 5.5rem;
+  }
 }
-.mkt-blob-d {
-  width: min(420px, 50vw);
-  height: min(420px, 50vw);
-  top: -20%;
-  right: -10%;
-  background: rgb(var(--accent-teal) / 0.12);
+
+/* —— Interactive motion: hover on fine pointers, tap/active on touch —— */
+@media (hover: hover) and (pointer: fine) {
+  .mkt-page a,
+  .mkt-page button,
+  .mkt-interactive {
+    transition:
+      color 180ms ease-out,
+      background-color 180ms ease-out,
+      border-color 180ms ease-out,
+      transform 180ms ease-out,
+      box-shadow 180ms ease-out,
+      filter 180ms ease-out;
+  }
+  .mkt-page a:hover,
+  .mkt-page button:hover,
+  .mkt-interactive:hover {
+    /* lift handled by more specific utility/classes where present */
+  }
+  .mkt-card-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 36px -20px rgb(15 23 42 / 0.28);
+    border-color: rgb(var(--brand) / 0.28);
+  }
 }
-.mkt-hero-grid {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgb(var(--border) / 0.55) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(var(--border) / 0.55) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse 65% 55% at 70% 35%, black, transparent 75%);
-  opacity: 0.45;
+
+@media (hover: none), (pointer: coarse) {
+  .mkt-page a:active,
+  .mkt-page button:active,
+  .mkt-interactive:active,
+  .mkt-card-lift:active,
+  .mkt-btn-demo:active {
+    transform: scale(0.98);
+    transition: transform 140ms ease-out, filter 140ms ease-out;
+  }
+  .mkt-btn-demo:active {
+    filter: brightness(1.05);
+  }
 }
 .mkt-visual-glow {
   background:
-    radial-gradient(circle at 40% 40%, rgb(var(--accent-teal) / 0.28), transparent 55%),
+    radial-gradient(circle at 40% 40%, rgb(var(--accent-orange) / 0.28), transparent 55%),
     radial-gradient(circle at 80% 70%, rgb(var(--brand) / 0.18), transparent 50%);
   filter: blur(28px);
 }
-.mkt-accent-line {
-  background: linear-gradient(
-    105deg,
-    rgb(var(--fg)) 0%,
-    rgb(var(--brand)) 40%,
-    rgb(var(--accent-teal)) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+/* Ambient hero video (Excis-style) — not currently mounted (see the commented-out markup in
+   page.tsx; no footage exists yet at /videos/marketing/hero-ambient.*). Kept here, ready to go,
+   so wiring it up later is a two-line change. The hero currently sits on the plain light --bg
+   with dark --fg text (no scrim anywhere), unlike the navy photo bands further down the page —
+   so the scrim here washes MOST of the video out with solid --bg near the text (left/top) and
+   only lets it read clearly toward the outer edge, rather than the photo-bands' dark-navy-wash
+   approach, to guarantee the existing dark-on-light heading contrast can never regress regardless
+   of footage brightness. */
+.mkt-hero-video {
+  position: absolute;
+  inset: -5% -8%;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: 1.5rem;
 }
+.mkt-hero-video video {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.mkt-hero-video::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(115deg, rgb(var(--bg) / 0.97) 0%, rgb(var(--bg) / 0.9) 45%, rgb(var(--bg) / 0.55) 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mkt-hero-video video {
+    display: none;
+  }
+}
+.mkt-accent-line {
+  color: rgb(var(--brand));
+}
+
+/* Editorial section eyebrow (aesthetic reference: excis.com) — a left label and a running
+   "№ 0X — Section" tag on the right, sitting above a thin full-width rule that separates it
+   from the heading below. Structural/typographic only, no new colour introduced: uses the
+   existing --brand token on light surfaces and --accent-orange on dark photo/mesh sections
+   (".on-dark") for the same purpose Excis's layout uses a fixed dark-navy/orange pairing. */
+.mkt-eyebrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgb(var(--border));
+}
+.mkt-eyebrow-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(var(--brand));
+}
+.mkt-eyebrow-tag {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(var(--muted));
+  white-space: nowrap;
+}
+.mkt-eyebrow.on-dark {
+  border-bottom-color: rgb(255 255 255 / 0.14);
+}
+.mkt-eyebrow.on-dark .mkt-eyebrow-label {
+  color: rgb(var(--accent-orange));
+}
+.mkt-eyebrow.on-dark .mkt-eyebrow-tag {
+  color: rgb(255 255 255 / 0.5);
+}
+@media (max-width: 479px) {
+  .mkt-eyebrow-tag {
+    font-size: 0.625rem;
+  }
+}
+
+/* Short single-line accent divider (aesthetic reference: excis.com) — the sole decorative
+   flourish left after the gradient-blob cleanup; a small rounded-cap rule, not a shape. */
+.mkt-accent-rule {
+  display: block;
+  height: 2px;
+  width: 2.75rem;
+  border-radius: 9999px;
+  background: rgb(var(--accent-orange));
+}
+
 .mkt-btn-demo {
-  background: linear-gradient(135deg, rgb(var(--brand)) 0%, rgb(30 58 110) 55%, rgb(var(--accent-teal-ink)) 100%);
+  background: linear-gradient(
+    135deg,
+    rgb(var(--brand)) 0%,
+    rgb(var(--brand) / 0.92) 55%,
+    rgb(var(--accent-orange-ink)) 100%
+  );
   color: #fff;
   box-shadow:
     0 10px 28px -10px rgb(var(--brand) / 0.55),
     inset 0 1px 0 rgb(255 255 255 / 0.12);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out, filter 200ms ease-out;
 }
-.mkt-btn-demo:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.06);
-  box-shadow:
-    0 16px 36px -12px rgb(var(--brand) / 0.6),
-    0 0 0 4px rgb(var(--accent-teal) / 0.18);
+@media (hover: hover) and (pointer: fine) {
+  .mkt-btn-demo:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+    box-shadow:
+      0 16px 36px -12px rgb(var(--brand) / 0.6),
+      0 0 0 4px rgb(var(--accent-orange) / 0.18);
+  }
+}
+
+/* Product ("intelligence layer") section photo: added above the pillar-card grids, same
+   --hero-panel navy scrim technique as the other photo bands, but confined to a fixed-height
+   band across the TOP of the section only (not the section's full inset:0) — this section is
+   much taller than how-it-works/integrations (heading + two stacked card grids below), and a
+   single landscape photo stretched across that whole height would crop down to an unrecognisable
+   sliver. The band's own scrim fades to a fully-opaque --hero-panel at its bottom edge, which is
+   exactly `.mkt-mesh`'s own base color (see below) — so the band blends seamlessly into the
+   plain mesh background the card grids already sit on, no visible seam. The presenter + data
+   screen sit right-of-center in the source photo, and the heading (max-w-3xl) sits at the left,
+   so the scrim is strongest at the left/top and eases toward the right where the photo's own
+   subject is the visible focal point. */
+.mkt-band-product-photo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  overflow: hidden;
+  height: 380px;
+}
+.mkt-band-product-photo img {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+}
+.mkt-band-product-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(var(--hero-panel) / 0.85) 0%, rgb(var(--hero-panel) / 0.68) 55%, rgb(var(--hero-panel) / 1) 100%),
+    linear-gradient(90deg, rgb(var(--hero-panel) / 0.92) 0%, rgb(var(--hero-panel) / 0.6) 45%, rgb(var(--hero-panel) / 0.32) 75%),
+    radial-gradient(60% 80% at 90% 15%, rgb(var(--accent-orange) / 0.14), transparent 55%);
+}
+@media (min-width: 640px) {
+  .mkt-band-product-photo {
+    height: 460px;
+  }
+}
+@media (min-width: 1024px) {
+  .mkt-band-product-photo {
+    height: 540px;
+  }
+}
+@media (max-width: 639px) {
+  .mkt-band-product-photo::after {
+    background:
+      linear-gradient(180deg, rgb(var(--hero-panel) / 0.93) 0%, rgb(var(--hero-panel) / 0.84) 55%, rgb(var(--hero-panel) / 1) 100%),
+      radial-gradient(60% 80% at 90% 15%, rgb(var(--accent-orange) / 0.14), transparent 55%);
+  }
+}
+
+/* Full-bleed section color bands — token-only (brand / accent-orange). */
+.mkt-band-integrations {
+  background:
+    radial-gradient(70% 90% at 0% 0%, rgb(var(--accent-orange) / 0.18), transparent 55%),
+    radial-gradient(60% 80% at 100% 100%, rgb(var(--brand) / 0.16), transparent 50%),
+    rgb(var(--brand) / 0.07);
+}
+.dark .mkt-band-integrations,
+html.dark .mkt-band-integrations {
+  background:
+    radial-gradient(70% 90% at 0% 0%, rgb(var(--accent-orange) / 0.22), transparent 55%),
+    radial-gradient(60% 80% at 100% 100%, rgb(var(--brand) / 0.35), transparent 50%),
+    rgb(var(--hero-panel) / 0.55);
+}
+
+/* Integrations heading/subtext photo band: same --hero-panel navy scrim technique, and now the
+   SAME 50/50 diptych geometry, as the workflow section's photo band directly above it (no
+   solid-color fallback — the two photos cover the full section width evenly, matching
+   coverage/proportion rather than a 40/60 split with a plain-color gap on the left).
+   - Below lg there's no spare width to dodge it horizontally (text spans the full band), so
+     the team-video photo alone runs full-bleed (the team-collab photo is hidden — two photos
+     have no room to read cleanly at this width) and a strong scrim carries legibility while
+     the screen still reads through, dimmed.
+   - At lg+ this is a true 50/50 diptych: team-collab photo fills the left half (where the
+     heading/subtext sit) and team-video fills the right half. The scrim is strong at the far
+     left (text), blends across the seam at 50% (same seam-blend idea as the workflow band),
+     and eases off toward the right so the call screen stays visible — still confined to a
+     single ::after layer, still token-only. */
+.mkt-band-integrations-photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+img.mkt-band-integrations-photo-a {
+  display: none;
+}
+img.mkt-band-integrations-photo-b {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center 12%;
+}
+@media (min-width: 1024px) {
+  /* Widened to 59% each (from a plain 50/50) so they physically overlap across an 18%-wide
+     band centered on the seam (section 41%-59%). Each image is mask-faded to transparent
+     across that shared band (opposite directions), so photo-b — later in DOM, stacked on
+     top — partially shows photo-a through it: a true pixel crossfade rather than a hard
+     photo-to-photo edge, matching how-it-works' single-image-with-no-seam look instead of
+     just camouflaging the cut with an extra-dark scrim band. */
+  img.mkt-band-integrations-photo-a {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 59%;
+    object-fit: cover;
+    object-position: center 40%;
+    mask-image: linear-gradient(90deg, #000 0%, #000 69%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 69%, transparent 100%);
+  }
+  img.mkt-band-integrations-photo-b {
+    left: 41%;
+    width: 59%;
+    object-position: center 42%;
+    mask-image: linear-gradient(90deg, transparent 0%, #000 31%, #000 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 31%, #000 100%);
+  }
+}
+.mkt-band-integrations-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(var(--hero-panel) / 0.92) 0%, rgb(var(--hero-panel) / 0.8) 55%, rgb(var(--hero-panel) / 0.66) 100%),
+    radial-gradient(70% 90% at 0% 0%, rgb(var(--accent-orange) / 0.16), transparent 55%);
+}
+@media (max-width: 639px) {
+  .mkt-band-integrations-photo::after {
+    background:
+      linear-gradient(180deg, rgb(var(--hero-panel) / 0.95) 0%, rgb(var(--hero-panel) / 0.9) 55%, rgb(var(--hero-panel) / 0.84) 100%),
+      radial-gradient(70% 90% at 0% 0%, rgb(var(--accent-orange) / 0.16), transparent 55%);
+  }
+}
+@media (min-width: 1024px) {
+  .mkt-band-integrations-photo::after {
+    background:
+      linear-gradient(180deg, rgb(var(--hero-panel) / 0.78) 0%, rgb(var(--hero-panel) / 0.6) 45%, rgb(var(--hero-panel) / 0.46) 100%),
+      linear-gradient(90deg, rgb(var(--hero-panel) / 0.95) 0%, rgb(var(--hero-panel) / 0.68) 32%, rgb(var(--hero-panel) / 0.6) 50%, transparent 68%),
+      radial-gradient(70% 90% at 0% 0%, rgb(var(--accent-orange) / 0.12), transparent 55%);
+  }
+}
+
+.mkt-band-workflow {
+  background:
+    radial-gradient(55% 70% at 100% 0%, rgb(var(--accent-orange) / 0.12), transparent 60%),
+    rgb(var(--bg));
+}
+
+/* Workflow section photo: fixed dark-navy scrim (--hero-panel, the same token used for the
+   marketing hero mock) so heading/body text stays legible over the presentation photo. Cards
+   are opaque (bg-card) and unaffected; this only governs the section's own background layer.
+   Below lg there's only room for one clean crop, so the presentation photo runs full-bleed;
+   at lg+ (the same breakpoint the 4-step grid itself expands at) there's enough width for a
+   second photo, so it splits into a two-photo diptych with the teacher photo on the right,
+   blended at the seam so it reads as one wash rather than two tiles. */
+.mkt-band-workflow-photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.mkt-band-workflow-photo img {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+}
+img.mkt-band-workflow-photo-b {
+  display: none;
+}
+@media (min-width: 1024px) {
+  img.mkt-band-workflow-photo-a {
+    width: 50%;
+  }
+  img.mkt-band-workflow-photo-b {
+    display: block;
+    left: 50%;
+    width: 50%;
+  }
+}
+.mkt-band-workflow-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(var(--hero-panel) / 0.88) 0%, rgb(var(--hero-panel) / 0.72) 45%, rgb(var(--hero-panel) / 0.55) 100%),
+    radial-gradient(70% 90% at 0% 0%, rgb(var(--accent-orange) / 0.16), transparent 55%);
+}
+@media (max-width: 639px) {
+  .mkt-band-workflow-photo::after {
+    background:
+      linear-gradient(180deg, rgb(var(--hero-panel) / 0.92) 0%, rgb(var(--hero-panel) / 0.86) 55%, rgb(var(--hero-panel) / 0.8) 100%),
+      radial-gradient(70% 90% at 0% 0%, rgb(var(--accent-orange) / 0.16), transparent 55%);
+  }
+}
+@media (min-width: 1024px) {
+  .mkt-band-workflow-photo::after {
+    background:
+      linear-gradient(180deg, rgb(var(--hero-panel) / 0.82) 0%, rgb(var(--hero-panel) / 0.64) 45%, rgb(var(--hero-panel) / 0.5) 100%),
+      linear-gradient(90deg, transparent 40%, rgb(var(--hero-panel) / 0.92) 50%, transparent 60%),
+      radial-gradient(70% 90% at 0% 0%, rgb(var(--accent-orange) / 0.14), transparent 55%);
+  }
+}
+/* Text/cards need to sit above the photo layer. */
+.mkt-band-workflow > .relative {
+  z-index: 1;
+}
+
+/* Book-demo section photo: same --hero-panel navy scrim technique as the other photo bands.
+   The form card is opaque bg-white, so it's unaffected regardless of scrim strength — the card,
+   not the scrim, is what protects its legibility.
+
+   2026-07-23: swapped the source photo (glass conference room → a sharp video-call screen with
+   four clearly visible remote faces) specifically so those faces read clearly — the prior photo
+   needed a heavy blur to stay legible and never fully worked. This one only needs a light blur
+   to soften edges, not obscure them, so blur/scale both come down a lot from the old 5px/1.04.
+   The source is pre-cropped tight around just the monitor (not the whole desk scene), so the
+   deployed asset IS the call-screen grid of faces, not a wider scene the CSS has to fish a crop
+   out of.
+
+   Below lg the section is a single stacked column (text, then the form, both full width).
+   2026-07-27: measured on an actual phone viewport (390×844) that the form card alone covers
+   ~62% of the section's height there, leaving only a thin sliver of the full-bleed photo
+   actually uncovered by opaque UI — nowhere near enough room to read a face. A full-bleed
+   treatment below lg was never going to show the faces clearly no matter how the scrim/crop
+   was tuned, so below lg this photo layer is disabled entirely (see .mkt-band-cta-photo-top
+   further down) in favour of a dedicated photo card ABOVE the heading, sized specifically to
+   show faces clearly the way this image swap was meant to.
+
+   At lg+ this becomes a genuine two-column grid (text | form), and a full-bleed image there
+   fights itself: the faces are wide enough that any single crop spanning the whole section width
+   ends up with the form card sitting right on top of them, no matter how the vertical crop is
+   tuned — confirmed empirically (several object-position passes all left the visible faces cut
+   into unrecognizable slivers above/below the card). So at lg+ the photo layer is confined to
+   the LEFT column only (roughly matching the text column's width, stopping short of the form)
+   — the form's column instead shows the section's own plain bg-brand background (already the
+   section's base color; no new color introduced). This gives the photo a full, unobstructed box
+   to show a face at readable size, rather than splitting it behind two things at once. */
+.mkt-band-cta-photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  display: none;
+}
+.mkt-band-cta-photo img {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: 85% 25%;
+  filter: blur(1.5px);
+  transform: scale(1.015);
+}
+/* Scrim: strong over the text corner, easing down toward the lower-right so the call screen's
+   faces stay clearly recognizable — re-verify contrast behind text after any change here
+   (glyph-free sampling, not a visual eyeball) since this is noticeably lighter than the old
+   blurred-photo scrim needed to be. */
+.mkt-band-cta-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgb(var(--hero-panel) / 0.82) 0%, rgb(var(--hero-panel) / 0.62) 45%, rgb(var(--hero-panel) / 0.34) 78%),
+    radial-gradient(60% 80% at 0% 100%, rgb(var(--accent-orange) / 0.14), transparent 55%);
+}
+@media (min-width: 1024px) {
+  .mkt-band-cta-photo {
+    display: block;
+    right: 44%;
+  }
+  .mkt-band-cta-photo img {
+    object-position: center 30%;
+  }
+  .mkt-band-cta-photo::after {
+    background:
+      linear-gradient(90deg, rgb(var(--hero-panel) / 0.85) 0%, rgb(var(--hero-panel) / 0.55) 55%, rgb(var(--hero-panel) / 0.28) 85%),
+      radial-gradient(60% 80% at 0% 100%, rgb(var(--accent-orange) / 0.14), transparent 55%);
+  }
+}
+
+/* Below lg: a dedicated photo card above the heading, sized specifically to give the faces
+   an unobstructed box to render in — the full-bleed layer above is display:none here, so this
+   isn't fighting the form card for space the way that one structurally can't avoid. Only a
+   light top/bottom edge fade is needed (no text sits on top of this card), matching the
+   lighter treatment the face-visibility swap was meant to achieve everywhere, not just at lg+. */
+.mkt-band-cta-photo-top {
+  position: relative;
+  height: 180px;
+  margin: 0 1rem 1.5rem;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+.mkt-band-cta-photo-top img {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center 26%;
+}
+.mkt-band-cta-photo-top::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, rgb(var(--hero-panel) / 0.04) 0%, rgb(var(--hero-panel) / 0.3) 100%),
+    radial-gradient(65% 75% at 100% 0%, rgb(var(--accent-orange) / 0.18), transparent 55%);
+}
+@media (min-width: 480px) {
+  .mkt-band-cta-photo-top {
+    height: 220px;
+  }
+}
+@media (min-width: 640px) {
+  .mkt-band-cta-photo-top {
+    height: 280px;
+    margin: 0 1.5rem 2rem;
+  }
+}
+@media (min-width: 1024px) {
+  .mkt-band-cta-photo-top {
+    display: none;
+  }
 }
 
 /* —— Docebo-grade marketing motion (CSS-only continuous life) —— */
@@ -322,7 +857,7 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
   background: linear-gradient(
     105deg,
     rgb(255 255 255) 0%,
-    rgb(var(--accent-teal)) 45%,
+    rgb(var(--accent-orange)) 45%,
     rgb(var(--brand-gold)) 100%
   );
   -webkit-background-clip: text;
@@ -331,11 +866,11 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
 }
 
 .mkt-cta-primary {
-  background: rgb(var(--accent-teal));
-  color: rgb(var(--accent-teal-ink));
+  background: rgb(var(--accent-orange));
+  color: rgb(var(--accent-orange-ink));
   box-shadow:
     0 12px 28px -8px rgb(0 0 0 / 0.45),
-    0 0 0 1px rgb(var(--accent-teal) / 0.35);
+    0 0 0 1px rgb(var(--accent-orange) / 0.35);
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 .mkt-cta-primary:hover {
@@ -343,52 +878,9 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
   filter: brightness(1.05);
   box-shadow:
     0 18px 36px -10px rgb(0 0 0 / 0.5),
-    0 0 24px rgb(var(--accent-teal) / 0.35);
+    0 0 24px rgb(var(--accent-orange) / 0.35);
 }
 
-.mkt-orb {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(60px);
-  opacity: 0.55;
-  will-change: transform;
-}
-.mkt-orb-a {
-  width: 42vw;
-  max-width: 520px;
-  height: 42vw;
-  max-height: 520px;
-  top: -12%;
-  left: -8%;
-  background: rgb(var(--accent-teal) / 0.35);
-}
-.mkt-orb-b {
-  width: 36vw;
-  max-width: 440px;
-  height: 36vw;
-  max-height: 440px;
-  top: 18%;
-  right: -10%;
-  background: rgb(var(--brand) / 0.55);
-}
-.mkt-orb-c {
-  width: 28vw;
-  max-width: 360px;
-  height: 28vw;
-  max-height: 360px;
-  bottom: 8%;
-  left: 35%;
-  background: rgb(var(--brand-gold) / 0.22);
-}
-.mkt-orb-cta {
-  width: 50%;
-  height: 80%;
-  top: 10%;
-  right: -15%;
-  background: rgb(var(--accent-teal) / 0.25);
-  filter: blur(80px);
-  opacity: 0.7;
-}
 .mkt-grid-fade {
   position: absolute;
   inset: 0;
@@ -402,7 +894,7 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
 
 .mkt-mesh {
   background:
-    radial-gradient(60% 80% at 20% 40%, rgb(var(--accent-teal) / 0.18), transparent 55%),
+    radial-gradient(60% 80% at 20% 40%, rgb(var(--accent-orange) / 0.18), transparent 55%),
     radial-gradient(50% 70% at 85% 60%, rgb(var(--brand) / 0.55), transparent 50%),
     rgb(var(--hero-panel));
 }
@@ -436,10 +928,10 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
   box-shadow: 0 24px 48px -20px rgb(0 0 0 / 0.45);
 }
 .mkt-feature-card-dark:hover {
-  border-color: rgb(var(--accent-teal) / 0.45);
+  border-color: rgb(var(--accent-orange) / 0.45);
   box-shadow:
     0 28px 56px -18px rgb(0 0 0 / 0.55),
-    0 0 32px rgb(var(--accent-teal) / 0.15);
+    0 0 32px rgb(var(--accent-orange) / 0.15);
 }
 .mkt-feature-icon {
   display: flex;
@@ -450,7 +942,7 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
   border-radius: 1rem;
   color: rgb(var(--brand));
   background:
-    linear-gradient(145deg, rgb(var(--brand) / 0.14), rgb(var(--accent-teal) / 0.12));
+    linear-gradient(145deg, rgb(var(--brand) / 0.14), rgb(var(--accent-orange) / 0.12));
   box-shadow: inset 0 0 0 1px rgb(var(--brand) / 0.12);
   transition: transform 0.25s ease;
 }
@@ -458,7 +950,7 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
   transform: scale(1.08);
 }
 .mkt-feature-icon-dark {
-  color: rgb(var(--accent-teal));
+  color: rgb(var(--accent-orange));
   background: rgb(255 255 255 / 0.1);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
 }
@@ -473,15 +965,6 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .mkt-orb-a { animation: mkt-drift 18s ease-in-out infinite; }
-  .mkt-orb-b { animation: mkt-drift 22s ease-in-out infinite reverse; }
-  .mkt-orb-c { animation: mkt-drift 26s ease-in-out infinite; }
-  .mkt-orb-cta { animation: mkt-drift 20s ease-in-out infinite alternate; }
-  .mkt-blob-a { animation: mkt-drift 20s ease-in-out infinite; }
-  .mkt-blob-b { animation: mkt-drift 24s ease-in-out infinite reverse; }
-  .mkt-blob-c { animation: mkt-drift 28s ease-in-out infinite; }
-  .mkt-blob-d { animation: mkt-drift 22s ease-in-out infinite alternate; }
-
   .mkt-float { animation: mkt-float 6.5s ease-in-out infinite; }
   .mkt-float-slow { animation: mkt-float 8.5s ease-in-out infinite reverse; }
 
@@ -503,19 +986,14 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
     animation: mkt-bar 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
 
-  @keyframes mkt-drift {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(4%, 6%) scale(1.06); }
-    66% { transform: translate(-3%, 3%) scale(0.96); }
-  }
   @keyframes mkt-float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-12px); }
   }
   @keyframes mkt-pulse {
-    0% { box-shadow: 0 0 0 0 rgb(var(--accent-teal) / 0.55); opacity: 1; }
-    70% { box-shadow: 0 0 0 8px rgb(var(--accent-teal) / 0); opacity: 0.85; }
-    100% { box-shadow: 0 0 0 0 rgb(var(--accent-teal) / 0); opacity: 1; }
+    0% { box-shadow: 0 0 0 0 rgb(var(--accent-orange) / 0.55); opacity: 1; }
+    70% { box-shadow: 0 0 0 8px rgb(var(--accent-orange) / 0); opacity: 0.85; }
+    100% { box-shadow: 0 0 0 0 rgb(var(--accent-orange) / 0); opacity: 1; }
   }
   @keyframes mkt-marquee {
     from { transform: translateX(0); }
@@ -532,17 +1010,59 @@ html[data-theme="citrus"] { --bg: 252 249 240; --fg: 40 32 16; --muted: 145 130 
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mkt-orb,
-  .mkt-blob,
   .mkt-float,
   .mkt-float-slow,
   .mkt-pulse,
   .mkt-marquee-track,
   .mkt-mesh,
-  .mkt-orb-cta,
   .mkt-bar-fill {
     animation: none !important;
   }
 }
 
 /* RTL is driven by <html dir="rtl"> set from locale; logical properties keep layouts mirrored. */
+
+/* ============================================================================
+   PRINT — deliberately general (not scoped to any one page), since anything
+   can be Ctrl+P'd. The two concrete problems this fixes: (1) the active skin
+   can be genuinely dark (royal, cyber, mono, etc. all set a near-black --bg),
+   which without an override would print as a solid dark page burning ink for
+   body text; (2) floating chrome (the marketing site's sticky pill nav, the
+   portal's fixed mobile tab bar, the portal sidebar, the fixed aurora wash)
+   only makes sense in a scrolling browser — on paper it just repeats per page
+   or sits on top of content. */
+@media print {
+  html, body {
+    background: #fff !important;
+  }
+  /* Fallback text colour for anything with no explicit text-* class of its own
+     (plain untouched inherited text) — NOT !important, so real content colour
+     (text-red/text-green/text-amber risk badges, text-brand links, etc.) keeps
+     winning via normal specificity. Losing those on the Compliance page would
+     defeat the point of a printed compliance report. */
+  html, body {
+    color: #000;
+  }
+
+  header.sticky,  /* MarketingHeader / PublicChrome — floating pill nav */
+  nav.fixed,      /* BottomNav — mobile tab bar */
+  aside,          /* portal sidebar nav */
+  .aurora {       /* fixed-position decorative background wash */
+    display: none !important;
+  }
+
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  a {
+    text-decoration: underline;
+  }
+
+  /* Let long tables paginate across pages instead of being clipped at the
+     page edge, and keep each row intact rather than splitting one mid-row. */
+  table { width: 100% !important; }
+  tr { break-inside: avoid; }
+  thead { display: table-header-group; }
+}

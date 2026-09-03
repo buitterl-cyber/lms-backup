@@ -130,6 +130,7 @@ model User {
   careerPlans     CareerPlan[]
   recommendations Recommendation[]
   auditLogs       AuditLog[]
+  providerLinks   ProviderLearnerLink[]
 
   @@unique([organizationId, email])
   @@index([tenantId, organizationId])
@@ -271,8 +272,50 @@ model ProviderConnection {
   status         String   @default("active")
   lastSyncedAt   DateTime?
   courses        Course[]
+  learnerLinks   ProviderLearnerLink[]
+  webhookEvents  ProviderWebhookEvent[]
   @@unique([organizationId, providerKey])
   @@index([tenantId])
+}
+
+// Stable mapping from a RiyadaIntel learner to their identity on a given connected provider.
+// Created once (on first createLearner() call) and reused for every subsequent enroll/progress/
+// certificate/SSO-launch call — without this, each enrollment would ask the provider to create a
+// new learner record every time (see enrollment.service.ts propagateToProvider()).
+model ProviderLearnerLink {
+  id             String   @id @default(cuid())
+  tenantId       String
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  connectionId   String
+  connection     ProviderConnection @relation(fields: [connectionId], references: [id])
+  providerKey    String   // denormalized for cheap lookups without a join
+  externalLearnerId String
+  lastSyncedAt   DateTime?
+  createdAt      DateTime @default(now())
+  @@unique([userId, connectionId])
+  @@index([tenantId])
+  @@index([connectionId, externalLearnerId])
+}
+
+// Raw inbound events from a provider's webhook (completion/progress/catalog-update push), kept
+// for audit and idempotent processing. externalEventId is whatever dedupe id the provider sends
+// (e.g. GO1's event id) — null until we know GO1's actual webhook payload shape.
+model ProviderWebhookEvent {
+  id             String   @id @default(cuid())
+  tenantId       String?  // resolved from the connection once signature verification passes
+  connectionId   String?
+  connection     ProviderConnection? @relation(fields: [connectionId], references: [id])
+  providerKey    String
+  externalEventId String?
+  eventType      String?  // provider-native event name, once known
+  payload        Json
+  status         String   @default("received") // received | processed | failed | ignored
+  error          String?
+  receivedAt     DateTime @default(now())
+  processedAt    DateTime?
+  @@index([tenantId])
+  @@index([connectionId, externalEventId])
 }
 
 model Course {
@@ -361,6 +404,9 @@ model Enrollment {
   dueAt         DateTime?
   enrolledAt    DateTime @default(now())
   completedAt   DateTime?
+  // Last time we pulled/received provider-side progress for this enrollment — lets a polling
+  // job (see jobs/provider-progress-poll) know what's stale, and dedupes against webhook pushes.
+  lastSyncedAt  DateTime?
   attempts      AssessmentAttempt[]
   @@unique([userId, courseId])
   @@index([tenantId])
@@ -841,6 +887,40 @@ model Inquiry {
   status    String   @default("new") // new | contacted | qualified | won | lost
   createdAt DateTime @default(now())
   @@index([status, createdAt])
+}
+
+// Basic error monitoring (2026-08-05): every exception the global filter catches, plus
+// frontend JS/React errors reported via POST /errors/report, land here so bugs are retrievable
+// after the fact instead of only living in PM2 logs. Not tenant-scoped — errors can happen
+// before tenant context resolves (auth failures, public routes, boot-time issues).
+model ErrorLog {
+  id          String   @id @default(cuid())
+  source      String   // "api" | "web"
+  message     String
+  stack       String?
+  path        String?
+  method      String?
+  statusCode  Int?
+  fingerprint String   // groups repeat occurrences of "the same" error for alert throttling
+  meta        Json?
+  createdAt   DateTime @default(now())
+  @@index([fingerprint, createdAt])
+  @@index([createdAt])
+}
+
+// Privacy-friendly first-party pageview analytics for the public marketing site (2026-08-10):
+// no cookies, no persistent visitor identifier — visitorHash is a daily-rotating salted hash
+// (day + IP + user-agent) so the same visitor can't be tracked across days or linked to their
+// real IP, only counted as "one visitor" within a given day. No cookie-consent banner is needed
+// because nothing here is a cookie or personal data under GDPR's ePrivacy rules.
+model PageView {
+  id          String   @id @default(cuid())
+  path        String
+  referrer    String?
+  visitorHash String   // sha256(day + ip + userAgent), truncated — not reversible to an identity
+  createdAt   DateTime @default(now())
+  @@index([path, createdAt])
+  @@index([createdAt])
 }
 
 // Append-only. Enforced INSERT-only at the DB level via trigger/migration.

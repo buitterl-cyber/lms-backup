@@ -1,9 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { AUTH, AuthShell } from "@/components/auth/AuthShell";
 import { Chevron } from "@/components/ui";
 
+export const metadata: Metadata = {
+  title: "Log In — Riyada Intelligence",
+  description: "Sign in to Riyada Intelligence as a learner or admin/manager.",
+};
+
 // Role selection — the front door. Two clear paths, nothing else.
 export const dynamic = "force-dynamic";
+
+const LOGIN_ERROR: Record<string, string> = {
+  session_expired: "Your session ended — sign in again to continue.",
+};
 
 function RoleCard({
   href,
@@ -53,7 +63,13 @@ function RoleCard({
   );
 }
 
-export default function RoleSelectPage() {
+export default async function RoleSelectPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+  const errorMessage = error ? LOGIN_ERROR[error] : undefined;
   return (
     <AuthShell width="max-w-2xl">
       <h1
@@ -65,6 +81,9 @@ export default function RoleSelectPage() {
       <p className="mt-1 text-center text-sm" style={{ color: AUTH.muted }}>
         Choose how you want to sign in.
       </p>
+      {errorMessage && (
+        <p className="mt-4 text-center text-sm text-red" role="alert">{errorMessage}</p>
+      )}
 
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <RoleCard

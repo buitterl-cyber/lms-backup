@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Card, RiskBadge } from "@/components/ui";
+import { Button, Card, Chevron, RiskBadge } from "@/components/ui";
 import { apiGet, apiPost, getContext, type DemoContext } from "@/lib/api";
 
 interface Q { id: string; type: string; prompt: string; options: string[] }
@@ -51,7 +51,9 @@ export default function QuizPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <header>
-        <Link href="/catalog" className="text-sm text-muted hover:text-fg">← Catalog</Link>
+        <Link href="/catalog" className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
+          <Chevron direction="left" /> Catalog
+        </Link>
         <h1 className="font-display mt-1 text-2xl font-semibold">{a.title}</h1>
         <p className="text-sm text-muted">{a.questions.length} questions · pass mark {a.passScore}%</p>
       </header>
@@ -82,7 +84,7 @@ export default function QuizPage() {
                     key={opt}
                     onClick={() => choose(q.id, opt, multi)}
                     disabled={!!result}
-                    className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm ${selected ? "border-brand bg-brand/10" : "border-border hover:bg-bg"}`}
+                    className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-start text-sm ${selected ? "border-brand bg-brand/10" : "border-border hover:bg-bg"}`}
                   >
                     <span className={`flex h-4 w-4 items-center justify-center ${multi ? "rounded" : "rounded-full"} border ${selected ? "border-brand bg-brand text-white" : "border-muted"}`}>
                       {selected ? "✓" : ""}
@@ -97,13 +99,13 @@ export default function QuizPage() {
       })}
 
       {!result ? (
-        <button onClick={submit} disabled={busy} className="w-full rounded-lg bg-brand px-4 py-3 text-sm font-medium text-white disabled:opacity-60">
+        <Button onClick={submit} disabled={busy} size="lg" className="w-full">
           {busy ? "Grading…" : "Submit assessment"}
-        </button>
+        </Button>
       ) : (
-        <Link href="/learner" className="block rounded-lg border border-border px-4 py-3 text-center text-sm font-medium hover:bg-card">
+        <Button href="/learner" variant="secondary" size="lg" className="w-full">
           Back to dashboard
-        </Link>
+        </Button>
       )}
     </div>
   );

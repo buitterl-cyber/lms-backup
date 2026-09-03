@@ -1,19 +1,31 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { SKINS, THEME_COOKIE } from "@/components/themes";
+import { SKINS, THEME_COOKIE, skinMode } from "@/components/themes";
+import { Card } from "@/components/ui";
+import { DropdownPortal } from "@/components/DropdownPortal";
 
 /** Skin picker: instant live preview (tokens swap on <html data-theme>), persisted in a
- *  cookie so the server renders the chosen skin on the next visit with no flash. */
+ *  cookie so the server renders the chosen skin on the next visit with no flash.
+ *
+ *  The panel is portaled to <body> (see DropdownPortal) rather than absolutely positioned
+ *  in place — this header sits inside ancestors with their own stacking contexts (sticky
+ *  sidebar, transformed cards, etc. depending on the page), any of which can trap a plain
+ *  `absolute` dropdown behind other content even with a high z-index of its own. */
 export function ThemeSwitcher() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("riyada");
+  const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setActive(document.documentElement.dataset.theme || "riyada");
     function close(e: MouseEvent) {
-      if (open && panel.current && !panel.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (!open) return;
+      if (trigger.current?.contains(target)) return;
+      if (panel.current?.contains(target)) return;
+      setOpen(false);
     }
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
@@ -21,13 +33,17 @@ export function ThemeSwitcher() {
 
   function apply(key: string) {
     document.documentElement.dataset.theme = key;
+    // The dark/light class no longer just rides along from the initial SSR paint — a live
+    // switch has to flip it explicitly too, now that it's not relying on cascade order.
+    document.documentElement.classList.toggle("dark", skinMode(key) === "dark");
     document.cookie = `${THEME_COOKIE}=${key}; path=/; max-age=31536000; samesite=lax`;
     setActive(key);
   }
 
   return (
-    <div className="relative" ref={panel}>
+    <>
       <button
+        ref={trigger}
         onClick={() => setOpen((o) => !o)}
         className="rounded-xl border border-border bg-card/70 p-2 backdrop-blur hover:border-brand/50"
         aria-label="Choose a skin"
@@ -40,21 +56,21 @@ export function ThemeSwitcher() {
         </svg>
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-12 z-50 w-72 rounded-2xl border border-border bg-card p-3 shadow-2xl">
+      <DropdownPortal anchorRef={trigger} panelRef={panel} open={open}>
+        <Card radius="2xl" padding="sm" className="w-[min(18rem,calc(100vw-1.5rem))] shadow-2xl">
           <p className="px-1 text-xs font-medium">Pick your skin</p>
           <p className="px-1 text-[11px] text-muted">Same app, your vibe. Saved to this browser.</p>
-          <div className="mt-2 grid max-h-80 grid-cols-2 gap-1.5 overflow-y-auto pr-1">
+          <div className="mt-2 grid max-h-80 grid-cols-2 gap-1.5 overflow-y-auto pe-1">
             {SKINS.map((s) => (
               <button
                 key={s.key}
                 onClick={() => apply(s.key)}
-                className={`flex items-center gap-2.5 rounded-xl border p-2 text-left transition-colors ${
+                className={`flex items-center gap-2.5 rounded-xl border p-2 text-start transition-colors ${
                   active === s.key ? "border-brand bg-brand/10" : "border-border hover:border-brand/40"
                 }`}
               >
                 <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full ring-1 ring-border" style={{ background: s.bg }}>
-                  <span className="absolute inset-y-0 right-0 w-1/2" style={{ background: s.brand }} />
+                  <span className="absolute inset-y-0 end-0 w-1/2" style={{ background: s.brand }} />
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-xs font-medium">{s.name}</span>
@@ -63,8 +79,8 @@ export function ThemeSwitcher() {
               </button>
             ))}
           </div>
-        </div>
-      )}
-    </div>
+        </Card>
+      </DropdownPortal>
+    </>
   );
 }

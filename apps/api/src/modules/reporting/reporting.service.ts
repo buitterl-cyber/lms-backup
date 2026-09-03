@@ -16,7 +16,7 @@ export class ReportingService {
     switch (kind) {
       case "learning": {
         const e = await this.prisma.db.enrollment.findMany({ where: { tenantId }, include: { user: true, course: true } });
-        return e.map((r) => ({ user: `${r.user.firstName} ${r.user.lastName}`, course: r.course.title, status: r.status, percent: r.percent, completedAt: r.completedAt ?? "" }));
+        return e.map((r) => ({ user: `${r.user.firstName} ${r.user.lastName}`, course: r.course.title, provider: r.course.providerKey, status: r.status, percent: r.percent, completedAt: r.completedAt ?? "" }));
       }
       case "compliance": {
         const a = await this.prisma.db.complianceAssignment.findMany({ where: { tenantId }, include: { user: true, control: { include: { framework: true } } } });
@@ -29,7 +29,7 @@ export class ReportingService {
       case "certification": {
         const now = new Date();
         const c = await this.prisma.db.earnedCertificate.findMany({ where: { tenantId }, include: { user: true, certification: true } });
-        return c.map((r) => ({ user: `${r.user.firstName} ${r.user.lastName}`, certification: r.certification?.name ?? "", expiresAt: r.expiresAt ?? "", status: certStatus({ expiresAt: r.expiresAt, now }), cpdHours: r.cpdHours ?? 0 }));
+        return c.map((r) => ({ user: `${r.user.firstName} ${r.user.lastName}`, certification: r.certification?.name ?? "", source: r.externalId ? "external" : "internal", expiresAt: r.expiresAt ?? "", status: certStatus({ expiresAt: r.expiresAt, now }), cpdHours: r.cpdHours ?? 0 }));
       }
       case "revenue": {
         const o = await this.prisma.db.order.findMany({ where: { tenantId } });

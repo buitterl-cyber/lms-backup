@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AUTH } from "@/components/auth/AuthShell";
+import { isValidEmail } from "@/lib/validation";
 
 const SOCIAL_ERROR: Record<string, string> = {
   social_cancelled: "Sign-in was cancelled — try again when you're ready.",
@@ -44,8 +45,16 @@ export function PortalLoginForm({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError("");
+    if (!isValidEmail(email)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    if (!password) {
+      setError("Enter your password.");
+      return;
+    }
+    setLoading(true);
     try {
       const res = await fetch("/api/v1/auth/login", {
         method: "POST",
@@ -74,14 +83,14 @@ export function PortalLoginForm({
     border: `1px solid ${AUTH.border}`,
     borderRadius: 10,
     background: AUTH.field,
-    padding: "9px 12px",
-    fontSize: 14,
+    padding: "12px",
+    fontSize: 16,
     color: AUTH.ink,
     outline: "none",
   };
 
   return (
-    <form onSubmit={submit} className="space-y-3">
+    <form onSubmit={submit} className="space-y-3" noValidate>
       <input
         required
         type="email"
@@ -103,11 +112,11 @@ export function PortalLoginForm({
           Forgot password?
         </Link>
       </div>
-      {error && <p className="text-xs" style={{ color: "#C0392B" }}>{error}</p>}
+      {error && <p className="text-xs text-red">{error}</p>}
       <button
         disabled={loading}
-        className="w-full py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-        style={{ background: portal === "admin" ? AUTH.navy : AUTH.gold, color: portal === "admin" ? "#fff" : "#3A2A05", borderRadius: 10 }}
+        className="w-full py-2.5 text-sm font-semibold disabled:opacity-60"
+        style={{ background: portal === "admin" ? AUTH.navy : AUTH.gold, color: portal === "admin" ? "#fff" : AUTH.goldInk, borderRadius: 10 }}
       >
         {loading ? "Signing in…" : cta}
       </button>

@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/LogoutButton";
 import { BottomNav } from "@/components/BottomNav";
 import { Avatar } from "@/components/Avatar";
 import { Topbar } from "@/components/Topbar";
 import { Brand } from "@/components/Brand";
 import { Card } from "@/components/ui";
-import { apiGet, getContext, isAdmin } from "@/lib/api";
+import { apiGet, getContext, isAdmin, SessionExpiredError } from "@/lib/api";
 
 // App shell — same navy/teal atmosphere as the marketing site: soft aurora, glass sidebar,
 // elevated cards. Mobile (<md): sidebar collapses, bottom tab bar takes over.
@@ -26,6 +27,8 @@ const NAV: { group: string; items: { href: string; label: string }[] }[] = [
     { href: "/providers", label: "Providers" },
     { href: "/reports", label: "Reports" },
     { href: "/sales-inquiries", label: "Sales Pipeline" },
+    { href: "/errors", label: "Error Monitoring" },
+    { href: "/analytics", label: "Site Analytics" },
   ] },
 ];
 
@@ -53,7 +56,13 @@ async function identity() {
       streak: game?.streak ?? 0,
       unread: notifs.filter((n) => !n.readAt).length,
     };
-  } catch {
+  } catch (err) {
+    // A rejected (not merely absent) token means someone was actually signed in and their
+    // session died mid-use (expiry, or a JWT_SECRET rotation invalidating every issued token) —
+    // send them to login with a clear reason instead of quietly rendering a fabricated
+    // dashboard. Anything else (a network blip, the demo bootstrap itself being down) keeps the
+    // existing graceful fallback so the shell still renders.
+    if (err instanceof SessionExpiredError) redirect("/login?error=session_expired");
     return { name: "Learner", role: "learner", admin: true, xp: 0, level: 1, levelProgress: 0, nextLevelXp: 100, streak: 0, unread: 0 };
   }
 }
@@ -73,7 +82,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <div className="aurora" aria-hidden />
-      <div className="relative mx-auto flex max-w-6xl gap-6 px-4 py-5 md:gap-8 md:px-6 md:py-7">
+      <div className="relative mx-auto flex max-w-6xl gap-4 overflow-x-clip px-3 py-4 md:gap-8 md:px-6 md:py-7">
         <aside className="hidden w-[15.5rem] shrink-0 md:flex md:flex-col">
           <div className="sticky top-5 flex max-h-[calc(100vh-2.5rem)] flex-col rounded-2xl border border-border/80 bg-card/80 p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.4)] backdrop-blur-md">
             <Link href="/" className="block px-1">
@@ -92,7 +101,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
                       >
                         {n.label}
                         {n.href === "/notifications" && me.unread > 0 && (
-                          <span className="tnum rounded-full bg-accentTeal/15 px-1.5 text-[10px] font-semibold text-accentTealInk">
+                          <span className="tnum rounded-full bg-accentOrange/15 px-1.5 text-[10px] font-semibold text-accentOrange">
                             {me.unread}
                           </span>
                         )}
@@ -113,7 +122,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               </div>
               <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-border">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-brand to-accentTeal"
+                  className="h-full rounded-full bg-gradient-to-r from-brand to-accentOrange"
                   style={{ width: `${Math.round(me.levelProgress * 100)}%` }}
                 />
               </div>
@@ -125,9 +134,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 pb-20 md:pb-0">
+        <main className="min-w-0 flex-1 overflow-x-clip pb-24 md:pb-0">
           <Topbar name={me.name} streak={me.streak} level={me.level} levelProgress={me.levelProgress} unread={me.unread} />
-          <div className="rise">{children}</div>
+          <div className="rise min-w-0">{children}</div>
         </main>
         <BottomNav manage={me.admin} />
       </div>

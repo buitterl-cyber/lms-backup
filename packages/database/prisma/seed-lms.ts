@@ -64,7 +64,7 @@ async function main() {
     await db.enrollment.update({ where: { id: amirEnrollments[0].id }, data: { dueAt: new Date(Date.now() + 4 * DAY) } });
   }
   // A not-started enrollment for the "hasn't started — deadline in N days" alert (newhire).
-  const someCourse = await db.course.findFirst({ where: { tenantId, providerKey: "ms-learn" }, skip: 3 });
+  const someCourse = await db.course.findFirst({ where: { tenantId, providerKey: "go1" }, skip: 3 });
   if (newhire && someCourse) {
     await db.enrollment.upsert({
       where: { userId_courseId: { userId: newhire.id, courseId: someCourse.id } },

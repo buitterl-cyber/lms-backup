@@ -60,7 +60,7 @@ export function HeroDashboardMock() {
             <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand text-[10px] font-bold text-white">
               R
             </span>
-            <span className="text-[12px] font-semibold text-white">RiyadaIntel</span>
+            <span className="text-[12px] font-semibold text-white">Riyada Intelligence</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="hidden items-center gap-1.5 rounded-full bg-heroTeal/15 px-2 py-0.5 text-[10px] font-medium text-heroTeal sm:inline-flex">

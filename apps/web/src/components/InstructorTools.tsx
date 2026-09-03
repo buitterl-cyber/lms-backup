@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiPost, type DemoContext } from "@/lib/api";
+import { Button, Card } from "@/components/ui";
 
 /** Course builder: create a native course, then add ordered modules to it. */
 export function CourseBuilder({ ctx }: { ctx: DemoContext }) {
@@ -55,9 +56,9 @@ export function CourseBuilder({ ctx }: { ctx: DemoContext }) {
           value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="What will learners get out of it?"
           className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-brand"
         />
-        <button onClick={createCourse} disabled={busy} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+        <Button onClick={createCourse} disabled={busy}>
           {busy ? "Creating…" : "Create course"}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -73,7 +74,7 @@ export function CourseBuilder({ ctx }: { ctx: DemoContext }) {
           {modules.map((m, i) => <li key={i}>{m}</li>)}
         </ol>
       )}
-      <div className="space-y-2 rounded-lg border border-border p-3">
+      <Card tone="none" radius="lg" padding="sm" className="space-y-2">
         <p className="text-xs font-medium text-muted">Add module {modules.length + 1}</p>
         <input
           value={modTitle} onChange={(e) => setModTitle(e.target.value)} placeholder="Module title"
@@ -88,11 +89,11 @@ export function CourseBuilder({ ctx }: { ctx: DemoContext }) {
             value={modMinutes} onChange={(e) => setModMinutes(e.target.value)} placeholder="Minutes" inputMode="numeric"
             className="w-24 rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-brand"
           />
-          <button onClick={addModule} disabled={busy} className="rounded-lg bg-brand px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
+          <Button onClick={addModule} disabled={busy}>
             {busy ? "Adding…" : "Add module"}
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
       <button onClick={() => { setCourse(null); setModules([]); setTitle(""); setDescription(""); }} className="text-xs text-muted underline">
         Start another course
       </button>
@@ -120,7 +121,7 @@ export function ReviewAction({ ctx, id }: { ctx: DemoContext; id: string }) {
   }
 
   if (!open)
-    return <button onClick={() => setOpen(true)} className="rounded-lg border border-brand/40 px-3 py-1 text-xs font-medium text-brand hover:bg-brand/10">Review</button>;
+    return <Button onClick={() => setOpen(true)} variant="outline" size="sm">Review</Button>;
   return (
     <div className="mt-2 w-full space-y-2">
       <textarea
@@ -132,9 +133,9 @@ export function ReviewAction({ ctx, id }: { ctx: DemoContext; id: string }) {
           value={score} onChange={(e) => setScore(e.target.value)} placeholder="Score /100" inputMode="numeric"
           className="w-24 rounded-lg border border-border bg-bg px-3 py-1.5 text-xs outline-none focus:border-brand"
         />
-        <button onClick={submit} disabled={busy} className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50">
+        <Button onClick={submit} disabled={busy} size="sm">
           {busy ? "Saving…" : "Submit review"}
-        </button>
+        </Button>
         <button onClick={() => setOpen(false)} className="text-xs text-muted">Cancel</button>
       </div>
     </div>

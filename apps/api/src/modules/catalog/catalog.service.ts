@@ -30,6 +30,8 @@ export class CatalogService {
         id: c.id,
         title: c.title,
         provider: c.providerKey,
+        publisher: c.publisher,
+        imageUrl: c.imageUrl,
         level: c.level,
         durationMinutes: c.durationMinutes,
         skills: c.skills.map((s) => s.skill.name),

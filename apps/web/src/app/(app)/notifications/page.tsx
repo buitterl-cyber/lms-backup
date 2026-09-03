@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui";
+import { Card, EmptyState } from "@/components/ui";
 import { apiGet, getContext } from "@/lib/api";
 
 // Notifications — in-app feed (renewal reminders, compliance alerts, assignments). Delivery to
@@ -38,14 +38,14 @@ export default async function NotificationsPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-display text-2xl font-semibold">Notifications</h1>
+        <h1 className="font-display text-xl font-semibold sm:text-2xl">Notifications</h1>
         <p className="text-sm text-muted">{notifs.length} notification{notifs.length === 1 ? "" : "s"}</p>
       </header>
 
       {notifs.length === 0 ? (
-        <Card>You&apos;re all caught up.</Card>
+        <Card><EmptyState title="You're all caught up" description="New reminders, alerts, and assignments will show up here." /></Card>
       ) : (
-        <Card className="p-0">
+        <Card padding="none">
           {notifs.map((n) => (
             <div key={n.id} className="flex items-start gap-3 border-b border-border/60 p-4 last:border-0">
               <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${n.readAt ? "bg-border" : "bg-brand"}`} />

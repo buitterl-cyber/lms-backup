@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { apiPost, type DemoContext } from "@/lib/api";
+import { Button, Card } from "@/components/ui";
 
 /** AI Study Assistant (wireframe): chat grounded in THIS course's content via /ai/chat courseId. */
 export function StudyAssistant({ ctx, courseId, courseTitle }: { ctx: DemoContext; courseId: string; courseTitle: string }) {
@@ -27,7 +28,7 @@ export function StudyAssistant({ ctx, courseId, courseTitle }: { ctx: DemoContex
   }
 
   return (
-    <div className="rounded-xl border border-brand/30 bg-card p-4">
+    <Card tone="brand" padding="md">
       <p className="flex items-center gap-2 text-sm font-medium"><span className="text-brand">◈</span> AI Study Assistant</p>
       <p className="mt-1 text-xs text-muted">Ask anything about {courseTitle} — answers are grounded in the course content.</p>
       {asked && (
@@ -44,10 +45,10 @@ export function StudyAssistant({ ctx, courseId, courseTitle }: { ctx: DemoContex
           placeholder="e.g. When should I use useMemo vs useCallback?"
           className="min-w-0 flex-1 rounded-lg border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-brand"
         />
-        <button onClick={ask} disabled={busy} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+        <Button onClick={ask} disabled={busy}>
           Ask
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }
