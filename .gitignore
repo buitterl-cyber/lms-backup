@@ -10,3 +10,7 @@ coverage/
 .DS_Store
 prisma/*.db
 .vercel/
+
+# Build artifacts / one-off local scripts
+*.tsbuildinfo
+packages/database/reset-password-tmp3.js
