@@ -80,7 +80,7 @@ export class ProvidersService {
     for (const c of page.items) {
       const course = await this.prisma.db.course.upsert({
         where: { providerKey_externalId_tenantId: { providerKey: c.providerKey, externalId: c.externalId, tenantId } },
-        update: { title: c.title, description: c.description, durationMinutes: c.durationMinutes ?? null, level: c.level ?? null, modality: c.modality, launchUrl: c.launchUrl ?? null, imageUrl: c.imageUrl ?? null },
+        update: { title: c.title, description: c.description, durationMinutes: c.durationMinutes ?? null, level: c.level ?? null, modality: c.modality, publisher: c.publisher, rawCategories: c.rawCategories, launchUrl: c.launchUrl ?? null, imageUrl: c.imageUrl ?? null },
         create: {
           tenantId, providerKey: c.providerKey, externalId: c.externalId, title: c.title,
           description: c.description, durationMinutes: c.durationMinutes ?? null, level: c.level ?? null,

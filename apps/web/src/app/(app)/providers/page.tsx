@@ -12,12 +12,18 @@ const LABEL: Record<string, string> = {
   "open-sesame": "OpenSesame", "internal:confluence": "Confluence", "internal:sharepoint": "SharePoint",
   "internal:google-drive": "Google Drive", "internal:m365": "Microsoft 365", "internal:notion": "Notion",
 };
-const REAL = new Set(["ms-learn"]);
+const REAL = new Set(["ms-learn", "go1"]);
 // Providers that need credentials before they can connect.
 const CRED_FIELDS: Record<string, { name: string; label: string; placeholder: string }[]> = {
   learnworlds: [
     { name: "school", label: "School URL", placeholder: "yourschool.learnworlds.com" },
     { name: "clientId", label: "Client ID", placeholder: "Lw-Client id" },
+    { name: "clientSecret", label: "Client secret", placeholder: "••••••••" },
+  ],
+  // Confirmed live against the sandbox portal (gateway.go1.com, Api-Version 2025-01-01) — OAuth2
+  // client-credentials, not a browser redirect flow. See packages/providers go1.provider.ts.
+  go1: [
+    { name: "clientId", label: "Client ID", placeholder: "GO1 OAuth client id" },
     { name: "clientSecret", label: "Client secret", placeholder: "••••••••" },
   ],
 };
